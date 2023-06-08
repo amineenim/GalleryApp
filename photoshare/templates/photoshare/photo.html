@@ -1,3 +1,4 @@
+
 {% extends 'photoshare/base.html' %}
 {% block title %}
 Detail 
@@ -22,7 +23,9 @@ Detail
             {% endfor %}
         {% endif %}
         <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl">
-            <a href="{% url 'gallery' %}">Go Back</a>
+            <a href="{% url 'gallery' %}">
+                <i class="fa-solid fa-arrow-left mr-1"></i>Go Back
+            </a>
         </button>
     </div>
     <div class="flex h-5/6">
@@ -31,15 +34,24 @@ Detail
         </div>
         {% block buttons_section %}
         <div class="w-1/2 py-8 px-4 bg-gray-100 rounded-xl flex flex-col justify-between">
-            <p class="overflow-hidden">
-                {{ photo.description }}
-            </p>
+            <div class="flex flex-col">
+                <p class="text-sm mb-4">
+                    <i class="fa-regular fa-clock mr-1"></i>{{ photo.created_at }}
+                </p>
+                <p class="overflow-hidden">
+                    {{ photo.description }}
+                </p>
+            </div>
             <div class="flex self-end">
                 <button class="py-2 px-4 bg-green-300 mx-2 rounded-xl hover:bg-green-400 hover:text-white">
-                    <a href="{% url 'edit' photo.id %}">Edit</a>
+                    <a href="{% url 'edit' photo.id %}" class="flex items-center">
+                        <i class="fa-solid fa-pen-to-square mr-1"></i>Edit
+                    </a>
                 </button>
                 <button class="py-2 px-4 bg-red-300 mx-2 rounded-xl hover:bg-red-400 hover:text-white">
-                    <a href="{% url 'delete' photo.id %}">Delete</a>
+                    <a href="{% url 'delete' photo.id %}">
+                        <i class="fa-solid fa-trash mr-1"></i>Delete
+                    </a>
                 </button>
             </div>
         </div>

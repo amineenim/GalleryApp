@@ -18,7 +18,9 @@
             {% endfor %}
         {% endif %}
         <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl">
-            <a href="{% url 'new' %}">Add Photo</a>
+            <a href="{% url 'new' %}" class="flex items-center">
+                <i class="fa-solid fa-plus mr-1"></i>Add Photo
+            </a>
         </button>
     </div>
     <div class="flex justify-center h-fit">
@@ -44,7 +46,9 @@
                 {% endif %}
             </p>
             <button class="bg-gray-400 py-2 px-4 self-center rounded-xl hover:bg-gray-600 hover:text-white">
-                <a href="{% url 'detail_photo' photo.id %}">View</a>
+                <a href="{% url 'detail_photo' photo.id %}" class="flex items-center">
+                    <i class="fa-solid fa-eye mr-1"></i>View
+                </a>
             </button>
         </div>
         {% empty %}

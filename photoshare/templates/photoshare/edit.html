@@ -19,7 +19,9 @@
             <div class="self-end">
                 <button type="submit" class="py-2 px-4 bg-green-300 hover:bg-green-400 rounded-xl">Save changes</button>
                 <button class="py-2 px-4 bg-gray-300 hover:bg-gray-400 rounded-xl">
-                    <a href="{% url 'detail_photo' photo.id %}">Cancel</a>
+                    <a href="{% url 'detail_photo' photo.id %}">
+                        <i class="fa-solid fa-xmark mr-1"></i>Cancel
+                    </a>
                 </button>
             </div>
         </form>
