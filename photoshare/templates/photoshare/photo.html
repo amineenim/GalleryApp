@@ -5,7 +5,22 @@ Detail
 {% block content %}
 <div class="flex flex-col h-full">
     <div class="flex justify-between py-6 px-8 bg-gray-400 rounded-xl mb-5 items-center col-span-3">
-        <h3 class="text-xl">Photo's Detail</h3>
+        <h3 class="text-xl">
+           {% block header_title %} Photo's Detail {% endblock %}
+        </h3>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "success" %}
+                    <p class="bg-green-300 rounded-xl text-center w-1/2 p-3">
+                        {{ message }}
+                    </p>
+                {% elif message.tags == "error" %}
+                    <p class="bg-red-300 rounded-xl text-center w-1/2 p-3">
+                        {{ message }}
+                    </p>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
         <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl">
             <a href="{% url 'gallery' %}">Go Back</a>
         </button>
@@ -14,11 +29,19 @@ Detail
         <div class="w-1/2 mr-3 border-2 border-gray-700 rounded-xl overflow-clip">
             <img class="object-cover h-full w-full" src="{{ photo.image.url }}" alt="{{ photo.description }}">
         </div>
-        <div class="w-1/2 py-8 px-4 bg-gray-100 rounded-xl">
-            <p>
+        {% block buttons_section %}
+        <div class="w-1/2 py-8 px-4 bg-gray-100 rounded-xl flex flex-col justify-between">
+            <p class="overflow-hidden">
                 {{ photo.description }}
             </p>
+            <div class="flex self-end">
+                <button class="py-2 px-4 bg-green-300 mx-2 rounded-xl hover:bg-green-400 hover:text-white">
+                    <a href="{% url 'edit' photo.id %}">Edit</a>
+                </button>
+                <button class="py-2 px-4 bg-red-300 mx-2 rounded-xl hover:bg-red-400 hover:text-white">Delete</button>
+            </div>
         </div>
+        {% endblock %}
     </div>
 </div>
 {% endblock %}

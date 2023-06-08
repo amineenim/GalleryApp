@@ -23,4 +23,13 @@ class PhotoForm(forms.ModelForm) :
         'class' : "w-full rounded-xl border py-4 px-5 resize-none mt-1"
     }))
 
-   
+
+class EditPhotoForm(forms.ModelForm) : 
+    class Meta :
+        model = Photo 
+        fields = ('description',)
+
+    
+    description = forms.CharField(widget=forms.Textarea(attrs={
+        'class' : "w-full rounded-xl border py-4 px-5 resize-none mt-2"
+    }))

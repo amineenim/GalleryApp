@@ -1,0 +1,27 @@
+{% extends 'photoshare/photo.html' %}
+{% block title %}Edit{% endblock %}
+{% block header_title %}Edit Photo {% endblock %}
+{% block buttons_section %}
+    <div class="w-1/2 py-8 px-4 bg-gray-100 rounded-xl flex flex-col justify-between">
+        <form method="POST" action="{% url 'edit' photo.id %}" class="flex flex-col space-y-3">
+            {% csrf_token %}
+            {{ form.as_p  }}
+            {% if form.errors or form.non_field_errors %}
+                <div class="bg-red-200 rounded-xl py-3 px-5 text-sm">
+                    <ul class="list-none">
+                        {% for field in form %}
+                            <li>{{ field.errors }}</li>
+                        {% endfor %}
+                    </ul>
+                        <p>{{ form.non_field_errors }}</p>
+                </div>
+            {% endif %}
+            <div class="self-end">
+                <button type="submit" class="py-2 px-4 bg-green-300 hover:bg-green-400 rounded-xl">Save changes</button>
+                <button class="py-2 px-4 bg-gray-300 hover:bg-gray-400 rounded-xl">
+                    <a href="{% url 'detail_photo' photo.id %}">Cancel</a>
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

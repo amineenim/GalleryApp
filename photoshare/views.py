@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Category, Photo
 from django.contrib import messages
-from .forms import PhotoForm 
+from .forms import PhotoForm, EditPhotoForm
 
 # Create your views here.
 # define a namespace for the app 
@@ -36,3 +36,23 @@ def addNew(request):
 def viewPhoto(request, pk) :
     photo = get_object_or_404(Photo, pk=pk)
     return render(request, 'photoshare/photo.html', {'photo' : photo})
+
+
+# view that handles updating a photo in storage 
+def editPhoto(request, pk) :
+    # grab the photo to edit 
+    photo_to_edit = get_object_or_404(Photo, pk=pk)
+    # check to see the request method 
+    if request.method == "POST" :
+        form = EditPhotoForm(request.POST, instance=photo_to_edit)
+        if form.is_valid() :
+            form.save()
+            messages.success(request, "Photo Modified with success !")
+            return redirect('detail_photo', pk=photo_to_edit.id)
+        
+    elif request.method == "GET" :
+        form = EditPhotoForm(instance=photo_to_edit)
+    
+    return render(request, 'photoshare/edit.html', {'photo' : photo_to_edit, 'form' : form})
+    
+            
