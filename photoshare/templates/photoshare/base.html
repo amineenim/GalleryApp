@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lamg="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <title>Gallery | {% block title %}{% endblock %}</title>
+    </head>
+    <body class="flex flex-col h-screen">
+        <header class="flex justify-between p-8 bg-gray-300">
+            <h3>Amine's Gallery</h3>
+            <button>Login</button>
+        </header>
+        <div class="h-8/10 py-10 px-8">
+            {% block content %}
+            {% endblock %}
+        </div>
+        <footer class="flex items-center justify-between p-8 bg-gray-300">
+            <div class="flex flex-col w-1/3">
+                <p class="text-sm mb-4">Created with Love by <strong>Amine MAOURID</strong></p>
+                <p class="text-xs">the intent of this platform is to provide 
+                    a mini social sharing pictures plateform
+                    which allows users to share their photos 
+                    with others</p>
+            </div>
+            <small>@ All Rights Reserved, 2023</small>
+        </footer>
+    </body>
+</html>

@@ -1,0 +1,22 @@
+{% extends 'photoshare/base.html' %}
+{% block title %}Add Photo{% endblock %}
+{% block content %}
+<div class="flex flex-col">
+    <div class="flex justify-between py-6 px-8 bg-gray-400 rounded-xl mb-5 items-center col-span-3">
+        <h3 class="text-xl">Add new Photo</h3>
+        <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl">
+            <a href="{% url 'gallery' %}">Go Back</a>
+        </button>
+    </div>
+    <div class="flex justify-center bg-gray-200 py-8">
+        <form method="POST" action="{% url 'new' %}" enctype="multipart/form-data"
+        class="flex flex-col w-1/2">
+            {% csrf_token %}
+            <div class="space-y-4">
+                {{form.as_p}}
+            </div>
+            <button type='submit' class="bg-green-300 mt-3 hover:bg-green-500 py-3 px-4 rounded-xl border-1 self-end">Save</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

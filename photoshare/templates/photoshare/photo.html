@@ -1,0 +1,24 @@
+{% extends 'photoshare/base.html' %}
+{% block title %}
+Detail 
+{% endblock %}
+{% block content %}
+<div class="flex flex-col h-full">
+    <div class="flex justify-between py-6 px-8 bg-gray-400 rounded-xl mb-5 items-center col-span-3">
+        <h3 class="text-xl">Photo's Detail</h3>
+        <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl">
+            <a href="{% url 'gallery' %}">Go Back</a>
+        </button>
+    </div>
+    <div class="flex h-5/6">
+        <div class="w-1/2 mr-3 border-2 border-gray-700 rounded-xl overflow-clip">
+            <img class="object-cover h-full w-full" src="{{ photo.image.url }}" alt="{{ photo.description }}">
+        </div>
+        <div class="w-1/2 py-8 px-4 bg-gray-100 rounded-xl">
+            <p>
+                {{ photo.description }}
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
