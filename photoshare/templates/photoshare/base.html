@@ -10,12 +10,12 @@
         <script src="{% static 'fontawesomefree/js/all.min.js' %}"></script>
         <link href="{% static 'fontawesomefree/css/all.min.css' %}" rel="stylesheet" type="text/css">
     </head>
-    <body class="flex flex-col h-screen">
+    <body class="flex flex-col justify-between h-screen">
         <header class="flex justify-between p-8 bg-gray-300">
             <h3>Amine's Gallery</h3>
             <button>Login</button>
         </header>
-        <div class="h-8/10 py-10 px-8">
+        <div class="h-9/10 py-5 px-8">
             {% block content %}
             {% endblock %}
         </div>

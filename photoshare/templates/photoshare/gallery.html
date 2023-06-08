@@ -27,9 +27,13 @@
         <div class="bg-gray-200 w-2/3 py-4 px-8 flex flex-col items-center border-2 border-gray-600 rounded-xl">
             <h3 class="text-xl mb-2 bold">Categories</h3>
             <ul class="list-none self-start divide-y divide-slate-700 w-full">
-                <li class="my-1 hover:text-lg">All</li>
-                {% for category in categories %}
-                <li class="my-1 hover:text-lg">{{ category.name }}</li>
+                <li class="my-1 hover:text-lg {% if not category %} bg-gray-800 text-white text-center {% endif %}">
+                    <a href="{% url 'gallery' %}">All</a>
+                </li>
+                {% for categorie in categories %}
+                <li class="my-1 hover:text-lg {% if categorie.id == category.id %} bg-gray-800 my-2 text-white text-center {% endif %}">
+                    <a href="{% url 'gallery' %}?category={{categorie.name}}">{{ categorie.name }}</a>
+                </li>
                 {% endfor %}
             </ul>
         </div>
@@ -52,7 +56,11 @@
             </button>
         </div>
         {% empty %}
-        <h3>No photos found </h3>
+        <div class="rounded-xl flex col-span-3 items-center justify-center">
+            <h3 class="text-2xl self-center">No photos found 
+                {% if category %} for category {{ category.name }}{% endif %}
+            </h3>
+        </div>
         {% endfor %}
     </div>
 </div>

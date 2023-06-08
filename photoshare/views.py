@@ -10,6 +10,13 @@ app_name = 'photoshare'
 def gellery(request) :
     categories = Category.objects.all()
     photos = Photo.objects.all()
+    # verify if there'a a category set 
+    if request.GET.get('category') != '' and request.GET.get('category') is not None :
+        selected_category = Category.objects.filter(name= request.GET.get('category'))[0]
+        photos = photos.filter(category = selected_category)
+        context = {'categories' : categories, 'photos' : photos, 'category' : selected_category }
+        return render(request, 'photoshare/gallery.html', context)
+   
     context = {'categories' : categories, 'photos' : photos}
     return render(request, 'photoshare/gallery.html', context)
 
