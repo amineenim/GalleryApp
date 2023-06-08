@@ -1,0 +1,17 @@
+{% extends 'photoshare/photo.html' %}
+{% block title %}Remove{% endblock %}
+{% block header_title %}Delete Photo {% endblock %}
+{% block buttons_section %}
+    <div class="w-1/2 py-8 px-4 bg-gray-100 rounded-xl flex flex-col justify-between">
+        <form method="POST" action="{% url 'delete' photo.id %}" class="flex flex-col space-y-3">
+            {% csrf_token %}
+            <p class="my-4">Are you sure you wanna remove the publication "{{ photo.description|truncatechars:20 }}" ?</p>
+            <div class="self-end">
+                <button type="submit" class="py-2 px-4 bg-red-300 hover:bg-red-400 rounded-xl hover:text-white">Yes</button>
+                <button class="py-2 px-4 bg-gray-300 hover:bg-gray-400 rounded-xl hover:text-white">
+                    <a href="{% url 'detail_photo' photo.id %}">Cancel</a>
+                </button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

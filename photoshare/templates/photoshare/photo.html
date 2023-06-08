@@ -38,7 +38,9 @@ Detail
                 <button class="py-2 px-4 bg-green-300 mx-2 rounded-xl hover:bg-green-400 hover:text-white">
                     <a href="{% url 'edit' photo.id %}">Edit</a>
                 </button>
-                <button class="py-2 px-4 bg-red-300 mx-2 rounded-xl hover:bg-red-400 hover:text-white">Delete</button>
+                <button class="py-2 px-4 bg-red-300 mx-2 rounded-xl hover:bg-red-400 hover:text-white">
+                    <a href="{% url 'delete' photo.id %}">Delete</a>
+                </button>
             </div>
         </div>
         {% endblock %}

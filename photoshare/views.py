@@ -55,4 +55,13 @@ def editPhoto(request, pk) :
     
     return render(request, 'photoshare/edit.html', {'photo' : photo_to_edit, 'form' : form})
     
-            
+
+# view that handles deleting a given photo resource
+def deletePhoto(request, pk) :
+    photo_to_delete = get_object_or_404(Photo, pk=pk)
+    if request.method == "POST" :
+        photo_to_delete.delete()
+        messages.success(request, "Photo deleted with success !")
+        return redirect('gallery')
+    return render(request, 'photoshare/delete.html', {"photo" : photo_to_delete})
+    
