@@ -12,7 +12,9 @@
     </head>
     <body class="flex flex-col justify-between h-full">
         <header class="flex justify-between p-8 bg-gray-300">
-            <h3>Amine's Gallery</h3>
+            <h3 class="text-2xl italic font-bold">
+                <a href="{% url 'gallery' %}">Amine's Gallery <i class="fa-solid fa-image" style="color: #000000;"></i></a>
+            </h3>
             {% if request.user.is_authenticated %}
                 <button class="border-2 bg-white border-slate-800 rounded-xl py-2 px-5 hover:bg-gray-900 hover:text-white">
                     <a href="{% url 'logout' %}">Logout</a>
