@@ -4,7 +4,7 @@
 <div class="flex flex-col items-center justify-around p-10 h-screen">
     <h2 class="flex flex-col items-center space-y-2">
         <p class="text-2xl">Authenticate here and enjoy our plateform<p>
-        <p class="text-xl">Dont have an account ? <a href="#" class="font-bold underline">Register Here</a></p>
+        <p class="text-xl">Dont have an account ? <a href="{% url 'register' %}" class="font-bold underline">Register Here</a></p>
 
     </h2>
     <form method="POST" action="{% url 'login' %}"

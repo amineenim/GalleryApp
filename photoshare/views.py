@@ -1,9 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from .models import Category, Photo
 from django.contrib import messages
-from .forms import PhotoForm, EditPhotoForm
+from .forms import PhotoForm, EditPhotoForm, CreateUserForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+
 
 # Create your views here.
 # define a namespace for the app 
@@ -11,30 +12,54 @@ app_name = 'photoshare'
 
 # view that handles logging in a user 
 def loginUser(request) :
-    # check if the form is submitted 
-    if request.method == "GET" :
-        return render(request, 'photoshare/login.html')
-    elif request.method == "POST" :
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        # validate username 
-        if len(username) >= 20 :
-            error_message = "Username can't exceed 20 characters"
-            return render(request, 'photoshare/login.html',{'error_message' : error_message})
-        # authenticate the user 
-        user = authenticate(request, username=username, password=password)
-        if user is None : 
-            error_message = "Please check your credentials"
-            return render(request, 'photoshare/login.html',{'error_message' : error_message})
-        login(request, user)
-        messages.success(request, f"Glad to see you again {request.user.username}")
+    # check if the user is authenticated 
+    if request.user.is_authenticated : 
         return redirect('gallery')
+    else : 
+        # check if the form is submitted 
+        if request.method == "GET" :
+            return render(request, 'photoshare/login.html')
+        elif request.method == "POST" :
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            # validate username 
+            if len(username) >= 20 :
+                error_message = "Username can't exceed 20 characters"
+                return render(request, 'photoshare/login.html',{'error_message' : error_message})
+            # authenticate the user 
+            user = authenticate(request, username=username, password=password)
+            if user is None : 
+                error_message = "Please check your credentials"
+                return render(request, 'photoshare/login.html',{'error_message' : error_message})
+            login(request, user)
+            messages.success(request, f"Glad to see you again {request.user.username}")
+            return redirect('gallery')
 
 # view that handles logging out a user 
 @login_required
 def logoutUser(request):
     logout(request)
     return redirect('login')
+
+# view that handles registering a user 
+def registerUser(request) :
+    # check if user is authenticated 
+    if request.user.is_authenticated :
+        return redirect('gallery')
+    else :
+        #check if the form has been submitted 
+        if request.method == "POST" :
+            form = CreateUserForm(request.POST)
+            if form.is_valid() :
+                user = form.save()
+                login(request, user)
+                messages.success(request, f"Glad to have you {request.user.username}, Enjoy our plateform")
+                return redirect('gallery')
+            
+        elif request.method == "GET" :
+            form = CreateUserForm()
+        
+        return render(request, 'photoshare/register.html', {'form' : form})
 
 
 # the view rendering the gallery page ehere all photos are displayed 
