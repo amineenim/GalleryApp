@@ -1,0 +1,29 @@
+{% extends 'photoshare/base.html' %}
+{% block title %}LogIn{% endblock %}
+{% block content %}
+<div class="flex flex-col items-center justify-around p-10 h-screen">
+    <h2 class="flex flex-col items-center space-y-2">
+        <p class="text-2xl">Authenticate here and enjoy our plateform<p>
+        <p class="text-xl">Dont have an account ? <a href="#" class="font-bold underline">Register Here</a></p>
+
+    </h2>
+    <form method="POST" action="{% url 'login' %}"
+    class="flex flex-col w-1/2 bg-gray-200 h-2/3 space-y-8 p-6 rounded-2xl">
+        {% csrf_token %}
+        {% if error_message %}
+            <div class="rounded-xl bg-red-200 p-4">{{ error_message }}</div>
+        {% endif %}
+        <fieldset class="flex flex-col h-fit">
+            <label for='username' class="mb-2">Username :</label>
+            <input type="text" name="username" id="username" placeholder="Enter your username" 
+            required class="py-2 pl-4 w-full rounded-xl border-1 border-slate-500">
+        </fieldset>
+        <fieldset class="flex flex-col h-fit">
+            <label for='password' class="mb-2">Password :</label>
+            <input type="password" name="password" id="password" placeholder="Enter your password" 
+            required class="py-2 pl-4 w-full rounded-xl border-1 border-slate-500">
+        </fieldset>
+        <button type='submit' class="py-2 self-end rounded-xl px-4 bg-green-300 hover:bg-green-500 hover:text-white">Login</button>
+    </form>
+</div>
+{% endblock %}

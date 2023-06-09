@@ -2,11 +2,43 @@ from django.shortcuts import render, get_object_or_404, redirect
 from .models import Category, Photo
 from django.contrib import messages
 from .forms import PhotoForm, EditPhotoForm
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 # define a namespace for the app 
 app_name = 'photoshare'
+
+# view that handles logging in a user 
+def loginUser(request) :
+    # check if the form is submitted 
+    if request.method == "GET" :
+        return render(request, 'photoshare/login.html')
+    elif request.method == "POST" :
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        # validate username 
+        if len(username) >= 20 :
+            error_message = "Username can't exceed 20 characters"
+            return render(request, 'photoshare/login.html',{'error_message' : error_message})
+        # authenticate the user 
+        user = authenticate(request, username=username, password=password)
+        if user is None : 
+            error_message = "Please check your credentials"
+            return render(request, 'photoshare/login.html',{'error_message' : error_message})
+        login(request, user)
+        messages.success(request, f"Glad to see you again {request.user.username}")
+        return redirect('gallery')
+
+# view that handles logging out a user 
+@login_required
+def logoutUser(request):
+    logout(request)
+    return redirect('login')
+
+
 # the view rendering the gallery page ehere all photos are displayed 
+@login_required
 def gellery(request) :
     categories = Category.objects.all()
     photos = Photo.objects.all()
@@ -22,6 +54,7 @@ def gellery(request) :
 
 
 # the view handling returning a form to add a new photo
+@login_required
 def addNew(request):
     # ckeck if the form is submitted 
     if request.method == "POST" :
@@ -40,12 +73,14 @@ def addNew(request):
 
 
 # the view handling showing a single photo detail 
+@login_required
 def viewPhoto(request, pk) :
     photo = get_object_or_404(Photo, pk=pk)
     return render(request, 'photoshare/photo.html', {'photo' : photo})
 
 
 # view that handles updating a photo in storage 
+@login_required
 def editPhoto(request, pk) :
     # grab the photo to edit 
     photo_to_edit = get_object_or_404(Photo, pk=pk)
@@ -64,6 +99,7 @@ def editPhoto(request, pk) :
     
 
 # view that handles deleting a given photo resource
+@login_required
 def deletePhoto(request, pk) :
     photo_to_delete = get_object_or_404(Photo, pk=pk)
     if request.method == "POST" :
