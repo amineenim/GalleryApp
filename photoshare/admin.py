@@ -2,4 +2,10 @@ from django.contrib import admin
 from .models import Category, Photo
 # Register your models here.
 admin.site.register(Category)
-admin.site.register(Photo)
+
+
+class PhotoAdmin(admin.ModelAdmin):
+    fields=['category', 'description', 'image']
+    list_display = ['category', 'description', 'created_by', 'created_at']
+    list_filter = ['category', 'created_by', 'created_at']
+admin.site.register(Photo, PhotoAdmin)
