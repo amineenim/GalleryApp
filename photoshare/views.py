@@ -132,4 +132,12 @@ def deletePhoto(request, pk) :
         messages.success(request, "Photo deleted with success !")
         return redirect('gallery')
     return render(request, 'photoshare/delete.html', {"photo" : photo_to_delete})
-    
+
+
+# view that allow a user to view only his gallery photos 
+@login_required
+def myGallery(request) :
+    # request only photos for the currently authenticated user 
+    user_photos = request.user.photos.all()
+    context = {'photos' : user_photos}
+    return render(request, 'photoshare/my_gallery.html',context)

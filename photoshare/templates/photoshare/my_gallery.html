@@ -1,0 +1,28 @@
+{% extends 'photoshare/base.html' %}
+{% block title %}My Photos{% endblock %}
+{% block content %}
+    <div class="h-screen w-full bg-gray-200 flex flex-col p-8">
+        <div class="flex justify-around items-center mb-10">
+            <h2 class="text-2xl">My Photo's Gallery</h2>
+            <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl">
+                <a href="{% url 'gallery' %}">All Photos</a>
+            </button>
+        </diV>
+        {% if photos %}
+        <div class="flex items-center h-5/6 overflow-auto">
+            <div class="h-full flex space-x-3 overflow-x-scroll overflow-y-auto">
+                {% for photo in photos %}
+                    <div class="flex flex-col flex-shrink-0 w-1/3 space-y-4 h-8/10 border border-2 border-slate-500 rounded-xl">
+                        <img src="{{ photo.image.url }}" alt="{{ photo.description }}" class="h-1/2">
+                        <p class="text-center text-xl underline font-blod">{{ photo.category|capfirst }}</p>
+                        <p class="h-1/3 p-4">{{ photo.description|truncatechars:300 }}</p>
+                        <p class="self-center">{{ photo.created_at|timesince }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% elif empty %}
+            <h2 class="slef-center">No Photos in your gallery for the moment</h2>
+        {% endif  %}
+    </div>
+{% endblock %}
