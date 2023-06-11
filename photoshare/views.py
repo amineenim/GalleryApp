@@ -1,9 +1,12 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from .models import Category, Photo
 from django.contrib import messages
 from .forms import PhotoForm, EditPhotoForm, CreateUserForm
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 
 
 # Create your views here.
@@ -52,6 +55,8 @@ def registerUser(request) :
             form = CreateUserForm(request.POST)
             if form.is_valid() :
                 user = form.save()
+                # associate the permissions to the newly created user 
+
                 login(request, user)
                 messages.success(request, f"Glad to have you {request.user.username}, Enjoy our plateform")
                 return redirect('gallery')
@@ -109,29 +114,38 @@ def viewPhoto(request, pk) :
 def editPhoto(request, pk) :
     # grab the photo to edit 
     photo_to_edit = get_object_or_404(Photo, pk=pk)
-    # check to see the request method 
-    if request.method == "POST" :
-        form = EditPhotoForm(request.POST, instance=photo_to_edit)
-        if form.is_valid() :
-            form.save()
-            messages.success(request, "Photo Modified with success !")
-            return redirect('detail_photo', pk=photo_to_edit.id)
-        
-    elif request.method == "GET" :
-        form = EditPhotoForm(instance=photo_to_edit)
-    
-    return render(request, 'photoshare/edit.html', {'photo' : photo_to_edit, 'form' : form})
+    # check if the user can edit the given photo or not 
+    if request.user == photo_to_edit.created_by or request.user.is_superuser :
+        # check to see the request method 
+        if request.method == "POST" :
+            form = EditPhotoForm(request.POST, instance=photo_to_edit)
+            if form.is_valid() :
+                form.save()
+                messages.success(request, "Photo Modified with success !")
+                return redirect('detail_photo', pk=photo_to_edit.id)
+                
+        elif request.method == "GET" :
+            form = EditPhotoForm(instance=photo_to_edit)
+            
+        return render(request, 'photoshare/edit.html', {'photo' : photo_to_edit, 'form' : form})
+    else : 
+        return redirect(reverse('detail_photo',args=(photo_to_edit.id,)))
     
 
 # view that handles deleting a given photo resource
 @login_required
+
 def deletePhoto(request, pk) :
     photo_to_delete = get_object_or_404(Photo, pk=pk)
-    if request.method == "POST" :
-        photo_to_delete.delete()
-        messages.success(request, "Photo deleted with success !")
-        return redirect('gallery')
-    return render(request, 'photoshare/delete.html', {"photo" : photo_to_delete})
+    # check if the user owns the photo 
+    if request.user == photo_to_delete.created_by or request.user.is_superuser :
+        if request.method == "POST" :
+            photo_to_delete.delete()
+            messages.success(request, "Photo deleted with success !")
+            return redirect('gallery')
+        return render(request, 'photoshare/delete.html', {"photo" : photo_to_delete})
+    else :
+        return redirect(reverse('detail_photo', args=(photo_to_delete.id,)))
 
 
 # view that allow a user to view only his gallery photos 
@@ -141,3 +155,9 @@ def myGallery(request) :
     user_photos = request.user.photos.all()
     context = {'photos' : user_photos}
     return render(request, 'photoshare/my_gallery.html',context)
+
+def get_perms(request) :
+    current_user = request.user 
+    content_type = ContentType.objects.get_for_model(Photo)
+    Permissions = Permission.objects.filter(content_type=content_type, user=current_user)
+    return render(request, 'photoshare/perms.html', {'permissions' : Permissions})

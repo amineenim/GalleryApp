@@ -1,0 +1,15 @@
+{% if permissions %}
+the permissions for the user {{request.user}} are :<br>
+<ul>
+    {% for p in permissions %}
+        {{ p.codename }}
+    {% endfor %}
+</ul>
+{% else %}
+nothing found <br>
+{{request.user.username }}<br>
+{{ request.user.user_permissions.all}}<br>
+{{ request.user.groups.all }}<br>
+{{ request.user.is_superuser}}
+{{ perms.photoshare.add_photo }}
+{% endif %}

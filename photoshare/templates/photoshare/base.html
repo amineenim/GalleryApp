@@ -18,7 +18,12 @@
             {% if request.user.is_authenticated %}
             <div class="flex w-1/6 justify-between">
                 <button class="border-2 bg-white border-slate-800 rounded-xl py-2 px-5 hover:bg-gray-900 hover:text-white">
-                    <a href="{% url 'mygallery' %}">My Gallery</a>
+                    <a href="{% url 'mygallery' %}">
+                        {% if request.user.is_superuser %}
+                        <i class="fa-solid fa-star mr-1" style="color: #daf745;"></i>
+                        {% endif %}
+                        My Gallery
+                    </a>
                 </button>
                 <button class="border-2 bg-white border-slate-800 rounded-xl py-2 px-5 hover:bg-gray-900 hover:text-white">
                     <a href="{% url 'logout' %}">Logout</a>

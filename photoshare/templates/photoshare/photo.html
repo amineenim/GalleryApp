@@ -42,7 +42,9 @@ Detail
                     {{ photo.description }}
                 </p>
             </div>
+            
             <div class="flex self-end">
+                {% if request.user == photo.created_by or request.user.is_superuser  %}
                 <button class="py-2 px-4 bg-green-300 mx-2 rounded-xl hover:bg-green-400 hover:text-white">
                     <a href="{% url 'edit' photo.id %}" class="flex items-center">
                         <i class="fa-solid fa-pen-to-square mr-1"></i>Edit
@@ -53,7 +55,9 @@ Detail
                         <i class="fa-solid fa-trash mr-1"></i>Delete
                     </a>
                 </button>
+                {% endif %}
             </div>
+        
         </div>
         {% endblock %}
     </div>

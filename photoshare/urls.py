@@ -6,6 +6,7 @@ urlpatterns = [
     path('',views.gellery, name='gallery'),
     path('new/', views.addNew, name='new'),
     path('mine/', views.myGallery, name='mygallery'),
+    path('permissions/', views.get_perms, name='perms'),
     path('<str:pk>/', views.viewPhoto, name='detail_photo'),
     path('<str:pk>/edit/', views.editPhoto, name="edit"),
     path('<str:pk>/remove/', views.deletePhoto, name="delete"),

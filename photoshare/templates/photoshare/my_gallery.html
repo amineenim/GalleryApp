@@ -21,8 +21,11 @@
                 {% endfor %}
             </div>
         </div>
-        {% elif empty %}
-            <h2 class="slef-center">No Photos in your gallery for the moment</h2>
+        {% else %}
+        <div class="flex flex-col items-center space-y-4 my-auto">
+            <h2 class="text-xl">No Photos in your gallery for the moment</h2>
+            <a class="underline" href="{% url 'new' %}">Add new Photo</a>
+        </div>
         {% endif  %}
     </div>
 {% endblock %}
