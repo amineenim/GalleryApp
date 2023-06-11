@@ -1,8 +1,8 @@
 {% extends 'photoshare/base.html' %}
 {% block title %}My Photos{% endblock %}
 {% block content %}
-    <div class="h-screen w-full bg-gray-200 flex flex-col p-8">
-        <div class="flex justify-around items-center mb-10">
+    <div class="h-screen w-full bg-gray-200 flex flex-col px-8 py-4">
+        <div class="flex justify-around items-center mb-6">
             <h2 class="text-2xl">My Photo's Gallery</h2>
             <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl">
                 <a href="{% url 'gallery' %}">All Photos</a>

@@ -20,6 +20,7 @@ class Photo(models.Model) :
     image = models.ImageField(null=False, blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(User, related_name="photos", on_delete=models.CASCADE)
+    number_of_likes = models.IntegerField(null=False, default=0)
 
     def __str__(self) :
         return self.description

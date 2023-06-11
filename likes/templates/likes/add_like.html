@@ -1,0 +1,9 @@
+{% extends 'likes/base.html' %}
+{% block content %}
+<form method="POST" action="{% url 'likes:add_like' photo.id %}" class="w-fit">
+    {% csrf_token %}
+    <i class="fa-regular fa-heart fa-beat fa-lg" style="color: #f9065b;">
+        <input type="submit">
+    </i>
+</form>
+{% endblock %}
