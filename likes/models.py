@@ -9,4 +9,5 @@ class Like(models.Model) :
     added_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self) :
-        return self.photo + ' liked by ' + self.created_by
+        return ' liked by ' + self.created_by.username
+    

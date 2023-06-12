@@ -1,9 +1,16 @@
 {% extends 'likes/base.html' %}
 {% block content %}
-<form method="POST" action="{% url 'likes:add_like' photo.id %}" class="w-fit">
+<form method="POST" action="{% url 'likes:add_like' photo.id %}" class="w-fit flex">
     {% csrf_token %}
-    <i class="fa-regular fa-heart fa-beat fa-lg" style="color: #f9065b;">
-        <input type="submit">
-    </i>
+    <p class="mr-1">{{ nb_likes }}</p>
+    {% if user_likes %}
+        <button type="submit">
+            <i class="fa-solid fa-heart fa-beat fa-lg" style="color: #f9065b;"></i>
+        </button>
+    {% else  %}
+        <button type="submit">
+            <i class="fa-regular fa-heart fa-beat fa-lg" style="color: #f9065b;"></i>
+        </button>
+    {% endif %}
 </form>
 {% endblock %}

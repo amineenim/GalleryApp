@@ -7,7 +7,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-
+from likes.models import Like 
 
 # Create your views here.
 # define a namespace for the app 
@@ -106,7 +106,13 @@ def addNew(request):
 @login_required
 def viewPhoto(request, pk) :
     photo = get_object_or_404(Photo, pk=pk)
-    return render(request, 'photoshare/photo.html', {'photo' : photo})
+    # get also the likes for the photo to pass it to the form displaying it 
+    likes_for_photo = Like.objects.filter(photo=photo, created_by = request.user)
+    user_likes_photo = False 
+    if likes_for_photo.exists() :
+        user_likes_photo = True
+
+    return render(request, 'photoshare/photo.html', {'photo' : photo, 'is_user_likes' : user_likes_photo })
 
 
 # view that handles updating a photo in storage 

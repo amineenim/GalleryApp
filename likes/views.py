@@ -1,4 +1,5 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse
 from photoshare.models import Photo
 from .models import Like
 # Create your views here.
@@ -14,18 +15,17 @@ def add_like(request, photo_id) :
     #return render(request, 'likes/add_like.html', {'photo' : photo})
     # check if the form has been submitted 
     if request.method == "POST" :
-        # increment the number of likes if the photo isn't already liked by user 
-        existing_likes = Like.objects.filter(photo=photo, created_by=request.user)
-        if existing_likes.exists():
+        # get or create the like object if already doesn't exist 
+        like, created = Like.objects.get_or_create(photo= photo, created_by = request.user)
+        if created :
+            # increment the number of likes for the photo 
+            photo.number_of_likes += 1 
+            photo.save()
+            return redirect(reverse('detail_photo', args=(photo.id,)))
+        else : 
+            # delete the corresponding like object and decrement the number of likes
+            like.delete()
             photo.number_of_likes -= 1
-            print('minus')
-        else :
-            photo.number_of_likes += 1
-            print('plus')
+            photo.save()
+            return redirect(reverse('detail_photo', args=(photo.id,)))
         
-        return render(request, 'photoshare/detail_photo.html', {'photo', photo})
-    
-    elif request.method == "GET" :
-        print('0')
-        return render(request, 'photoshare/detail_photo.html', {'photo', photo})
-

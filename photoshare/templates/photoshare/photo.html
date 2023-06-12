@@ -57,7 +57,7 @@ Detail
                     {{ photo.description }}
                 </p>
                 <div class="px-4 flex justify-end">
-                    {% include 'likes/add_like.html' %}
+                    {% include 'likes/add_like.html' with user_likes=is_user_likes nb_likes=photo.number_of_likes %}
                 </div>
             </div>
         
