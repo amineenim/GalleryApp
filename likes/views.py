@@ -6,7 +6,12 @@ from .models import Like
 
 # view that handles diplaying likes for a given Photo 
 def likes_per_photo(request, photo_id) :
-    return render(request, 'likes/likes_per_photo.html', {'id' : photo_id})
+    # get the photo
+    photo = get_object_or_404(Photo, pk=photo_id)
+    # get the likes for the photo 
+    likes_for_photo = Like.objects.filter(photo=photo)
+    return render(request, 'likes/likes_per_photo.html', {'likes' : likes_for_photo, 'photo' : photo})
+
 
 
 # view that handles the form to add a new like to a photo 
