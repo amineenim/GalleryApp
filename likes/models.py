@@ -18,7 +18,7 @@ class Like(models.Model) :
 
 class Comment(models.Model) :
     class Meta :
-        ordering = ('created_at',)
+        ordering = ('-created_at',)
         
     comment_text = models.CharField(max_length=400, blank=False, null=False)
     photo = models.ForeignKey(Photo, related_name='comments', on_delete=models.CASCADE)
