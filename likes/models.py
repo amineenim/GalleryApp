@@ -28,30 +28,33 @@ class Comment(models.Model) :
     def __str__(self) :
         return self.comment_text
     
+    
     @admin.display(
             boolean=False,
             ordering="-created_at",
-            description= "published since when"
+            description="published since"
     )
-    def get_when_created(self) :
+
+    def get_when_created(self):
         time_now = timezone.now()
-        if time_now - datetime.timedelta(days=1) <= self.created_at <= time_now :
-            if time_now - datetime.timedelta(hours=1) <= self.created_at :
+        if time_now - datetime.timedelta(days=1) <= self.created_at <= time_now:
+            if time_now - datetime.timedelta(hours=1) <= self.created_at:
                 difference = time_now - self.created_at
-                diffence_in_seconds = difference.total_seconds()
-                difference_in_minutes = int(diffence_in_seconds//60)
-                if difference_in_minutes == 0 :
-                    seconds = int(diffence_in_seconds % 60)
+                difference_in_seconds = difference.total_seconds()
+                difference_in_minutes = int(difference_in_seconds // 60)
+                if difference_in_minutes == 0:
+                    seconds = int(difference_in_seconds % 60)
                     return f"{seconds} seconds ago"
                 return f"{difference_in_minutes} minutes ago"
-            else :
+            else:
                 difference = time_now - self.created_at
-                diffence_in_seconds = difference.total_seconds()
-                hours = int(diffence_in_seconds//3600)
-                if hours == 1 :
+                difference_in_seconds = difference.total_seconds()
+                hours = int(difference_in_seconds // 3600)
+                if hours == 1:
                     return f"1 hour ago"
                 return f"{hours} hours ago"
-        elif time_now - datetime.timedelta(days=2) <= self.created_at <= time_now - datetime.timedelta(days=1) :
+        elif time_now - datetime.timedelta(days=2) <= self.created_at <= time_now - datetime.timedelta(days=1):
             return "yesterday"
-        else :
-            return self.created_at 
+        else:
+            return self.created_at
+
