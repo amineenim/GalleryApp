@@ -68,7 +68,7 @@ Detail
                                                 <p class="font-bold text-xs">{{ comment.created_by.username }} :</p>
                                                 <p class="text-xs pl-2"> {{ comment.comment_text }}</p>
                                             </div>
-                                            <p class="text-xs self-end">{{ comment.created_at|timesince }} ago</p>
+                                            <p class="text-xs self-end">{{ comment.get_when_created }}</p>
                                         </div>
                                     {% endfor %}
                                 {% else %}
