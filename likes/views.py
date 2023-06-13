@@ -4,6 +4,7 @@ from photoshare.models import Photo
 from .models import Like
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from .forms import CommentCreateForm
 # Create your views here.
 
 # view that handles diplaying likes for a given Photo 
@@ -48,3 +49,19 @@ def clear_messages(request) :
         storage = messages.get_messages(request)
         storage.used = True
         return redirect(redirect_url)
+
+# view that handles adding a comment to a given Photo
+def add_comment(request, photo_id) :
+    # get the photo instance 
+    photo = get_object_or_404(Photo, id=photo_id)
+    # check the request method 
+    if request.method == "POST" :
+        form = CommentCreateForm(request.POST)
+        if form.is_valid():
+            comment_to_insert = form.save(commit=False)
+            comment_to_insert.photo = photo
+            comment_to_insert.created_by = request.user
+            comment_to_insert.save()
+
+        return redirect(reverse('detail_photo', args=(photo.id,)))
+

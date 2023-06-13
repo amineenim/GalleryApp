@@ -1,0 +1,10 @@
+{% extends 'likes/base.html' %}
+{% block content %}
+    <form method="POST" action="{% url 'likes:add_comment' photo.id %}" class="flex items-center">
+        {% csrf_token %}
+        <p class="w-full">{{ form.comment_text }}</p>
+        <button class="ml-1 w-fit" type="submit">
+            <i class="fa-regular fa-solid fa-paper-plane"></i>
+        </button>
+    </form>
+{% endblock %}
