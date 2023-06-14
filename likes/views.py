@@ -51,6 +51,7 @@ def clear_messages(request) :
         return redirect(redirect_url)
 
 # view that handles adding a comment to a given Photo
+@login_required
 def add_comment(request, photo_id) :
     # get the photo instance 
     photo = get_object_or_404(Photo, id=photo_id)

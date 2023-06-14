@@ -6,6 +6,7 @@ from photoshare.models import Photo, Category
 from .models import Comment
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
+from photoshare import urls
 # Create your tests here.
 class LikesViewTests(TestCase) :
 
@@ -102,3 +103,73 @@ class CommentModelTests(TestCase) :
     def test_get_when_created_with_comment_before_2days_and_1second(self) :
         test_comment = self.create_comment('before 2 days and 1 second', 48*3600 + 1)
         self.assertTrue(isinstance(test_comment.get_when_created(), datetime.datetime))
+
+
+
+class AddCommentViewTests(TestCase) :
+    def create_photo(self, description, category) :
+        # create a test user and authenticate him
+        self.user = User.objects.create_user(username='testuser', password='test')
+        self.client.login(username='testuser', password='test')
+        # create a test category 
+        test_cat = Category.objects.create(name=category)
+        image = SimpleUploadedFile('test_photo.jpg', b"content_file", 'image/jpeg')
+        test_photo = Photo.objects.create(description=description, category=test_cat, image=image, created_by=self.user)
+        self.client.logout()
+        return test_photo
+
+
+    # tests the view function with an unauthenticated user  
+    def test_add_comment_with_unauthenticated_user(self) :
+        photo = self.create_photo('test photo', 'travel')
+        target_url = reverse('likes:add_comment', args=(photo.id,))
+        response = self.client.post(target_url)
+        self.assertEqual(response.status_code, 302)
+        expected_url = f"{reverse('login')}?next={target_url}"
+        #expected_query_strings = {'next' : target_url}
+        self.assertRedirects(response, expected_url)
+
+    # tests the view function with unexsting photo 
+    def test_add_comment_to_unexisting_photo(self) :
+        target_url = reverse('likes:add_comment', args=(1,))
+        # create a user and log him in
+        user = User.objects.create_user(username='test', password='testpass')
+        self.client.login(username='test', password='testpass')
+        response = self.client.post(target_url, {'description' : 'test'})
+        self.assertEqual(response.status_code, 404)
+    
+    # tests the view function with axisting photo 
+    def test_add_comment_with_existing_photo(self) :
+        # create a photo 
+        test_photo = self.create_photo('test photo', 'test category')
+        # create a user instance and log him in
+        user = User.objects.create_user(username='test', password='testpassword')
+        self.client.login(username='test', password='testpassword')
+        target_url = reverse('likes:add_comment', args=(test_photo.id,))
+        response = self.client.post(target_url, {'comment_text' : 'this is a test for adding a comment'})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('detail_photo', args=(test_photo.id,)))
+        # get the last comment 
+        last_comment = Comment.objects.last()
+        self.assertEqual(last_comment.comment_text, 'this is a test for adding a comment')
+        self.assertEqual(last_comment.created_by, user)
+        self.assertEqual(last_comment.photo, test_photo)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
