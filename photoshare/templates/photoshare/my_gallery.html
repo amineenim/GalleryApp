@@ -21,6 +21,9 @@
                             <a href="{% url 'likes:likes_per_photo' photo.id %}">
                                 <p class="underline"> {{photo.number_of_likes }} Like{{ photo.number_of_likes|pluralize }} </p>
                             </a>
+                            <a href="{% url 'likes:comments_per_photo' photo.id %}">
+                                <p class="underline"> {{ photo.comments.all|length }} Comment{{ photo.comments.all|pluralize }} </p>
+                            </a>
                         </div>
                     </div>
                 {% endfor %}

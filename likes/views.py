@@ -25,7 +25,6 @@ def likes_per_photo(request, photo_id) :
 @login_required
 def add_like(request, photo_id) :
     photo = get_object_or_404(Photo, pk=photo_id)
-    #return render(request, 'likes/add_like.html', {'photo' : photo})
     # check if the form has been submitted 
     if request.method == "POST" :
         # get or create the like object if already doesn't exist 
@@ -65,4 +64,10 @@ def add_comment(request, photo_id) :
             comment_to_insert.save()
 
         return redirect(reverse('detail_photo', args=(photo.id,)))
+
+# view that handles displaying the comments for a given photo
+@login_required
+def comments_per_photo(request, photo_id) :
+    photo = get_object_or_404(Photo, id=photo_id)
+    return render(request, 'likes/comments_per_photo.html', {'photo' : photo})
 

@@ -18,14 +18,15 @@
         <div class="w-2/3 h-5/6 self-center flex">
             <div class="w-1/2 flex flex-col pb-2 justify-between space-y-3 h-full border rounded-xl overflow-clip">
                 <img class="h-1/2" src={{ photo.image.url }} alt="{{ photo.description}}">
-                <p class="h-1/3 px-3"> {{ photo.description }} </p>
+                <p class="h-1/3 overflow-y-auto px-3"> {{ photo.description }} </p>
                 <p class="self-center">Published on : {{ photo.created_at|date }}</p>
             </div>
             <div class="w-1/2 h-full flex flex-col py-3">
                 <h3 class="text-lg self-center mb-3">
-                    Total number of likes : {{ photo.number_of_likes }} 
-                    <i class="fa-solid fa-heart" style="color: #ff0059;"></i>
+                    Total number of {% block total_number %} likes : {{ photo.number_of_likes }} 
+                    <i class="fa-solid fa-heart" style="color: #ff0059;"></i> {% endblock %}
                 </h3>
+                {% block right_side %}
                 {% if likes %}
                 <ul class="list-none h-5/6 overflow-y-auto p-3 space-y-1">
                     <li>
@@ -47,6 +48,7 @@
                 {% else %}
                 <p class="text-lg self-center m-auto">No Likes for the moment</p>
                 {% endif %}
+                {% endblock %}
             </div>
         </div>
     </div>

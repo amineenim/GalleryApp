@@ -1,0 +1,31 @@
+{% extends 'likes/likes_per_photo.html' %}
+{% block title %} Comments {% endblock %}
+{% block total_number %}
+    Comments : {{ photo.comments.all|length }}
+    <i class="fa-solid fa-comments fa-lg" style="margin-left : 1" ></i>
+{% endblock %}
+{% block right_side %}
+    {% if photo.comments.all %}
+        <div class="h-full ml-1 overflow-y-auto space-y-1">
+            {% for comment in photo.comments.all %}
+            <div class="w-full flex flex-col bg-gray-100 border border-slate-800 rounded-xl py-1 px-3 h-fit">
+                <div class="bg-gray-200 flex justify-between">
+                     <p class="font-bold text-sm pl-1">{{ comment.created_by.username }}</p> 
+                     {% if comment.created_by == request.user %}
+                     <p class="pr-1">
+                        <i class="fa-solid fa-pen fa-xs"></i>
+                        <i class="fa-solid fa-x fa-xs"></i>
+                    </p>
+                     {% endif %}
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-sm pl-2"> {{ comment.comment_text }} </p>
+                    <p class="text-xs self-end"> {{ comment.get_when_created }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-lg self-center m-auto">No Comments for the moment</p>
+    {% endif %}
+{% endblock %}

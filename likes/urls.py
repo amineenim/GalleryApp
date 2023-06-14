@@ -9,4 +9,5 @@ urlpatterns = [
     path('messages/clear/', views.clear_messages, name='clear_messages'),
     # paths for comments 
     path('<int:photo_id>/add_comment/', views.add_comment, name='add_comment'),
+    path('<int:photo_id>/comments/', views.comments_per_photo, name="comments_per_photo"),
 ]
