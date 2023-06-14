@@ -155,8 +155,65 @@ class AddCommentViewTests(TestCase) :
         self.assertEqual(last_comment.created_by, user)
         self.assertEqual(last_comment.photo, test_photo)
 
+# class to test the operation of comments_per_photo view 
+class CommentsPerPhotoViewTests(TestCase) :
+    # function that creates a photo 
+    def create_photo_for_test(self, description, category, is_user_authenticated) :
+        test_category = Category.objects.create(name=category)
+        image_file = SimpleUploadedFile('myimage.png', b"content_file", 'image/png')
+        self.user = User.objects.create_user(username='test', password='test')
+        self.client.login(username='test', password='test')
+        test_photo = Photo.objects.create(description=description, category=test_category, image=image_file, created_by=self.user)
+        if is_user_authenticated : 
+            return self.user, test_photo
+        self.client.logout()
+        return test_photo
+    # test comments_per_photo for unauthenticated user 
+    def test_comments_per_photo_with_unauthenticated_user(self) :
+        test_photo = self.create_photo_for_test('this is a test', 'test category', False)
+        target_url = reverse('likes:comments_per_photo', args=(test_photo.id,))
+        # send a get request to the target url
+        response = self.client.get(target_url)
+        # check that response is a redirect 
+        self.assertEqual(response.status_code, 302)
+        redirect_url = f"{reverse('login')}?next={target_url}"
+        self.assertRedirects(response, redirect_url)
 
-
+    # test comments_per_photo with unexisting photo 
+    def test_comments_per_photo_with_unexisting_photo(self) :
+        # create a user and log him in
+        self.user = User.objects.create_user(username='test', password='test')
+        self.client.login(username='test', password='test')
+        target_url = reverse('likes:comments_per_photo', args=(1,))
+        response = self.client.get(target_url)
+        # check that the response is 404 
+        self.assertEqual(response.status_code, 404)
+    
+    # test comments_per_photo with a user to which the photo doesn't belong 
+    def test_comments_per_photo_with_user_not_owner_of_photo(self) :
+        test_photo = self.create_photo_for_test('test image', 'test category', False)
+        # create a user and authenticate him 
+        self.user = User.objects.create_user(username='testtest', password='pass')
+        self.client.login(username='testtest', password='pass')
+        target_url = reverse('likes:comments_per_photo', args=(test_photo.id,))
+        response = self.client.get(target_url)
+        # check that the response is a redirect 
+        self.assertEqual(response.status_code, 302)
+        # check that the redirect url is the following 
+        redirect_url = f"{reverse('gallery')}"
+        self.assertRedirects(response, redirect_url)
+    
+    # test the comments_per_photo with user who created the photo (owner)
+    def test_comments_per_photo_with_creator_of_photo(self) :
+        user, test_photo = self.create_photo_for_test('test photo', 'categ', True)
+        target_url = reverse('likes:comments_per_photo', args=(test_photo.id,))
+        response = self.client.get(target_url)
+        # check the response is 200 OK
+        self.assertEqual(response.status_code, 200)
+        # check the context of response has the photo just created 
+        self.assertTrue(isinstance(response.context['photo'], Photo))
+        self.assertEqual(response.context['photo'].description, 'test photo')
+        
 
 
 
