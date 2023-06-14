@@ -69,5 +69,10 @@ def add_comment(request, photo_id) :
 @login_required
 def comments_per_photo(request, photo_id) :
     photo = get_object_or_404(Photo, id=photo_id)
-    return render(request, 'likes/comments_per_photo.html', {'photo' : photo})
+    # check if the user is the owner of the photo 
+    if request.user == photo.created_by :
+        return render(request, 'likes/comments_per_photo.html', {'photo' : photo})
+    
+    messages.error(request, 'unauthorized action')
+    return redirect(reverse('gallery'))
 

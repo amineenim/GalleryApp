@@ -1,5 +1,8 @@
 {% extends 'likes/likes_per_photo.html' %}
 {% block title %} Comments {% endblock %}
+{% block header_title %}
+<i class="fa-solid fa-comments fa-2xl"></i> 
+{% endblock %}
 {% block total_number %}
     Comments : {{ photo.comments.all|length }}
     <i class="fa-solid fa-comments fa-lg" style="margin-left : 1" ></i>
