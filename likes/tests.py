@@ -10,8 +10,16 @@ from photoshare import urls
 # Create your tests here.
 class LikesViewTests(TestCase) :
 
+    # tests the likes_per_photo with an unauthenticated user 
+    def test_likes_per_photo_with_unauthenticated_user(self) :
+        target_url = reverse('likes:likes_per_photo', args=(1,))
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        redirect_url = f"{reverse('login')}?next={target_url}"
+        self.assertRedirects(response, redirect_url)
+
     # testes the likes_per_photo with an inexisting photo 
-    def test_likes_per_photo_with_unexsiting_photo(self):
+    def test_likes_per_photo_with_unexisting_photo(self):
         # create a user 
         self.user = User.objects.create_user(username="test", password="testpassword")
         self.client.login(username="test", password="testpassword")
@@ -31,7 +39,10 @@ class LikesViewTests(TestCase) :
         test_url = reverse('likes:likes_per_photo', args=(photo.id,))
         response = self.client.get(test_url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Total number of likes')
+        # check the context of the response 
+        self.assertEqual(response.context['photo'].description, 'blabla')
+        self.assertEqual(response.context['photo'], photo)
+        self.assertQuerysetEqual(response.context['likes'], [])
 
     # tests the likes_per_photo with a user who doesn't own the photo 
     def test_likes_per_photo_with_not_owner_of_photo(self):
