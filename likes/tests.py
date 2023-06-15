@@ -295,8 +295,55 @@ class EditCommentViewTests(TestCase) :
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('likes:comments_per_photo', args=(photo.id,)))
 
+# class to test the delete_comment view 
+class DeleteCommentViewTests(TestCase) :
+    # function that creates a comment 
+    def create_comment(self, description_photo, category_photo,comment_text, is_regular_user):
+        category = Category.objects.create(name='Test')
+        image_file = SimpleUploadedFile('image.png', b"content_file", 'image/png')
+        if is_regular_user :
+            user = User.objects.create_user(username='regular', password='regular')
+            photo = Photo.objects.create(description=description_photo, category=category, image=image_file, created_by=user)
+            # the comment belongs to a regular user
+            comment_regular = Comment.objects.create(comment_text=comment_text, photo=photo, created_by=user)
+            return user, comment_regular
+        else :
+            superuser = User.objects.create_superuser(username='superuser', password='superuser')
+            photo= Photo.objects.create(description=description_photo, category=category, image=image_file, created_by=user)
+            # the comment belongs to regular user
+            comment = Comment.objects.create(comment_text=comment_text, photo=photo, created_by=user)
+            return superuser, comment
 
 
+    # test the delete_comment with unauthenticated user 
+    def test_delete_comment_with_unauthenticated_user(self) :
+        target_url = reverse('likes:delete_comment', args=(1,))
+        response = self.client.delete(target_url)
+        # check the response status and redirect url
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+    
+    # test the delete_comment with an unexisting comment 
+    def test_delete_comment_with_unexisting_comment(self) :
+        user = User.objects.create_user(username='testuser', password='test')
+        self.client.login(username='testuser', password='test')
+        target_url = reverse('likes:delete_comment', args=(1,))
+        response = self.client.delete(target_url)
+        # check that response is a 404
+        self.assertEqual(response.status_code, 404)
+    
+    # test the delete_comment with a user not owner and not superuser 
+    def test_delete_comment_with_regular_user_and_not_owner(self) :
+        # the comment returned is created by regular user which is also returned
+        user, comment = self.create_comment('myphoto', 'catphoto', 'my comment', True)
+        # create a second user and authenticate him
+        user2 = User.objects.create_user(username='testuser', password='testuser')
+        self.client.login(username='testuser', password='testuser')
+        target_url = reverse('likes:delete_comment', args=(comment.id,))
+        # user2 is not a superuser and also not owner of the comment 
+        response = self.client.delete(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
 
 
 
