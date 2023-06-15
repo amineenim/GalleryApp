@@ -301,14 +301,14 @@ class DeleteCommentViewTests(TestCase) :
     def create_comment(self, description_photo, category_photo,comment_text, is_regular_user):
         category = Category.objects.create(name='Test')
         image_file = SimpleUploadedFile('image.png', b"content_file", 'image/png')
+        user = User.objects.create_user(username='regular', password='regular')
+        superuser = User.objects.create_superuser(username='superuser', password='superuser')
         if is_regular_user :
-            user = User.objects.create_user(username='regular', password='regular')
-            photo = Photo.objects.create(description=description_photo, category=category, image=image_file, created_by=user)
+            photo = Photo.objects.create(description=description_photo, category=category, image=image_file, created_by=superuser)
             # the comment belongs to a regular user
             comment_regular = Comment.objects.create(comment_text=comment_text, photo=photo, created_by=user)
             return user, comment_regular
         else :
-            superuser = User.objects.create_superuser(username='superuser', password='superuser')
             photo= Photo.objects.create(description=description_photo, category=category, image=image_file, created_by=user)
             # the comment belongs to regular user
             comment = Comment.objects.create(comment_text=comment_text, photo=photo, created_by=user)
@@ -344,6 +344,34 @@ class DeleteCommentViewTests(TestCase) :
         response = self.client.delete(target_url)
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('gallery'))
+    
+    # test delete_comment view with user owner of the comment 
+    def test_delete_comment_with_user_owner_of_comment(self) :
+        user, comment = self.create_comment('testphoto', 'testcategory', 'testcomment', True)
+        # authenticate the user who owns the comment 
+        self.client.login(username='regular', password='regular')
+        target_url = reverse('likes:delete_comment',args=(comment.id,))
+        response = self.client.delete(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('detail_photo', args=(comment.photo.id,)))
+    
+    # test delete_comment view with superuser and comment not his
+    def test_delete_comment_with_super_user_and_not_owner_of_comment(self) :
+        user, comment = self.create_comment('test photo', 'test category', 'comment test', True)
+        # authenticate the superuser 
+        self.client.login(username='superuser', password='superuser')
+        target_url = reverse('likes:delete_comment', args=(comment.id,))
+        response = self.client.delete(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('likes:comments_per_photo', args=(comment.photo.id,)))
+
+
+
+
+
+
+
+    
 
 
 
