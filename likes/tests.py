@@ -226,6 +226,54 @@ class CommentsPerPhotoViewTests(TestCase) :
         self.assertEqual(response.context['photo'].description, 'test photo')
         
 
+# class that tests the operation of edit_comment view 
+class EditCommentViewTests(TestCase) :
+    # method that creates and returns a user 
+    def create_user(self, username, password) :
+        user = User.objects.create_user(username=username, password=password)
+        return user 
+    # method that creates a photo and a comment 
+    def create_photo_and_comment(self, description_photo, category, comment_text) :
+        user = self.create_user('testuser', 'testpassword')
+        category = Category.objects.create(name="testCategory")
+        image_file = SimpleUploadedFile('image.jpg', b"content_file", 'image/jpeg')
+        photo = Photo.objects.create(description=description_photo, category=category,image=image_file, created_by=user)
+        comment = Comment.objects.create(comment_text=comment_text, photo=photo, created_by=user)
+        return user, photo, comment 
+    # tests the edit_comment for an unauthenticated user 
+    def test_edit_comment_with_unauthenticated_user(self) :
+        # no such commment with id=1 exists in testdatabase, since it's not created
+        target_url = reverse('likes:edit_comment', args=(1,))
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+
+    # tests the edit_comment with an unexisting comment 
+    def test_edit_comment_with_unexisting_comment(self) :
+        user = self.create_user('test', 'test')
+        self.client.login(username='test', password='test')
+        target_url = reverse('likes:edit_comment', args=(1,))
+        response = self.client.get(target_url)
+        # check that the response returned a 404 
+        self.assertEqual(response.status_code, 404)
+
+    # tests the edit_comment with a user not owner of the comment 
+    def test_edit_comment_with_user_not_owner_of_comment(self) :
+        user1, photo_of_user1, comment_of_user1 = self.create_photo_and_comment('test photo', 'test category', 'testcomment')
+        # create a second user and authenticate him
+        user2 = self.create_user('user2', 'user2')
+        self.client.login(username='user2', password='user2')
+        # request the edit page for the comment of user1
+        target_url = reverse('likes:edit_comment', args=(comment_of_user1.id,))
+        response_for_get = self.client.get(target_url)
+        response_for_post = self.client.post(target_url,{})
+        # check that the response is a redirect 
+        self.assertEqual(response_for_get.status_code, 302)
+        self.assertRedirects(response_for_get, reverse('gallery'))
+        self.assertEqual(response_for_post.status_code, 302)
+        self.assertRedirects(response_for_post, reverse('gallery'))
+
+
 
 
 
