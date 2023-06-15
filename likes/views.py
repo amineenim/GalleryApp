@@ -1,10 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from photoshare.models import Photo
-from .models import Like
+from .models import Like, Comment
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .forms import CommentCreateForm
+from .forms import CommentCreateForm, CommentEditForm
 # Create your views here.
 
 # view that handles diplaying likes for a given Photo 
@@ -75,4 +75,26 @@ def comments_per_photo(request, photo_id) :
     
     messages.error(request, 'unauthorized action')
     return redirect(reverse('gallery'))
+
+# view that handles editing his own comment 
+@login_required
+def edit_comment(request, comment_id) :
+    comment_to_edit = get_object_or_404(Comment, id=comment_id)
+    related_photo = comment_to_edit.photo
+    # check if the user is the owner of comment 
+    if comment_to_edit.created_by == request.user :
+        if request.method == 'GET' :
+            form = CommentEditForm(instance=comment_to_edit)
+            return render(request, 'likes/edit_comment.html', {'form' : form, 'photo' : related_photo})
+        elif request.method == 'POST' :
+            form = CommentEditForm(request.POST, instance=comment_to_edit)
+            if form.is_valid() :
+                form.save()
+                return redirect(reverse('likes:comments_per_photo', args=(comment_to_edit.photo.id,)))
+
+    # if the user is not the owner of the comment
+    else : 
+        messages.error(request, "Unauthorized action")
+        return redirect(reverse('gallery'))
+
 

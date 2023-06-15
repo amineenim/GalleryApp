@@ -1,0 +1,22 @@
+{% extends 'likes/comments_per_photo.html' %}
+{% block title %} Edit Comment {% endblock %}
+{% block total_number %}Edit my comment {% endblock %}
+{% block right_side %}
+    <form class="w-full h-1/3 space-y-4 p-3 flex flex-col" method='POST' action="">
+        {% csrf_token %}
+        <div class="flex flex-col space-y-2 w-full">
+            <label>{{ form.comment_text.label }}</label>
+            {{ form.comment_text }}
+        </div>
+        <div class="bg-gray-300 w-1/3 flex justify-between self-end">
+            <button type="submit" class="py-2 px-3 rounded-xl bg-green-300 hover:bg-green-600 hover:text-white">
+                Save
+            </button>
+            <button class="py-2 px-3 rounded-xl bg-red-300 hover:bg-red-600 hover:text-white">
+                <a href="{% url 'likes:comments_per_photo' photo.id %}">
+                    Cancel
+                </a>
+            </button>
+        </div>
+    </form>
+{% endblock %}

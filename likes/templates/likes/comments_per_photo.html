@@ -4,7 +4,7 @@
 <i class="fa-solid fa-comments fa-2xl"></i> 
 {% endblock %}
 {% block total_number %}
-    Comments : {{ photo.comments.all|length }}
+    Total number of Comments : {{ photo.comments.all|length }}
     <i class="fa-solid fa-comments fa-lg" style="margin-left : 1" ></i>
 {% endblock %}
 {% block right_side %}
@@ -16,8 +16,12 @@
                      <p class="font-bold text-sm pl-1">{{ comment.created_by.username }}</p> 
                      {% if comment.created_by == request.user %}
                      <p class="pr-1">
-                        <i class="fa-solid fa-pen fa-xs"></i>
-                        <i class="fa-solid fa-x fa-xs"></i>
+                        <a href="{% url 'likes:edit_comment' comment.id %}">
+                            <i class="fa-solid fa-pen fa-xs"></i>
+                        </a>
+                        <a href="#">
+                            <i class="fa-solid fa-x fa-xs"></i>
+                        </a>
                     </p>
                      {% endif %}
                 </div>

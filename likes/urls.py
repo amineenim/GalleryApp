@@ -10,4 +10,5 @@ urlpatterns = [
     # paths for comments 
     path('<int:photo_id>/add_comment/', views.add_comment, name='add_comment'),
     path('<int:photo_id>/comments/', views.comments_per_photo, name="comments_per_photo"),
+    path('comments/<int:comment_id>/edit/', views.edit_comment, name='edit_comment'),
 ]

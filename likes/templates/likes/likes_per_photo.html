@@ -23,7 +23,7 @@
             </div>
             <div class="w-1/2 h-full flex flex-col py-3">
                 <h3 class="text-lg self-center mb-3">
-                    Total number of {% block total_number %} likes : {{ photo.number_of_likes }} 
+                    {% block total_number %} Total number of likes : {{ photo.number_of_likes }} 
                     <i class="fa-solid fa-heart" style="color: #ff0059;"></i> {% endblock %}
                 </h3>
                 {% block right_side %}
