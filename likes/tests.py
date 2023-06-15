@@ -7,6 +7,7 @@ from .models import Comment
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from photoshare import urls
+from .forms import CommentEditForm
 # Create your tests here.
 class LikesViewTests(TestCase) :
 
@@ -272,6 +273,27 @@ class EditCommentViewTests(TestCase) :
         self.assertRedirects(response_for_get, reverse('gallery'))
         self.assertEqual(response_for_post.status_code, 302)
         self.assertRedirects(response_for_post, reverse('gallery'))
+
+    # tests the edit_comment with a user owner of the comment in get request
+    def test_edit_comment_with_get_request(self) :
+        # first create a user, photo of the user and comment of the same user 
+        user, photo, comment = self.create_photo_and_comment('my photo', 'my category', 'my comment')
+        self.client.login(username='testuser', password='testpassword')
+        target_url = reverse('likes:edit_comment', args=(comment.id,))
+        response = self.client.get(target_url)
+        # check the response status and context 
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(isinstance(response.context['form'], CommentEditForm), True)
+    
+    # test the edit_comment with a user owner of the comment in POST request 
+    def test_edit_comment_with_post_request(self) :
+        user, photo, comment = self.create_photo_and_comment('myphoto', 'testcategory', 'mycomment')
+        self.client.login(username='testuser', password='testpassword')
+        target_url = reverse('likes:edit_comment', args=(comment.id,))
+        response = self.client.post(target_url, {'comment_text' : 'test'})
+        # check the response status and context
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('likes:comments_per_photo', args=(photo.id,)))
 
 
 
