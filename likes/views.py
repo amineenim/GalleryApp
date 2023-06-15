@@ -70,7 +70,7 @@ def add_comment(request, photo_id) :
 def comments_per_photo(request, photo_id) :
     photo = get_object_or_404(Photo, id=photo_id)
     # check if the user is the owner of the photo 
-    if request.user == photo.created_by :
+    if request.user == photo.created_by or request.user.is_superuser :
         return render(request, 'likes/comments_per_photo.html', {'photo' : photo})
     
     messages.error(request, 'unauthorized action')
@@ -98,3 +98,18 @@ def edit_comment(request, comment_id) :
         return redirect(reverse('gallery'))
 
 
+# view that handles deleting a comment 
+@login_required
+def delete_comment(request, comment_id) :
+    comment_to_delete = get_object_or_404(Comment, id=comment_id)
+    # check if the user is the owner of the comment or if it's an admin
+    if comment_to_delete.created_by != request.user and not(request.user.is_superuser):
+        messages.error(request, 'Unauthorized action')
+        return redirect(reverse('gallery'))
+    else :
+        comment_to_delete.delete()
+        if request.user.is_superuser :
+            return redirect(reverse('likes:comments_per_photo', args=(comment_to_delete.photo.id,)))
+        else : 
+            return redirect(reverse('detail_photo', args=(comment_to_delete.photo.id,)))
+    

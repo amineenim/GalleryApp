@@ -14,12 +14,14 @@
             <div class="w-full flex flex-col bg-gray-100 border border-slate-800 rounded-xl py-1 px-3 h-fit">
                 <div class="bg-gray-200 flex justify-between">
                      <p class="font-bold text-sm pl-1">{{ comment.created_by.username }}</p> 
-                     {% if comment.created_by == request.user %}
+                     {% if comment.created_by == request.user or request.user.is_superuser %}
                      <p class="pr-1">
+                        {% if request.user == comment.created_by %}
                         <a href="{% url 'likes:edit_comment' comment.id %}">
                             <i class="fa-solid fa-pen fa-xs"></i>
                         </a>
-                        <a href="#">
+                        {% endif %}
+                        <a href="{% url 'likes:delete_comment' comment.id %}">
                             <i class="fa-solid fa-x fa-xs"></i>
                         </a>
                     </p>
