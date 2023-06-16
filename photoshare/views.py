@@ -9,6 +9,7 @@ from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from likes.models import Like, Comment
 from likes.forms import CommentCreateForm
+from django.core.paginator import Paginator
 
 # Create your views here.
 # define a namespace for the app 
@@ -72,11 +73,16 @@ def registerUser(request) :
 @login_required
 def gellery(request) :
     categories = Category.objects.all()
-    photos = Photo.objects.all()
+    # create a paginator instance
+    p = Paginator(Photo.objects.all(), 6)
+    page = request.GET.get('page')
+    photos = p.get_page(page)
     # verify if there'a a category set 
     if request.GET.get('category') != '' and request.GET.get('category') is not None :
         selected_category = Category.objects.filter(name= request.GET.get('category'))[0]
-        photos = photos.filter(category = selected_category)
+        p = Paginator(Photo.objects.filter(category=selected_category), 6)
+        page = request.GET.get('page')
+        photos = p.get_page(page)
         context = {'categories' : categories, 'photos' : photos, 'category' : selected_category }
         return render(request, 'photoshare/gallery.html', context)
    

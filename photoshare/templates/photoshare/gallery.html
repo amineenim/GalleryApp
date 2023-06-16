@@ -76,6 +76,35 @@
             </h3>
         </div>
         {% endfor %}
+        <div class="col-span-3 flex m-auto space-x-2">
+            {% if photos.has_previous %}
+                <div class="flex items-center w-20 justify-evenly">
+                    <p>
+                        <a href="?page=1">
+                            <i class="fa-solid fa-angles-left"></i>
+                        </a>
+                    </p>
+                    <p class="text-xs">
+                        <a href="?page={{ photos.previous_page_number }}">Previous</a>
+                    </p>
+                </div>
+            {% endif %}
+            <div class="bg-gray-300 px-3 py-2 rounded-xl border-2 border-slate-600 hover:bg-gray-800 hover:text-white">
+                {{ photos.number }}
+            </div>
+            {% if photos.has_next %}
+                <div class="flex items-center w-20 justify-evenly">
+                    <p class="text-xs hover:text-sm">
+                        <a href="?page={{ photos.next_page_number}}">Next</a>
+                    </p>
+                    <p>
+                        <a href="?page={{ photos.paginator.num_pages }}">
+                            <i class="fa-solid fa-angles-right"></i>
+                        </a>
+                    </p>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}
