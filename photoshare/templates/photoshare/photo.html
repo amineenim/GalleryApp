@@ -63,6 +63,7 @@ Detail
                             <div class="h-2/3 flex flex-col space-y-1 overflow-y-auto">
                                 {% if photo.comments.all %}
                                     {% for comment in photo.comments.all %}
+                                        {% if comment.is_hidden == False %}
                                         <div class="flex flex-col w-full h-fit border-b border-gray-800">
                                             <div class="flex items-center">
                                                 <p class="font-bold text-xs">{{ comment.created_by.username }} :</p>
@@ -70,6 +71,7 @@ Detail
                                             </div>
                                             <p class="text-xs self-end">{{ comment.get_when_created }}</p>
                                         </div>
+                                        {% endif %}
                                     {% endfor %}
                                 {% else %}
                                         <div class="m-auto">No comments for the moments</div>

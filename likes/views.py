@@ -112,4 +112,23 @@ def delete_comment(request, comment_id) :
             return redirect(reverse('likes:comments_per_photo', args=(comment_to_delete.photo.id,)))
         else : 
             return redirect(reverse('detail_photo', args=(comment_to_delete.photo.id,)))
+
+# view that handles hiding a comment on one of his photos 
+@login_required
+def hide_comment(request, comment_id) : 
+    # get the comment 
+    comment_to_hide = get_object_or_404(Comment, id=comment_id)
+    related_photo = comment_to_hide.photo
+    # check that the comment belongs to a photo owned by the authenticated user 
+    if request.user != comment_to_hide.photo.created_by :
+        messages.error(request, 'Unauthorized action')
+        return redirect(reverse('gallery'))
+    # check if the method is GET 
+    if request.method == 'GET' : 
+        return render(request, 'likes/hide_comment.html', {'comment' : comment_to_hide, 'photo' : related_photo})
+    elif request.method == 'POST' :
+        comment_to_hide.is_hidden = True 
+        comment_to_hide.save()
+        return redirect(reverse('likes:comments_per_photo', args=(comment_to_hide.photo.id,)))
+    
     

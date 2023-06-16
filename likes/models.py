@@ -22,6 +22,7 @@ class Comment(models.Model) :
         
     comment_text = models.CharField(max_length=400, blank=False, null=False)
     photo = models.ForeignKey(Photo, related_name='comments', on_delete=models.CASCADE)
+    is_hidden = models.BooleanField(default=False)
     created_by = models.ForeignKey(User, related_name='comments', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 

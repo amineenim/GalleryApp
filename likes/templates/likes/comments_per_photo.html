@@ -11,27 +11,38 @@
     {% if photo.comments.all %}
         <div class="h-full ml-1 overflow-y-auto space-y-1">
             {% for comment in photo.comments.all %}
+            {% if comment.is_hidden == False %}
             <div class="w-full flex flex-col bg-gray-100 border border-slate-800 rounded-xl py-1 px-3 h-fit">
                 <div class="bg-gray-200 flex justify-between">
                      <p class="font-bold text-sm pl-1">{{ comment.created_by.username }}</p> 
-                     {% if comment.created_by == request.user or request.user.is_superuser %}
+                     {% if comment.created_by == request.user %}
                      <p class="pr-1">
-                        {% if request.user == comment.created_by %}
                         <a href="{% url 'likes:edit_comment' comment.id %}">
                             <i class="fa-solid fa-pen fa-xs"></i>
                         </a>
-                        {% endif %}
                         <a href="{% url 'likes:delete_comment' comment.id %}">
                             <i class="fa-solid fa-x fa-xs"></i>
                         </a>
                     </p>
-                     {% endif %}
+                    {% else %}
+                    <p class="pr-1">
+                        <a href="{% url 'likes:hide_comment' comment.id %}">
+                            <i class="fa-solid fa-eye-slash fa-xs"></i>
+                        </a>
+                        {% if request.user.is_superuser %}
+                        <a href="{% url 'likes:delete_comment' comment.id %}">
+                            <i class="fa-solid fa-x fa-xs"></i>
+                        </a>
+                        {% endif %}
+                    </p>
+                    {% endif %}
                 </div>
                 <div class="flex flex-col">
                     <p class="text-sm pl-2"> {{ comment.comment_text }} </p>
                     <p class="text-xs self-end"> {{ comment.get_when_created }}</p>
                 </div>
             </div>
+            {% endif %}
             {% endfor %}
         </div>
     {% else %}
