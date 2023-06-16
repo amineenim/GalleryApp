@@ -365,10 +365,48 @@ class DeleteCommentViewTests(TestCase) :
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('likes:comments_per_photo', args=(comment.photo.id,)))
 
-
-
-
-
+# class to test the operation of the hide_comment view 
+class HideCommentViewTests(TestCase) :
+    def create_photo_with_someone_else_comment_on_it(self, description, category, comment_text):
+        self.user = User.objects.create_user(username='photo_owner', password='password')
+        image_file = SimpleUploadedFile('image.png', b"content_file", 'image/png')
+        category = Category.objects.create(name=category)
+        # this is a photo instance created by the user photo_owner
+        photo = Photo.objects.create(description=description, category=category,image=image_file, created_by=self.user)
+        # create a comment on this photo, but by another user 
+        self.user = User.objects.create_user(username='comment_owner', password='password')
+        comment = Comment.objects.create(comment_text=comment_text, photo=photo, created_by=self.user)
+        return photo, comment
+    # test the hide_comment view with unauthenticated user 
+    def test_hide_comment_with_unauthenticated_user(self) :
+        target_url = reverse('likes:hide_comment', args=(1,))
+        response = self.client.get(target_url)
+        # check that the response is a redirect
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+    
+    # test the hide_comment view with an unexisting comment 
+    def test_hide_comment_with_unexisting_comment(self) :
+        # create a user and authenticate him
+        user = User.objects.create_user(username='testuser', password='testpassword')
+        self.client.login(username='testuser', password ='testpassword')
+        target_url = reverse('likes:hide_comment', args=(1,))
+        response = self.client.get(target_url)
+        # check that the response is a 404
+        self.assertEqual(response.status_code, 404)
+    
+    # test hide_comment with a user trying to hide a comment not on one of his photos
+    def test_hide_comment_not_on_his_own_photo(self) :
+        # create a photo having someone else comment 
+        photo, comment = self.create_photo_with_someone_else_comment_on_it('test photo', 'test category', 'test comment')
+        # authenticate the comment_owner since the photo is not his 
+        self.client.login(username='comment_owner', password='password')
+        # try to hide the comment on a photo not his 
+        target_url = reverse('likes:hide_comment', args=(comment.id,))
+        reponse = self.client.get(target_url)
+        # check that the response is a redirect 
+        self.assertEqual(reponse.status_code, 302)
+        self.assertRedirects(reponse, reverse('gallery'))
 
 
     
