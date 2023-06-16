@@ -407,7 +407,23 @@ class HideCommentViewTests(TestCase) :
         # check that the response is a redirect 
         self.assertEqual(reponse.status_code, 302)
         self.assertRedirects(reponse, reverse('gallery'))
-
+    
+    # test hide_comment with a user trying to hide a comment on one of his photos 
+    def test_hide_comment_with_user_owner_of_photo_and_not_owner_of_comment_on_the_photo(self) :
+        photo, comment = self.create_photo_with_someone_else_comment_on_it('test photo', 'cat', 'this is not my comment')
+        # authenticate the user who owns the photo 
+        self.client.login(username='photo_owner', password='password')
+        # try to hide the comment of comment_owner user 
+        target_url = reverse('likes:hide_comment', args=(comment.id,))
+        # try in get request 
+        response_get = self.client.get(target_url)
+        self.assertEqual(response_get.status_code, 200)
+        self.assertEqual(response_get.context['comment'], comment)
+        self.assertEqual(response_get.context['photo'], photo)
+        # try in post request 
+        response_post = self.client.post(target_url)
+        self.assertEqual(response_post.status_code, 302)
+        self.assertRedirects(response_post, reverse('likes:comments_per_photo', args=(photo.id,)))
 
     
 
