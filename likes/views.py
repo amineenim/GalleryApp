@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from photoshare.models import Photo
-from .models import Like, Comment
+from .models import Like, Comment, Notification
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import CommentCreateForm, CommentEditForm
@@ -33,12 +33,27 @@ def add_like(request, photo_id) :
             # increment the number of likes for the photo 
             photo.number_of_likes += 1 
             photo.save()
+            # check if the authenticated user is not the owner of the photo
+            if request.user != photo.created_by :
+                # create a notification for the like 
+                notification_text = request.user.username + ' Liked your photo from ' + photo.category.name + ' category.'
+                Notification.objects.create(
+                    notification=notification_text,
+                    created_by = request.user,
+                    photo = photo,
+                    is_like = True,
+                    is_comment = False
+                )
             return redirect(reverse('detail_photo', args=(photo.id,)))
         else : 
             # delete the corresponding like object and decrement the number of likes
             like.delete()
             photo.number_of_likes -= 1
             photo.save()
+            # delete the corresponding notification for that like 
+            corresponding_notification = Notification.objects.filter(created_by=request.user, photo=photo, is_like=True)
+            if corresponding_notification :
+                corresponding_notification[0].delete()
             return redirect(reverse('detail_photo', args=(photo.id,)))
         
 # view that handles clearing nessages
@@ -62,7 +77,15 @@ def add_comment(request, photo_id) :
             comment_to_insert.photo = photo
             comment_to_insert.created_by = request.user
             comment_to_insert.save()
-
+            # create a corresponding notification object for the comment 
+            notification_text = request.user.username + ' commented your photo from ' + photo.category.name + ' category.'
+            Notification.objects.create(
+                notification=notification_text,
+                created_by = request.user,
+                photo = photo,
+                is_like = False,
+                is_comment = True
+            )
         return redirect(reverse('detail_photo', args=(photo.id,)))
 
 # view that handles displaying the comments for a given photo
@@ -109,8 +132,16 @@ def delete_comment(request, comment_id) :
     else :
         comment_to_delete.delete()
         if request.user.is_superuser :
+            # delete the corresponding notification for that comment 
+            corresponding_notification = Notification.objects.filter(created_by = comment_to_delete.created_by, photo=comment_to_delete.photo, is_comment=True, comment=comment_to_delete)
+            if corresponding_notification.exists() :
+                corresponding_notification[0].delete()
             return redirect(reverse('likes:comments_per_photo', args=(comment_to_delete.photo.id,)))
         else : 
+            # delete the corresponding notification for that comment 
+            corresponding_notification = Notification.objects.filter(created_by = request.user, photo=comment_to_delete.photo, is_comment=True, comment=comment_to_delete)
+            if corresponding_notification.exists() :
+                corresponding_notification[0].delete()
             return redirect(reverse('detail_photo', args=(comment_to_delete.photo.id,)))
 
 # view that handles hiding a comment on one of his photos 
@@ -131,4 +162,19 @@ def hide_comment(request, comment_id) :
         comment_to_hide.save()
         return redirect(reverse('likes:comments_per_photo', args=(comment_to_hide.photo.id,)))
     
-    
+# view that allows a user to check if there are any notifications for him
+@login_required
+def get_notifications(request) :
+    # initiate an empty list to store notifications
+    user_notifications = []
+    # get the photos for tha autheticated user, and grab the notifications related to each of them 
+    user_photos = request.user.photos.all()
+    for photo in user_photos :
+        has_notifications = photo.notifications.exists()
+        if has_notifications : 
+            photo_notifications = photo.notifications.all()
+            for notification in photo_notifications :
+                user_notifications.append(notification)
+    # after looping over all user's photos and getting notifications for each render the template 
+    return render(request, 'likes/notifications.html', {'notifications' : user_notifications})
+

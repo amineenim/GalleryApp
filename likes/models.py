@@ -58,4 +58,21 @@ class Comment(models.Model) :
             return "yesterday"
         else:
             return self.created_at
+        
+
+# class that represents a notification object
+class Notification(models.Model) :
+    notification = models.CharField(null=False, max_length=200)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    photo = models.ForeignKey(Photo, related_name='notifications', on_delete=models.CASCADE, null=False)
+    is_like = models.BooleanField(null=False)
+    is_comment = models.BooleanField(null=False)
+    comment = models.ForeignKey(Comment, related_name='comment_notifications', on_delete=models.CASCADE, null=True)
+    is_seen = models.BooleanField(null=False, default=False)
+
+    def __str__(self) :
+        return self.notification 
+    
+
 

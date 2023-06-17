@@ -13,4 +13,6 @@ urlpatterns = [
     path('comments/<int:comment_id>/edit/', views.edit_comment, name='edit_comment'),
     path('comments/<int:comment_id>/remove/', views.delete_comment, name='delete_comment'),
     path('comments/<int:comment_id>/hide/', views.hide_comment, name='hide_comment'),
+    # paths for notifications
+    path('notifications/', views.get_notifications, name='notifications'),
 ]
