@@ -425,6 +425,15 @@ class HideCommentViewTests(TestCase) :
         self.assertEqual(response_post.status_code, 302)
         self.assertRedirects(response_post, reverse('likes:comments_per_photo', args=(photo.id,)))
 
+# class to test the opertaion of the get_notifications view 
+class GetNotificationsViewTests(TestCase) :
+    # test the get_notifications with an unauthenticated user 
+    def test_get_notifications_with_unauthenticated_user(self) :
+        target_url = reverse('likes:notifications')
+        response = self.client.get(target_url)
+        # check that the response is a redirect
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
     
 
 
