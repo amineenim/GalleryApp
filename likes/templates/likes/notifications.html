@@ -15,8 +15,8 @@
             <i class="fa-solid fa-bell"></i>
         </h3>
          <div class="flex flex-col py-2 h-full space-y-1 overflow-y-auto border-2 rounded-xl border-slate-600">
-            {% if notifications %}
-                {% for notification in notifications %}
+            {% if allnotifications %}
+                {% for notification in allnotifications %}
                 <div class="w-2/3 self-center flex flex-col border-b-2 border-slate-800">
                     <p class="text-sm px-3">{{ notification.notification }}</p>
                     <span class="text-xs self-end pr-3"> {{ notification.created_at|timesince }} </span>

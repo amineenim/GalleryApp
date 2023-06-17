@@ -175,6 +175,10 @@ def get_notifications(request) :
             photo_notifications = photo.notifications.all()
             for notification in photo_notifications :
                 user_notifications.append(notification)
+                # set the notification is_seen to true 
+                if notification.is_seen == False :
+                    notification.is_seen = True 
+                    notification.save()
     # after looping over all user's photos and getting notifications for each render the template 
-    return render(request, 'likes/notifications.html', {'notifications' : user_notifications})
+    return render(request, 'likes/notifications.html', {'allnotifications' : user_notifications})
 
