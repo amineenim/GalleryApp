@@ -1,14 +1,25 @@
 {% extends 'photoshare/base.html' %}
 {% block title %}notifications{% endblock %}
 {% block content %}
-    <div class="w-2/3 flex flex-col py-4 px-10 bg-gray-300 h-screen m-auto">
-         <h3 class="text-xl self-center mb-8">Notifications for Me</h3>
-         <div class="flex flex-col h-full items-center space-y-2 overflow-y-auto">
+    <div class="flex justify-between py-6 px-8 bg-gray-400 rounded-xl mb-5 items-center col-span-3">
+        <h3 class="text-xl">Notifications <i class="fa-solid fa-bell fa-xl ml-1"></i></h3>
+        <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl">
+            <a href="{% url 'gallery' %}" class="flex items-center">
+                <i class="fa-solid fa-house mr-1"></i>Home
+            </a>
+        </button>
+    </div>
+    <div class="w-2/3 flex flex-col py-4 px-10 h-screen m-auto">
+         <h3 class="text-xl self-center mb-8 flex items-center">
+            <p class="mr-3">Notifications for Me</p>
+            <i class="fa-solid fa-bell"></i>
+        </h3>
+         <div class="flex flex-col py-2 h-full space-y-1 overflow-y-auto border-2 rounded-xl border-slate-600">
             {% if notifications %}
                 {% for notification in notifications %}
-                <div class="w-2/3 flex flex-col border-b-2 border-slate-800">
-                    <p>{{ notification.notification }}</p>
-                    <span class="text-sm self-end"> {{ notification.created_at|timesince }} </span>
+                <div class="w-2/3 self-center flex flex-col border-b-2 border-slate-800">
+                    <p class="text-sm px-3">{{ notification.notification }}</p>
+                    <span class="text-xs self-end pr-3"> {{ notification.created_at|timesince }} </span>
                 </div>
                 {% endfor %}
             {% else %}

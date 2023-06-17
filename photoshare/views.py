@@ -69,10 +69,20 @@ def registerUser(request) :
         return render(request, 'photoshare/register.html', {'form' : form})
 
 
-# the view rendering the gallery page ehere all photos are displayed 
+# the view rendering the gallery page where all photos are displayed 
 @login_required
 def gellery(request) :
     categories = Category.objects.all()
+    # get unseen notifications for user's photos
+    user_notifications = []
+    user_photos = request.user.photos.all()
+    for photo in user_photos :
+        if photo.notifications.filter(is_seen=False).exists() :
+            photo_notifications = photo.notifications.filter(is_seen=False)
+            for notification in photo_notifications :
+                user_notifications.append(notification)
+    
+
     # create a paginator instance
     p = Paginator(Photo.objects.all(), 6)
     page = request.GET.get('page')
@@ -86,7 +96,7 @@ def gellery(request) :
         context = {'categories' : categories, 'photos' : photos, 'category' : selected_category }
         return render(request, 'photoshare/gallery.html', context)
    
-    context = {'categories' : categories, 'photos' : photos}
+    context = {'categories' : categories, 'photos' : photos, 'notifications' : user_notifications}
     return render(request, 'photoshare/gallery.html', context)
 
 

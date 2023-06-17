@@ -16,7 +16,19 @@
                 <a href="{% url 'gallery' %}">Amine's Gallery <i class="fa-solid fa-image" style="color: #000000;"></i></a>
             </h3>
             {% if request.user.is_authenticated %}
-            <div class="flex w-1/6 justify-between">
+            <div class="flex w-1/5 items-center justify-between">
+                <a href="{% url 'likes:notifications' %}">
+                    {% if notifications %}
+                        <div class="relative items-center">
+                            <i class="fa-solid fa-bell fa-2xl"></i>
+                            <span class="ml-1 absolute bottom-0 right-0 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs">
+                            {{ notifications|length }}
+                            </span>
+                        </div>
+                    {% else %}
+                        <i class="fa-solid fa-bell fa-2xl"></i>
+                    {% endif %}
+                </a>
                 <button class="border-2 bg-white border-slate-800 rounded-xl py-2 px-5 hover:bg-gray-900 hover:text-white">
                     <a href="{% url 'mygallery' %}">
                         {% if request.user.is_superuser %}
