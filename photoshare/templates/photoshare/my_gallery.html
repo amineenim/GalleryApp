@@ -22,7 +22,7 @@
                                 <p class="hover:text-lg"> {{photo.number_of_likes }} <i class="fa-solid fa-heart" style="color: #ff0a60;"></i> </p>
                             </a>
                             <a href="{% url 'likes:comments_per_photo' photo.id %}">
-                                <p class="hover:text-lg"> {{ photo.comments.all|length }}<i class="fa-solid fa-comment ml-1"></i> </p>
+                                <p class="hover:text-lg"> {{ photo.get_not_hidden_comments|length }}<i class="fa-solid fa-comment ml-1"></i> </p>
                             </a>
                         </div>
                     </div>

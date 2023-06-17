@@ -24,3 +24,6 @@ class Photo(models.Model) :
 
     def __str__(self) :
         return self.description
+    
+    def get_not_hidden_comments(self) :
+        return self.comments.filter(is_hidden=False)
