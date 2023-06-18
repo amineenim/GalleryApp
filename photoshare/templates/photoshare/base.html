@@ -16,7 +16,10 @@
                 <a href="{% url 'gallery' %}">Amine's Gallery <i class="fa-solid fa-image" style="color: #000000;"></i></a>
             </h3>
             {% if request.user.is_authenticated %}
-            <div class="flex w-1/5 items-center justify-between">
+            <div class="flex w-1/4 items-center justify-between">
+                <a href="{% url 'profile:my_profile' %}">
+                    <i class="fa-solid fa-user fa-xl"></i>
+                </a>
                 <a href="{% url 'likes:notifications' %}">
                     {% if notifications %}
                         <div class="relative items-center">

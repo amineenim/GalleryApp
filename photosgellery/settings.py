@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'photoshare.apps.PhotoshareConfig',
     'likes.apps.LikesConfig',
+    'userprofile.apps.UserprofileConfig',
     'fontawesomefree',
 ]
 
