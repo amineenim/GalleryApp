@@ -77,15 +77,18 @@ def add_comment(request, photo_id) :
             comment_to_insert.photo = photo
             comment_to_insert.created_by = request.user
             comment_to_insert.save()
-            # create a corresponding notification object for the comment 
-            notification_text = request.user.username + ' commented your photo from ' + photo.category.name + ' category.'
-            Notification.objects.create(
-                notification=notification_text,
-                created_by = request.user,
-                photo = photo,
-                is_like = False,
-                is_comment = True
-            )
+            # check if the user who commented isn't actually the owner of the photo 
+            if request.user != photo.created_by :
+                # create a corresponding notification object for the comment 
+                notification_text = request.user.username + ' commented your photo from ' + photo.category.name + ' category.'
+                Notification.objects.create(
+                    notification=notification_text,
+                    created_by = request.user,
+                    photo = photo,
+                    is_like = False,
+                    is_comment = True,
+                    comment = comment_to_insert
+                )
         return redirect(reverse('detail_photo', args=(photo.id,)))
 
 # view that handles displaying the comments for a given photo

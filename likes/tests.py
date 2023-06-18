@@ -3,7 +3,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User
 from photoshare.models import Photo, Category
-from .models import Comment
+from .models import Comment, Like, Notification
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from photoshare import urls
@@ -435,7 +435,41 @@ class GetNotificationsViewTests(TestCase) :
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
     
-
+    # function that creates a photo and notification for the photo , notification can be either like or comment
+    def create_photo(self, description_photo, category_photo) :
+        user_owner_of_photo = User.objects.create_user(username='owner_photo', password='ownerofphoto')
+        category = Category.objects.create(name=category_photo)
+        image_file = SimpleUploadedFile('test.jpg', b"content_file", 'image/jpeg')
+        test_photo = Photo.objects.create(description=description_photo, category=category, image=image_file, created_by=user_owner_of_photo)
+        return test_photo
+    
+    # tests the get_notifications with a user liking it's own photo
+    def test_get_notifications_with_user_liking_his_own_photo(self) :
+        photo = self.create_photo('my photo', 'my category')
+        # authenticate as the user owner of the photo 
+        self.client.login(username='owner_photo', password='ownerofphoto')
+        # add a like to the photo
+        add_like_url = reverse('likes:add_like', args=(photo.id,))
+        self.client.post(add_like_url)
+        # now that the owner of the photo has liked his photo, check notifications 
+        response = self.client.get(reverse('likes:notifications'))
+        # check that the response status is 200 
+        self.assertEqual(response.status_code, 200)
+        self.assertQuerysetEqual(response.context['allnotifications'], [])
+    
+    # tests the get_notifications with a user other than the owner of the photo 
+    def test_get_notifications_with_user_liking_someone_else_photo(self) :
+        photo = self.create_photo('my photo', 'my category')
+        # create a new user , authenticate him and make him like the photo
+        user = User.objects.create_user(username='testuser', password='testpassword')
+        self.client.login(username='testuser', password='testpassword')
+        self.client.post(reverse('likes:add_like', args=(photo.id,)))
+        self.client.logout()
+        # authenticate the owner of photo and check notifications
+        self.client.login(username='owner_photo', password='ownerofphoto')
+        response = self.client.get(reverse('likes:notifications'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'testuser Liked your photo from my category category.')
 
 
 
