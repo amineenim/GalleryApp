@@ -470,6 +470,33 @@ class GetNotificationsViewTests(TestCase) :
         response = self.client.get(reverse('likes:notifications'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'testuser Liked your photo from my category category.')
+    
+    # tests the get_notifications with a user commenting his own photo 
+    def test_get_notifications_with_user_commenting_his_own_photo(self) :
+        photo = self.create_photo('my photo', 'testcategory')
+        # authenticate the owner of the photo
+        self.client.login(username='owner_photo', password='ownerofphoto')
+        # add a comment to his own photo 
+        self.client.post(reverse('likes:add_comment', args=(photo.id,)), {'comment_text' : "i'm commenting my photo"})
+        # request the notifications
+        response = self.client.get(reverse('likes:notifications'))
+        self.assertEqual(response.status_code, 200)
+        self.assertQuerysetEqual(response.context['allnotifications'], [])
+    
+    # tests the get_notifications with a user commenting someone's else photo 
+    def test_get_notifications_with_user_commenting_someone_else_photo(self) :
+        photo = self.create_photo('someone else photo', 'testcategory')
+        # create a new user and authenticate him to comment this photo
+        User.objects.create_user(username='not_owner_of_photo', password='123')
+        self.client.login(username='not_owner_of_photo', password='123')
+        self.client.post(reverse('likes:add_comment', args=(photo.id,)), {'comment_text' : 'hello world!'})
+        self.client.logout()
+        # authenticate the owner of photo
+        self.client.login(username='owner_photo', password='ownerofphoto')
+        response = self.client.get(reverse('likes:notifications'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['allnotifications']), 1)
+        self.assertContains(response, 'not_owner_of_photo commented your photo from testcategory category.')
 
 
 
