@@ -20,6 +20,12 @@ class UserProfileCreateForm(forms.Form) :
             raise forms.ValidationError(f"the image size can't exceed {self.MAX_SIZE} bytes")
         return profile_picture
     
+    def validate_birthdate(value) :
+        min_age = date.today() - timedelta(days=365*5)
+        if value < min_age :
+            raise('must be at least 5 years')
+        
+
     first_name = forms.CharField(label='First Name', max_length=100, widget=forms.TextInput(attrs={
         'class' : "w-full py-2 pl-3 border rounded-xl",
         'placeholder' : 'Your First name'
@@ -28,9 +34,8 @@ class UserProfileCreateForm(forms.Form) :
         'class' : "w-full py-2 pl-3 border rounded-xl", 
         'placeholder' : 'Your Last name'
     }))
-    birthdate = forms.DateField(label='Date of birth', input_formats=['%d/%m/%Y'], 
+    birthdate = forms.DateField(label='Date of birth',
                                 help_text='Please enter you birth date in the format dd/mm/YYYY', 
-                                validators=[MaxValueValidator(limit_value=date.today() - timedelta(days=365*5), )],
                                 widget=forms.DateInput(attrs={
                                     'class' : 'w-full rounded-xl border py-2 px-3',
                                     'type' : 'date'

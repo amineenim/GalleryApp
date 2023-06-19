@@ -38,17 +38,25 @@
             </button>
         </div>
         <div class="h-full w-3/4 self-center bg-gray-100 rounded-md">
-            <form method='POST' action="" class="w-full p-4 flex h-full">
+            <form method='POST' action="" class="w-full p-4 flex h-full"
+            enctype="multipart/form-data">
                 {% csrf_token %}
+                {% if form.non_field_errors %}
+                <p>
+                    {{ form.non_field_errors }}
+                </p>
+                {% endif %}
                 <div class="w-1/2 flex flex-col space-y-2 justify-center items-center">
                     <p>{{ form.profile_picture.label }}</p>
                     <p> {{ form.profile_picture.help_text }} </p>
                     <img src="{% static 'profile/anonymous.avif' %}" alt="anonymous" width='200'>
                     {{ form.profile_picture }}
                     {% if form.profile_picture.errors %}
-                        <p class="text-sm p-2 w-full bg-red-200">
-                            {{ form.profile_picture.errors }}
-                        </p>
+                        <ul class="text-sm p-2 w-1/2 bg-red-200 list-none rounded-xl">
+                            {% for error in form.profile_picture.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
                     {% endif %}
                 </div>
                 <div class="w-1/2 space-y-2 flex flex-col justify-between">
@@ -88,7 +96,13 @@
                         {% endif %}
                     </div>
                     <div class="self-end">
-                        <button type="submit" class="bg-green-300 rounded-xl py-2 px-4 hover:bg-green-500 hover:text-white">Save</button>
+                        <button type="submit" class="bg-green-300 rounded-xl py-2 px-4 hover:bg-green-500 hover:text-white">
+                            {% if is_first_time %}
+                            Add data
+                            {% else %}
+                            Save changes
+                            {% endif %}
+                        </button>
                     </div>
                 </div>
             </form>
