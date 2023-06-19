@@ -21,21 +21,22 @@ class UserProfileCreateForm(forms.Form) :
         return profile_picture
     
     first_name = forms.CharField(label='First Name', max_length=100, widget=forms.TextInput(attrs={
-        'class' : "w-full py-2 pl-4 border rounded-xl",
+        'class' : "w-full py-2 pl-3 border rounded-xl",
         'placeholder' : 'Your First name'
     }))
     last_name = forms.CharField(label='Last Name', max_length=100, widget=forms.TextInput(attrs={
-        'class' : "w-full py-2 pl-4 border rounded-xl", 
+        'class' : "w-full py-2 pl-3 border rounded-xl", 
         'placeholder' : 'Your Last name'
     }))
     birthdate = forms.DateField(label='Date of birth', input_formats=['%d/%m/%Y'], 
                                 help_text='Please enter you birth date in the format dd/mm/YYYY', 
                                 validators=[MaxValueValidator(limit_value=date.today() - timedelta(days=365*5), )],
                                 widget=forms.DateInput(attrs={
-                                    'class' : 'w-full'
+                                    'class' : 'w-full rounded-xl border py-2 px-3',
+                                    'type' : 'date'
                                 }))
     bio = forms.CharField(label='Little description about yourself', widget=forms.Textarea(attrs={
-        'class' : "w-full no-resize rounded-xl border py-3 px-5",
+        'class' : "w-full resize-none rounded-xl border p-3",
         'placeholder' : 'Tell us a little bit about you',
         'rows' : 6
     }))
@@ -46,4 +47,6 @@ class UserProfileCreateForm(forms.Form) :
                                            'accept' : 'image/*'
                                        }),
                                        validators=[FileExtensionValidator(['jpeg', 'png', 'jpg'], 'Unvalid file format')])
-    country = CountryField().formfield()
+    country = CountryField().formfield(widget=forms.Select(attrs={
+        'class' : "w-full py-2 px-3 border rounded-xl"
+    }))

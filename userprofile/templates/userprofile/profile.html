@@ -1,4 +1,5 @@
 {% extends 'userprofile/base.html' %}
+{% load static %}
 {% block content %}
     <div class="flex flex-col h-screen">
         <div class="flex justify-between py-6 px-8 bg-gray-400 rounded-xl mb-5 items-center col-span-3">
@@ -36,12 +37,59 @@
                 </a>
             </button>
         </div>
-        <div class="h-full w-3/4 self-center bg-gray-100 ">
-            <form method='POST' action="" class="w-full p-4">
+        <div class="h-full w-3/4 self-center bg-gray-100 rounded-md">
+            <form method='POST' action="" class="w-full p-4 flex h-full">
                 {% csrf_token %}
-                {{ form.as_p }}
-                <div>
-                    <button type="submit" class="bg-gray-300 py-2 px-4 hover:bg-gray-500 hover:text-white">Save</button>
+                <div class="w-1/2 flex flex-col space-y-2 justify-center items-center">
+                    <p>{{ form.profile_picture.label }}</p>
+                    <p> {{ form.profile_picture.help_text }} </p>
+                    <img src="{% static 'profile/anonymous.avif' %}" alt="anonymous" width='200'>
+                    {{ form.profile_picture }}
+                    {% if form.profile_picture.errors %}
+                        <p class="text-sm p-2 w-full bg-red-200">
+                            {{ form.profile_picture.errors }}
+                        </p>
+                    {% endif %}
+                </div>
+                <div class="w-1/2 space-y-2 flex flex-col justify-between">
+                    <div class="flex flex-col space-y-1">
+                        {{ form.first_name.label_tag }}
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <p class="text-sm p-1">{{form.first_name.errors}}</p>
+                        {% endif %}
+                    </div>
+                    <div class="flex flex-col space-y-1">
+                        {{ form.last_name.label_tag }}
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <p class="text-sm p-1">{{form.last_name.errors}}</p>
+                        {% endif %}
+                    </div>
+                    <div class="flex flex-col space-y-1">
+                        {{ form.birthdate.label_tag }}
+                        {{ form.birthdate }}
+                        {% if form.birthdate.errors %}
+                            <p class="text-sm p-1">{{form.birthdate.errors}}</p>
+                        {% endif %}
+                    </div>
+                    <div class="flex flex-col space-y-1">
+                        {{ form.bio.label_tag }}
+                        {{ form.bio }}
+                        {% if form.bio.errors %}
+                            <p class="text-sm p-1">{{form.bio.errors}}</p>
+                        {% endif %}
+                    </div>
+                    <div class="flex flex-col space-y-1">
+                        {{ form.country.label_tag }}
+                        {{ form.country }}
+                        {% if form.country.errors %}
+                            <p class="text-sm p-1">{{form.country.errors}}</p>
+                        {% endif %}
+                    </div>
+                    <div class="self-end">
+                        <button type="submit" class="bg-green-300 rounded-xl py-2 px-4 hover:bg-green-500 hover:text-white">Save</button>
+                    </div>
                 </div>
             </form>
         </div>
