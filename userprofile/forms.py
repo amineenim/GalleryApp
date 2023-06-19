@@ -7,10 +7,10 @@ from django_countries.fields import CountryField
 
 
 
-class UserProfileCreateForm(forms.Form) :
+class UserProfileCreateForm(forms.ModelForm) :
     class Meta :
         model = UserProfile
-        fields = '__all__'
+        fields = ('first_name', 'last_name', 'birthdate', 'bio', 'profile_picture', 'country')
     
     MAX_SIZE = 2 * 1024 * 1024 
     
