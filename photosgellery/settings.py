@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'likes.apps.LikesConfig',
     'userprofile.apps.UserprofileConfig',
     'fontawesomefree',
+    'django_countries',
 ]
 
 MIDDLEWARE = [
