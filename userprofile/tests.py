@@ -4,6 +4,10 @@ from django.urls import reverse
 from .models import UserProfile
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.contrib.messages import get_messages
+from .forms import UserProfileCreateForm
+import io
+from PIL import Image
 # Create your tests here.
 
 # class to test the operation of get_my_profile View 
@@ -57,15 +61,30 @@ class GetMyProfileViewTests(TestCase) :
         User.objects.create_user(username='test', password='test')
         self.client.login(username='test', password='test')
         target_url = reverse('profile:my_profile')
-        response = self.client.post(target_url,{
+        self.client.get(target_url)
+
+        image_file = SimpleUploadedFile("test.jpg", b"file_content", content_type="image/jpeg")
+
+
+        data = {
             'first_name' : 'amine',
             'last_name' : 'maourid',
             'birthdate' : date(1995, 5, 23),
             'bio' : 'hello world!',
-            'profile_picture' : SimpleUploadedFile('test.jpg', b"content_file", 'image/jpeg'),
-            'country' : 'Morocco',
-        })
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse('profile:my_profile'))
+            'profile_picture' : image_file,
+            'country' : 'US',
+        }
+        files = {'profile_picture': image_file}
+
+        response1 = self.client.post(target_url,data)
+        self.assertEqual(response1.status_code, 302)
+        self.assertRedirects(response1, target_url)
+        form = UserProfileCreateForm(data, files)
+        if not form.is_valid() :
+            print(form.errors)
+        self.assertTrue(form.is_valid())
+        
+
+        
 
 

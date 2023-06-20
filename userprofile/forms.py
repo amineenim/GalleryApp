@@ -1,7 +1,6 @@
 from datetime import date, timedelta
 from django import forms 
-from django.core.exceptions import ValidationError
-from django.core.validators import MaxValueValidator, FileExtensionValidator
+from django.core.validators import  FileExtensionValidator
 from .models import UserProfile
 from django_countries.fields import CountryField
 
