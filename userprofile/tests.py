@@ -1,7 +1,6 @@
 from datetime import date
 from django.test import TestCase
 from django.urls import reverse
-from . import urls
 from .models import UserProfile
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -20,7 +19,7 @@ class GetMyProfileViewTests(TestCase) :
                                    profile_picture=image_file,
                                    country = country,
                                    user=self.user)
-
+    
     # tests with an unauthenticated user 
     def test_get_my_profile_with_unauthenticated_user(self) :
         target_url = reverse('profile:my_profile')
@@ -50,3 +49,23 @@ class GetMyProfileViewTests(TestCase) :
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['is_first_time'], False)
         self.assertEqual(response.context['user_profile_data'], profile_data)
+        self.assertContains(response, 'amine')
+
+    # tests the get_my_profile view with a post request when the user is creating the data for the first time
+    def test_get_my_profile_with_post_request_with_user_adding_his_data_for_the_first_time(self) :
+        # create a user and authenticate him
+        User.objects.create_user(username='test', password='test')
+        self.client.login(username='test', password='test')
+        target_url = reverse('profile:my_profile')
+        response = self.client.post(target_url,{
+            'first_name' : 'amine',
+            'last_name' : 'maourid',
+            'birthdate' : date(1995, 5, 23),
+            'bio' : 'hello world!',
+            'profile_picture' : SimpleUploadedFile('test.jpg', b"content_file", 'image/jpeg'),
+            'country' : 'Morocco',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('profile:my_profile'))
+
+
