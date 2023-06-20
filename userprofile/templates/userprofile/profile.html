@@ -38,7 +38,7 @@
             </button>
         </div>
         <div class="h-full w-3/4 self-center bg-gray-100 rounded-md">
-            <form method='POST' action="" class="w-full p-4 flex h-full"
+            <form method="POST" action="{% url 'profile:my_profile' %}" class="w-full p-4 flex h-full"
             enctype="multipart/form-data">
                 {% csrf_token %}
                 {% if form.non_field_errors %}
@@ -49,8 +49,8 @@
                 <div class="w-1/2 flex flex-col space-y-2 justify-center items-center">
                     <p>{{ form.profile_picture.label }}</p>
                     <p> {{ form.profile_picture.help_text }} </p>
-                    {% if profile_picture %}
-                    <img src="{{ profile_picture.url }}" alt="anonymous" width='200'>
+                    {% if user_profile_data %}
+                    <img src="{{ user_profile_data.profile_picture.url }}" alt="anonymous" width='200'>
                     {% else %}
                     <img src="{% static 'profile/anonymous.avif' %}" alt="anonymous" width='200'>
                     {% endif %}
