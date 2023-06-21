@@ -4,7 +4,7 @@ from django.urls import reverse
 from .models import UserProfile
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.contrib.messages import get_messages
+from django.contrib import messages
 from .forms import UserProfileCreateForm
 import io
 from PIL import Image
@@ -61,7 +61,10 @@ class GetMyProfileViewTests(TestCase) :
         user = User.objects.create_user(username='test', password='test')
         self.client.login(username='test', password='test')
         target_url = reverse('profile:my_profile')
-        self.client.get(target_url)
+        get_response = self.client.get(target_url)
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(get_response.context['is_first_time'], True)
+        self.assertContains(get_response, 'Add data')
         # create an image file
         image_file = SimpleUploadedFile("test.jpg", b"file_content", content_type="image/jpeg")
 
@@ -79,6 +82,15 @@ class GetMyProfileViewTests(TestCase) :
         response1 = self.client.post(target_url, data)
         self.assertEqual(response1.status_code, 302)
         self.assertRedirects(response1, target_url)
+
+        # check for messages associated with the request 
+        my_messages = list(messages.get_messages(response1.wsgi_request))
+        # check that we only have one message 
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'success') # check it's a success message
+            self.assertEqual(message.message, 'Profile data added with success') # check the text of the message
+        
         form = UserProfileCreateForm(data, files)
         if not form.is_valid() :
             print(form.errors)
@@ -92,6 +104,10 @@ class GetMyProfileViewTests(TestCase) :
         self.assertEqual(response2.context['user_profile_data'], UserProfile.objects.filter(user=user).first())
         self.assertContains(response2, 'Save changes')
         self.assertContains(response2, 'maourid')
+        
+
+    # tests the get_my_profile view with a post request when the user has already profile data 
+
         
 
         
