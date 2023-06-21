@@ -189,8 +189,8 @@ class GetMyProfileViewTests(TestCase) :
         self.assertEqual(response1.context['is_first_time'], True)
         self.assertContains(response1, 'Add data')
     
-    # tests the get_my_profile view in post request with a date in the last 5 years or before 70 years 
-    def test_get_my_profile_with_post_request_and_invalid_birthdate_in_last_five_years_or_before_seventy_years(self) :
+    # tests the get_my_profile view in post request with a date in the last 5 years  
+    def test_get_my_profile_with_post_request_and_invalid_birthdate_in_last_five_years(self) :
         # create a user and authenticate him 
         User.objects.create_user(username='test', password='test')
         self.client.login(username='test', password='test')
@@ -205,32 +205,20 @@ class GetMyProfileViewTests(TestCase) :
             'profile_picture' : image_file,
             'country' : 'AU'
         }
-        data2 = {
-            'first_name' : 'test',
-            'last_name' : 'test',
-            'birthdate' : date(1800, 5, 20),
-            'bio' : 'hello world',
-            'profile_picture' : image_file,
-            'country' : 'AU'
-        }
+
         files = {'profile_picture' : image_file }
 
         form1 = UserProfileCreateForm(data=data1, files=files)
-        form2 = UserProfileCreateForm(data=data2, files=files)
-        # check the forms are both valid 
+        # check the form is valid 
         self.assertTrue(form1.is_valid())
-        self.assertTrue(form2.is_valid()) 
 
         target_url = reverse('profile:my_profile')
-        response1 = self.client.post(target_url, data1)
-        #response2 = self.client.post(target_url, data2)
-        
+        response = self.client.post(target_url, data1)
         
         # check that both responses return a 200 OK
-        self.assertEqual(response1.status_code, 200)
-        self.assertIsNotNone(response1.context['error_birthdate'])
-        self.assertContains(response1, 'unvalid date pick a date between')
-        #self.assertEqual(response2.status_code, 200)
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.context['error_birthdate'])
+        self.assertContains(response, 'unvalid date pick a date between')
         # check that no UserProfile instance is created 
         self.assertFalse(UserProfile.objects.exists())
         # request my profile url with get request and check it's empty 
@@ -238,7 +226,44 @@ class GetMyProfileViewTests(TestCase) :
         self.assertEqual(get_response.status_code, 200)
         self.assertEqual(get_response.context['is_first_time'], True)
         self.assertContains(get_response, 'Add data')
+    
+    # tests the get_my_profile view in post request with a date before 70 years 
+    def test_get_my_profile_with_post_request_and_invalid_birthdate_before_seventy_years(self) :
+        # create a user and authenticate him 
+        User.objects.create_user(username='test', password='test')
+        self.client.login(username='test', password='test')
+        # data to pass to the form 
+        image_file = SimpleUploadedFile('test.png', b"file_content", 'image/png')
+       
+        data2 = {
+            'first_name' : 'test',
+            'last_name' : 'test',
+            'birthdate' : date(1953, 5, 20),
+            'bio' : 'hello world',
+            'profile_picture' : image_file,
+            'country' : 'AU'
+        }
+        files = {'profile_picture' : image_file }
 
+        form2 = UserProfileCreateForm(data=data2, files=files)
+        # check the form is valid 
+        self.assertTrue(form2.is_valid()) 
+
+        target_url = reverse('profile:my_profile')
+        response = self.client.post(target_url, data2)
+        
+        
+        # check that both responses return a 200 OK
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.context['error_birthdate'])
+        self.assertContains(response, 'unvalid date pick a date between')
+        # check that no UserProfile instance is created 
+        self.assertFalse(UserProfile.objects.exists())
+        # request my profile url with get request and check it's empty 
+        get_response = self.client.get(target_url)
+        self.assertEqual(get_response.status_code, 200)
+        self.assertEqual(get_response.context['is_first_time'], True)
+        self.assertContains(get_response, 'Add data')
 
         
 
