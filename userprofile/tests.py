@@ -58,11 +58,11 @@ class GetMyProfileViewTests(TestCase) :
     # tests the get_my_profile view with a post request when the user is creating the data for the first time
     def test_get_my_profile_with_post_request_with_user_adding_his_data_for_the_first_time(self) :
         # create a user and authenticate him
-        User.objects.create_user(username='test', password='test')
+        user = User.objects.create_user(username='test', password='test')
         self.client.login(username='test', password='test')
         target_url = reverse('profile:my_profile')
         self.client.get(target_url)
-
+        # create an image file
         image_file = SimpleUploadedFile("test.jpg", b"file_content", content_type="image/jpeg")
 
 
@@ -76,13 +76,22 @@ class GetMyProfileViewTests(TestCase) :
         }
         files = {'profile_picture': image_file}
 
-        response1 = self.client.post(target_url,data)
+        response1 = self.client.post(target_url, data)
         self.assertEqual(response1.status_code, 302)
         self.assertRedirects(response1, target_url)
         form = UserProfileCreateForm(data, files)
         if not form.is_valid() :
             print(form.errors)
         self.assertTrue(form.is_valid())
+        # check that a UserProfile instance was created 
+        self.assertTrue(UserProfile.objects.exists())
+        # go to the redirecy url and check that it contains the data just created 
+        response2 = self.client.get(target_url)
+        self.assertEqual(response2.status_code, 200)
+        self.assertEqual(response2.context['is_first_time'], False)
+        self.assertEqual(response2.context['user_profile_data'], UserProfile.objects.filter(user=user).first())
+        self.assertContains(response2, 'Save changes')
+        self.assertContains(response2, 'maourid')
         
 
         

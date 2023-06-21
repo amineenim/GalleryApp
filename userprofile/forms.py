@@ -44,7 +44,7 @@ class UserProfileCreateForm(forms.ModelForm) :
         'placeholder' : 'Tell us a little bit about you',
         'rows' : 6
     }))
-    profile_picture = forms.ImageField(label='Profile Picture',
+    profile_picture = forms.FileField(label='Profile Picture',
                                        help_text='Upload a profile picture up to 2MB',
                                        widget=forms.FileInput(attrs={
                                            'class' : "w-1/2",
