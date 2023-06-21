@@ -156,6 +156,39 @@ class GetMyProfileViewTests(TestCase) :
         self.assertContains(response, 'enima')
         self.assertContains(response, date(1995, 5, 23))
         self.assertContains(response, 'Save changes')
+    
+    # tests the get_my_profile view with invalid birthdates 
+    def test_get_my_profile_with_post_request_and_invalid_birthdate_beyond_the_actual_date(self) :
+        # create a user and authenticate him
+        User.objects.create_user(username='testuser', password='testpassword')
+        self.client.login(username='testuser', password='testpassword')
+        # prepare data to pass to the form 
+        image_file = SimpleUploadedFile('test.jpg', b"file_content", 'image/jpeg')
+        data = {
+            'first_name' : 'amine',
+            'last_name' : 'maourid',
+            'birthdate' : date(2023, 6, 24),
+            'bio' : 'hello world',
+            'profile_picture' : image_file,
+            'country' : 'US'
+        }
+        target_url = reverse('profile:my_profile')
+        files = {'profile_picture' : image_file }
+        form = UserProfileCreateForm(data=data, files=files)
+        # the form only checks for a valid date , after more advanced analyses of dates are performed
+        self.assertTrue(form.is_valid())
+        response = self.client.post(target_url, data)
+        # check that the response status is 200 and that an error_birthdate context variable is passed to the view
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['error_birthdate'], 'unvalid birthdate')
+        # check that no UserProfile instance was created 
+        self.assertFalse(UserProfile.objects.exists())
+        # go the my profile url and check it's empty 
+        response1 = self.client.get(target_url)
+        self.assertEqual(response1.status_code, 200)
+        self.assertEqual(response1.context['is_first_time'], True)
+        self.assertContains(response1, 'Add data')
+
 
         
 
