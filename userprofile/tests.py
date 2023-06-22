@@ -307,6 +307,22 @@ class SearchInGetMyProfileViewTests(TestCase) :
         # check that the div under the search inout will display "search_me" as a result 
         self.assertContains(response, 'search_me')
     
+    # tests the search functionnality with a user looking for a user not existing 
+    def test_search_with_user_looking_for_a_user_not_existing(self) :
+        # create a user and authenticate him 
+        self.create_user(username='test', password='test')
+        self.client.login(username='test', password='test')
+        search_string = 'not_existing'
+        target_url = f"{reverse('profile:my_profile')}?search={search_string}"
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        # check for the response context 
+        self.assertIn('search_results', response.context)
+        self.assertIn('searched_value', response.context)
+        self.assertQuerysetEqual(response.context['search_results'], [])
+        self.assertEqual(response.context['searched_value'], search_string)
+        self.assertContains(response, 'No results for your search')
+    
     
 
 
