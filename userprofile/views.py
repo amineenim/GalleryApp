@@ -26,9 +26,9 @@ def get_my_profile(request) :
             searched_value = request.GET.get('search')
             # trim the input value
             searched_value = searched_value.strip()
-            searched_value = html.escape(searched_value)
             if len(searched_value) > 0 :
                 # we look for matches in both username and email fields 
+                searched_value = html.escape(searched_value)
                 results = User.objects.filter(Q(username__icontains=searched_value) | Q(email__icontains=searched_value))
                 is_a_list = False 
         if is_editing :
@@ -37,12 +37,12 @@ def get_my_profile(request) :
             form = UserProfileCreateForm(instance=user_profile_data)
             if not(is_a_list) :
                 return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : False, 'user_profile_data' : user_profile_data, 'search_results' : results, 'searched_value' : searched_value})
-            return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : False, 'user_profile_data' : user_profile_data, 'searched_value' : searched_value})
+            return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : False, 'user_profile_data' : user_profile_data})
         else :
             form = UserProfileCreateForm()
             if not(is_a_list) :
                 return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : True, 'search_results' : results, 'searched_value' : searched_value})
-            return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : True, 'searched_value' : searched_value})
+            return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : True})
     
 
     elif request.method == 'POST' :
