@@ -1,9 +1,12 @@
-from datetime import datetime, timedelta, date
+from datetime import timedelta, date
 from django.shortcuts import render, redirect
 from .forms import UserProfileCreateForm
 from .models import UserProfile
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.contrib.auth.models import User
+from django.db.models import Q
+from django.utils import html
 # Create your views here.
 @login_required
 def get_my_profile(request) :
@@ -15,13 +18,31 @@ def get_my_profile(request) :
         is_editing = False  
     # check if it's a get request
     if request.method == 'GET' :
+        results = []
+        is_a_list = True 
+        # check if there is a search param in the URL 
+        if 'search' in request.GET :
+            searched_value = request.GET.get('search')
+            # trim the input value
+            searched_value = searched_value.strip()
+            searched_value = html.escape(searched_value)
+            if len(searched_value) > 0 :
+                # we look for matches in both username and email fields 
+                results = User.objects.filter(Q(username__icontains=searched_value) | Q(email__icontains=searched_value))
+                is_a_list = False 
         if is_editing :
             user_profile_data = user_profile_data[0]
             # this means that the user has already filled his data
             form = UserProfileCreateForm(instance=user_profile_data)
+            if not(is_a_list) :
+                if results.exists() :
+                    return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : False, 'user_profile_data' : user_profile_data, 'search_results' : results})
             return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : False, 'user_profile_data' : user_profile_data})
         else :
             form = UserProfileCreateForm()
+            if not(is_a_list) :
+                if results.exists() : 
+                    return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : True, 'search_results' : results})
             return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : True})
     
 

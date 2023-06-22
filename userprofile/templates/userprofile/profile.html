@@ -31,11 +31,18 @@
                     {% endif %}
                 {% endfor %}
             {% endif %}
-            <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl">
-                <a href="{% url 'gallery' %}" class="flex items-center">
-                    <i class="fa-solid fa-home mr-1"></i>Home
-                </a>
-            </button>
+            <div class="flex justify-between w-1/4 items-center">
+                {% if search_results %}
+                    {% include 'userprofile/search.html' with results=search_results %}
+                {% else %}
+                    {% include 'userprofile/search.html' %}
+                {% endif %}
+                <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl">
+                    <a href="{% url 'gallery' %}" class="flex items-center">
+                        <i class="fa-solid fa-home mr-1"></i>Home
+                    </a>
+                </button>
+            </div>
         </div>
         <div class="h-full w-3/4 self-center bg-gray-100 rounded-md">
             <form method="POST" action="{% url 'profile:my_profile' %}" class="w-full p-4 flex h-full"

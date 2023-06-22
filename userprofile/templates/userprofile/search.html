@@ -1,0 +1,13 @@
+{% extends 'likes/base.html' %}
+{% block content %}
+    <form method='GET' action="{% url 'profile:my_profile' %}" class="h-fit flex items-center">
+        <input type='text' name='search' placeholder="Looking for someone..."
+        class="border-2 border-slate-600 rounded-xl pl-2 py-1 mr-1">
+        <button type='submit'>
+            <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+        </button>
+        {% if results %}
+            {{ results }}
+        {% endif %}
+    </form>
+{% endblock %}
