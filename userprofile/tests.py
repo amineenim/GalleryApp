@@ -323,6 +323,24 @@ class SearchInGetMyProfileViewTests(TestCase) :
         self.assertEqual(response.context['searched_value'], search_string)
         self.assertContains(response, 'No results for your search')
     
-    
-
+    # tests the search functionnality with a search that matches more than a user 
+    def test_search_with_search_input_matching_more_than_a_single_user(self) :
+        user1 = self.create_user(username='userone', password='1234')
+        user1 = self.create_user(username='usertwo', password='45678')
+        # create a user and authenticate him
+        User.objects.create_user(username='amine', password='test')
+        self.client.login(username='amine', password='test')
+        # this search string exists in both the users 1 and 2 username
+        search_string = 'user'
+        target_url = f"{reverse('profile:my_profile')}?search={search_string}"
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        # check for response's context
+        self.assertIn('search_results', response.context)
+        self.assertIn('searched_value', response.context)
+        self.assertContains(response, 'userone')
+        self.assertContains(response, 'usertwo')
+        self.assertEqual(response.context['searched_value'], search_string)
+        # check that the iterables are equal without regard to the order
+        self.assertCountEqual(response.context['search_results'], User.objects.filter(username__icontains='user'))
 
