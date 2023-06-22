@@ -286,7 +286,26 @@ class SearchInGetMyProfileViewTests(TestCase) :
         self.assertNotIn('search_results', response.context)
         self.assertNotIn('searched_value', response.context)
     
-    
+    # tests the search functionnality with a user looking for another user that exists 
+    def test_search_with_user_looking_for_another_user_who_exists(self) :
+        # create the user to search for 
+        self.create_user(username='search_me', password='1234')
+        # create a user and authenticate him
+        User.objects.create_user(username='test', password='test')
+        self.client.login(username='test', password='test')
+        # since the search looks for records whose username contains the input in search this corresponds to "search_me" user
+        search_string = 'ch_me'
+        target_url = f"{reverse('profile:my_profile')}?search={search_string}"
+        response = self.client.get(target_url)
+        # check for response status and context variables 
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('search_results', response.context)
+        self.assertIn('searched_value', response.context)
+        self.assertQuerysetEqual(response.context['search_results'], [User.objects.filter(username='search_me').first()])
+        # check that the value typed in search will prefill the search input
+        self.assertContains(response, 'ch_me')
+        # check that the div under the search inout will display "search_me" as a result 
+        self.assertContains(response, 'search_me')
     
     
 
