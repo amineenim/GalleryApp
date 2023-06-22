@@ -326,7 +326,7 @@ class SearchInGetMyProfileViewTests(TestCase) :
     # tests the search functionnality with a search that matches more than a user 
     def test_search_with_search_input_matching_more_than_a_single_user(self) :
         user1 = self.create_user(username='userone', password='1234')
-        user1 = self.create_user(username='usertwo', password='45678')
+        user2 = self.create_user(username='usertwo', password='45678')
         # create a user and authenticate him
         User.objects.create_user(username='amine', password='test')
         self.client.login(username='amine', password='test')
@@ -342,5 +342,5 @@ class SearchInGetMyProfileViewTests(TestCase) :
         self.assertContains(response, 'usertwo')
         self.assertEqual(response.context['searched_value'], search_string)
         # check that the iterables are equal without regard to the order
-        self.assertCountEqual(response.context['search_results'], User.objects.filter(username__icontains='user'))
+        self.assertCountEqual(response.context['search_results'], [user1, user2])
 
