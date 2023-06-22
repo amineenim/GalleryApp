@@ -8,7 +8,9 @@
                 {% for result in results %}
                     <p class="pl-3 border-b-2 border-slate-500"> {{ result.username }}</p>
                 {% empty %}
-                    <p class="pl-3 border-b-2 py-1 text-center text-sm"> No results for your search</p>
+                    {% if searched_value|length > 0 %}
+                        <p class="pl-3 border-b-2 py-1 text-center text-sm"> No results for your search</p>
+                    {% endif %}
                 {% endfor %}
             </div>
         </div>

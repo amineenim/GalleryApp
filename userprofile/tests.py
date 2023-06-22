@@ -266,5 +266,28 @@ class GetMyProfileViewTests(TestCase) :
         self.assertContains(get_response, 'Add data')
 
         
+# class to test the search functionnality in get_my_profile view 
+class SearchInGetMyProfileViewTests(TestCase) :
+    # function that creates and returns a user
+    def create_user(self, username, password) :
+        return User.objects.create_user(username=username, password=password)
+    
+    # tests the search functionnality with an empty string 
+    def test_search_with_empty_string(self) :
+        # create a user and authenticate him 
+        self.create_user('test', '1234')
+        self.client.login(username='test', password='1234')
+        empty_string = ''
+        target_url = f"{reverse('profile:my_profile')}?search={empty_string}"
+        response = self.client.get(target_url)
+        # check the response status
+        self.assertEqual(response.status_code, 200)
+        # check that the 'search_results' and 'searched_value' variables are not passed as context variables
+        self.assertNotIn('search_results', response.context)
+        self.assertNotIn('searched_value', response.context)
+    
+    
+    
+    
 
 
