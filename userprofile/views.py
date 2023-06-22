@@ -20,6 +20,7 @@ def get_my_profile(request) :
     if request.method == 'GET' :
         results = []
         is_a_list = True 
+        searched_value = ''
         # check if there is a search param in the URL 
         if 'search' in request.GET :
             searched_value = request.GET.get('search')
@@ -35,15 +36,13 @@ def get_my_profile(request) :
             # this means that the user has already filled his data
             form = UserProfileCreateForm(instance=user_profile_data)
             if not(is_a_list) :
-                if results.exists() :
-                    return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : False, 'user_profile_data' : user_profile_data, 'search_results' : results})
-            return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : False, 'user_profile_data' : user_profile_data})
+                return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : False, 'user_profile_data' : user_profile_data, 'search_results' : results, 'searched_value' : searched_value})
+            return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : False, 'user_profile_data' : user_profile_data, 'searched_value' : searched_value})
         else :
             form = UserProfileCreateForm()
             if not(is_a_list) :
-                if results.exists() : 
-                    return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : True, 'search_results' : results})
-            return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : True})
+                return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : True, 'search_results' : results, 'searched_value' : searched_value})
+            return render(request, 'userprofile/profile.html', {'form' : form, 'is_first_time' : True, 'searched_value' : searched_value})
     
 
     elif request.method == 'POST' :
