@@ -80,7 +80,7 @@ def get_my_profile(request) :
 # view that handles displaying some user profile for the authenticated user 
 @login_required
 def get_profile(request, username) : 
-    # check if the user with the given usrname exists or not, username is unique 
+    # check if the user with the given username exists or not, username is unique 
     try :
         user = User.objects.get(username=username)
     except User.DoesNotExist :

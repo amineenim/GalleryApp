@@ -344,3 +344,29 @@ class SearchInGetMyProfileViewTests(TestCase) :
         # check that the iterables are equal without regard to the order
         self.assertCountEqual(response.context['search_results'], [user1, user2])
 
+# class to test get_profile view which allows a user to see am=nother user profile 
+class GetProfileViewTests(TestCase) :
+    # test get_profile view with unauthenticated user 
+    def test_get_profile_with_unauthenticated_user(self) :
+        target_url = reverse('profile:view_profile', args=('test',))
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+    
+    # test get_profile with user requesting a user with username not existing
+    def test_get_profile_with_user_not_existing(self) :
+        # create a user and authenticate him
+        User.objects.create_user(username='amine', password='1234')
+        self.client.login(username='amine', password='1234')
+        # we don't have a user with username 'alpha' for example
+        username = 'alpha'
+        target_url = reverse('profile:view_profile', args=(username,))
+        response = self.client.get(target_url)
+        # check for reponse status and messages 
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
+        # get messages and tranform in list 
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        for message in my_messages :
+            self.assertEqual(message.tags, 'error')
+            self.assertEqual(message.message, 'Not found 404')
