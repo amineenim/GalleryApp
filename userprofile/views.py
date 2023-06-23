@@ -1,5 +1,6 @@
 from datetime import timedelta, date
 from django.shortcuts import render, redirect
+from django.urls import reverse
 from .forms import UserProfileCreateForm
 from .models import UserProfile
 from django.contrib.auth.decorators import login_required
@@ -7,6 +8,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils import html
+from django_countries.fields import Country
 # Create your views here.
 @login_required
 def get_my_profile(request) :
@@ -75,4 +77,28 @@ def get_my_profile(request) :
                 messages.success(request, 'profile data modified succesefully')
             return redirect('profile:my_profile')
                 
+# view that handles displaying some user profile for the authenticated user 
+@login_required
+def get_profile(request, username) : 
+    # check if the user with the given usrname exists or not, username is unique 
+    try :
+        user = User.objects.get(username=username)
+    except User.DoesNotExist :
+        messages.error(request, 'Not found 404')
+        return redirect(reverse('gallery'))
+    user_profile_data = UserProfile.objects.filter(user=user)
+    # the user may or may not have the profile data , depends if he alredy filled it or not
+    context = {}
+    if user_profile_data.exists():
+        # get data about the country which is stored in 2_alpha
+        country = Country(user_profile_data.first().country)
+        if country :
+            context = {'user_profile_data' : user_profile_data.first(), 'username' : username, 'country_data' : country}
+        else : 
+            context = {'user_profile_data' : user_profile_data.first(), 'username' : username}
+        return render(request, 'userprofile/user_profile.html', context)
+    else :
+        context = {'username' : username}
+        return render(request, 'userprofile/user_profile.html', context)
+    
     

@@ -6,7 +6,9 @@
             class=" border-2 border-slate-600 rounded-xl pl-2 py-1 mr-1" value="{{searched_value}}">
             <div class="absolute top-0 mt-10 w-full bg-white rounded shadow-lg z-10 max-h-64 overflow-y-auto">
                 {% for result in results %}
-                    <p class="pl-3 border-b-2 border-slate-500"> {{ result.username }}</p>
+                    <p class="pl-3 border-b-2 border-slate-500">
+                        <a href="{% url 'profile:view_profile' result.username %}">{{ result.username }}</a>
+                    </p>
                 {% empty %}
                     {% if searched_value|length > 0 %}
                         <p class="pl-3 border-b-2 py-1 text-center text-sm"> No results for your search</p>

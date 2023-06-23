@@ -1,0 +1,70 @@
+{% extends 'userprofile/base.html' %}
+{% load static %}
+{% load countries %}
+{% block title %}{{ username }}{% endblock %}
+{% block content %}
+
+    <div class="h-screen flex flex-col">
+        <div class="flex justify-between py-6 px-8 bg-gray-400 rounded-xl mb-5 items-center">
+            <h3 class="text-lg">{{username}}'s Profile </h3>
+            <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl">
+                <a href="{% url 'profile:my_profile' %}" class="flex items-center">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    <p class="ml-1">Back</p>
+                </a>
+            </button>
+        </div>
+        <div class="h-full bg-gray-100 rounded-xl p-6 flex flex-col items-center">
+            {% if user_profile_data %}
+                <div class="grid grid-cols-2 gap-3 h-full w-3/4">
+                    <div class="flex flex-col items-center justify-center">
+                        <div class="bg-gray-200 rounded-full border-2 border-slate-800 w-64 h-64 overflow-clip">
+                            {% if user_profile_data.profile_picture %}
+                            <img src="{{user_profile_data.profile_picture.url}}" alt="profile_picture" 
+                            class="w-full h-full object-cover">
+                            {% else %}
+                                <img src="{% static 'profile/anonymous.avif' %}" alt="anonymous_profile"
+                                class="w-full h-full object-cover">
+                            {% endif %}
+                        </div>
+                        <p class="text-xl underline my-4"> {{username}} </p>
+                    </div>
+                    <div class="flex justify-center items-center">
+                        <div class="grid grid-cols-2 gap-4 h-1/2 p-2">
+                            <div class="flex">
+                                <label class="font-bold mr-3">First Name : </label>
+                                <p>{{user_profile_data.first_name}}</p>
+                            </div>
+                            <div class="flex">
+                                <label class="font-bold mr-3">Last Name : </label>
+                                <p>{{user_profile_data.last_name}}</p>
+                            </div>
+                            <div class="col-span-2 flex items-center">
+                                <label class="font-bold">Birthdate :</label>
+                                <p class="m-auto"> {{user_profile_data.birthdate}} </p>
+                            </div>
+                            <div class="col-span-2 flex flex-col">
+                                <label class="font-bold">Bio :</label>
+                                <p class="h-fit"> {{user_profile_data.bio}} </p>
+                            </div>
+                            <div class="col-span-2 flex items-center">
+                                <label class="font-bold">Country :</label>
+                                {% if country_data %}
+                                <div class="flex items-center m-auto ">
+                                    <p class="mr-2"> {{country_data.name}}</p>
+                                    <img src="{{country_data.flag}}" alt='country_flag' class="border-1 border-slate-800 w-8">
+                                </div>
+                                {% else %}
+                                    <p>{{user_profile_data.country}}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <p class="self-center m-auto">No Profile data availabe for {{username}}</p>
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock %}
