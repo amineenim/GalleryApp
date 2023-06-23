@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib import messages
 from .forms import UserProfileCreateForm
+from django_countries.fields import Country
 # Create your tests here.
 
 # class to test the operation of get_my_profile View 
@@ -385,3 +386,38 @@ class GetProfileViewTests(TestCase) :
         self.assertEqual(response.context['username'], 'i_exist')
         self.assertNotIn('user_profile_data', response.context)
         self.assertContains(response, 'No Profile data availabe for i_exist')
+    
+    # test get_profile view with existing user and UserProfile data for the user existing
+    def test_get_profile_with_user_having_profile_data(self) :
+        # create a user and a UserProfile instance associated to him
+        user_with_profile_data = User.objects.create_user(username='test', password='test')
+        image_file = SimpleUploadedFile('profile.jpg', b"file_content", 'image/jpeg')
+        profile_data = UserProfile.objects.create(
+            first_name = 'amine',
+            last_name = 'enima',
+            birthdate = date(1999, 9, 9),
+            bio = 'hello world',
+            user = user_with_profile_data,
+            profile_picture = image_file,
+            country = 'US'
+        )
+        # create a user and authenticate him
+        User.objects.create_user(username='foo', password='1234')
+        self.client.login(username='foo', password='1234')
+        # set the url to request with the username 'test' since we gonna request his profile
+        target_url = reverse('profile:view_profile', args=('test',))
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        # check for context variables passed to the view 
+        self.assertIn('user_profile_data', response.context)
+        self.assertIn('username', response.context)
+        self.assertIn('country_data', response.context)
+        self.assertEqual(response.context['username'], 'test')
+        country_data = Country('US')
+        self.assertEqual(response.context['country_data'], country_data)
+        self.assertEqual(response.context['user_profile_data'], profile_data)
+        # check for the content of the rendered view 
+        self.assertContains(response, 'amine')
+        self.assertContains(response, 'enima')
+        self.assertContains(response, 'hello world')
+        self.assertContains(response, country_data.name)
