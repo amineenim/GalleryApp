@@ -370,3 +370,18 @@ class GetProfileViewTests(TestCase) :
         for message in my_messages :
             self.assertEqual(message.tags, 'error')
             self.assertEqual(message.message, 'Not found 404')
+    
+    # test the get_profile view with an existing user but UserProfile instance associated with him not existing
+    def test_get_profile_with_existing_user_and_no_user_profile_data_associated(self) :
+        # create a user , this user is the one we're going to request his profile
+        User.objects.create_user(username='i_exist', password='test')
+        # create a user and authenticate him
+        User.objects.create_user(username='amine', password='1234')
+        self.client.login(username='amine', password='1234')
+        target_url = reverse('profile:view_profile', args=('i_exist',))
+        response = self.client.get(target_url)
+        # check for response 
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['username'], 'i_exist')
+        self.assertNotIn('user_profile_data', response.context)
+        self.assertContains(response, 'No Profile data availabe for i_exist')
