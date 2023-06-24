@@ -12,4 +12,15 @@ class SendFriendshipRequestViewTests(TestCase) :
         response = self.client.post(target_url,{})
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+
+    # test send_friendship_request to a user which does not exist 
+    def test_send_friendship_request_to_unexisting_user(self) :
+        # create a user and autneticate him 
+        User.objects.create_user(username='amine', password='test')
+        self.client.login(username='amine', password='test')
+        # i pass as a username argument 'not_existing' which doesn't refer to any user
+        target_url = reverse('friends:send_request', args=('not_existing',))
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
         
