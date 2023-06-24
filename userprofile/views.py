@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from django.utils import html
 from django_countries.fields import Country
+from friends.models import FriendshipRequest
 # Create your views here.
 @login_required
 def get_my_profile(request) :
@@ -89,16 +90,51 @@ def get_profile(request, username) :
     user_profile_data = UserProfile.objects.filter(user=user)
     # the user may or may not have the profile data , depends if he alredy filled it or not
     context = {}
+    # define some variables to store if we're friends or not yet 
+    are_we_friends = False 
+    i_invited_him = False
+    he_invited_me = False 
+    no_invitation = True 
+    # check if the currently authenticated user has already sent a friendship request to the user with this username
+    have_i_already_sent_a_friendship_request = FriendshipRequest.objects.filter(initiated_by=request.user, sent_to=user).exists()
+    if have_i_already_sent_a_friendship_request :
+        i_invited_him = True 
+        no_invitation = False 
+        # there's two options, either he accepted the friendship request or not yet 
+        if FriendshipRequest.objects.filter(initiated_by=request.user, sent_to=user).first().status == True :
+            are_we_friends = True 
+
+    # check if he has already sent a friendship request to the authenticated user 
+    has_he_already_sent_a_friendship_request_to_me = FriendshipRequest.objects.filter(initiated_by = user, sent_to=request.user).exists()
+    if has_he_already_sent_a_friendship_request_to_me :
+        he_invited_me = True 
+        no_invitation = False 
+        # either i already accepted his request or not yet 
+        if FriendshipRequest.objects.filter(initiated_by=user, sent_to=request.user).first().status == True :
+            are_we_friends = True 
+
     if user_profile_data.exists():
         # get data about the country which is stored in 2_alpha
         country = Country(user_profile_data.first().country)
         if country :
-            context = {'user_profile_data' : user_profile_data.first(), 'username' : username, 'country_data' : country}
+            context = {'user_profile_data' : user_profile_data.first(), 'username' : username,
+                       'country_data' : country,
+                       'are_we_friends' : are_we_friends,
+                       'i_invited_him' : i_invited_him,
+                       'he_invited_me' : he_invited_me,
+                       'no_invitation' : no_invitation}
         else : 
-            context = {'user_profile_data' : user_profile_data.first(), 'username' : username}
+            context = {'user_profile_data' : user_profile_data.first(), 'username' : username,
+                       'are_we_friends' : are_we_friends,
+                       'i_invited_him' : i_invited_him,
+                       'he_invited_me' : he_invited_me,
+                       'no_invitation' : no_invitation}
         return render(request, 'userprofile/user_profile.html', context)
     else :
-        context = {'username' : username}
+        context = {'username' : username, 'are_we_friends' : are_we_friends, 
+                   'i_invited_him' : i_invited_him,
+                   'he_invited_me' : he_invited_me,
+                   'no_invitation' : no_invitation}
         return render(request, 'userprofile/user_profile.html', context)
     
     

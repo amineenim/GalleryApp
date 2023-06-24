@@ -7,6 +7,33 @@
     <div class="h-screen flex flex-col">
         <div class="flex justify-between py-6 px-8 bg-gray-400 rounded-xl mb-5 items-center">
             <h3 class="text-lg">{{username}}'s Profile </h3>
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        <div class="bg-green-300 rounded-xl flex justify-between items-center w-1/2 p-3 pl-5 w-1/2">
+                            <p>{{ message }}</p>
+                            <form method="POST" action="{% url 'likes:clear_messages' %}" class="w-fit h-fit">
+                                {% csrf_token %}
+                                <input type="hidden" name="previous_url" value="{{request.path}}">
+                                <button type="submit">
+                                    <i class="fa-solid fa-x"></i>
+                                </button>
+                            </form>
+                        </div>
+                    {% elif message.tags == 'error' %}
+                        <div class="bg-red-300 rounded-xl flex justify-between items-center w-1/2 p-3 pl-5">
+                            <p>{{ message }}</p>
+                            <form method="POST" action="{% url 'likes:clear_messages' %}" class="w-fit h-fit">
+                                {% csrf_token %}
+                                <input type="hidden" name="previous_url" value="{{request.path}}">
+                                <button type="submit">
+                                    <i class="fa-solid fa-x"></i>
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
             <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl">
                 <a href="{% url 'profile:my_profile' %}" class="flex items-center">
                     <i class="fa-solid fa-arrow-left"></i>
@@ -31,6 +58,38 @@
                     </div>
                     <div class="flex justify-center items-center">
                         <div class="grid grid-cols-2 gap-4 h-1/2 p-2">
+                            <div class="col-span-2 flex items-center">
+                                {% if are_we_friends %}
+                                    <button class="py-2 px-4 bg-gray-200 hover:bg-gray-600 hover:text-white m-auto">
+                                        Message 
+                                    </button>
+                                {% else %}
+                                    {% if no_invitation %}
+                                        <form action="{% url 'friends:send_request' username %}" method="POST" class="m-auto h-fit w-fit mb-6">
+                                            {% csrf_token %}
+                                            <button class="py-2 px-4 flex items-center bg-green-300 hover:bg-green-600 hover:text-white">
+                                                <i class="fa-solid fa-plus"></i> <p class="ml-2">Add as a Friend</p> 
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        {% if i_invited_him %}
+                                            <form action="{% url 'friends:send_request' username %}" method="POST" class="m-auto h-fit w-fit mb-6">
+                                                {% csrf_token %}
+                                                <button class="py-2 px-4 flex items-center bg-green-300 hover:bg-green-600 hover:text-white">
+                                                    <i class="fa-solid fa-x"></i> <p class="ml-2">Cancel my Request</p>  
+                                                </button>
+                                            </form>
+                                        {% elif he_invited_me %}
+                                            <button class="py-2 px-4 bg-gray-200 hover:bg-gray-600 hover:text-white">
+                                                Accept  
+                                            </button>
+                                            <button class="py-2 px-4 bg-gray-200 hover:bg-gray-600 hover:text-white">
+                                                Decline  
+                                            </button>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
                             <div class="flex">
                                 <label class="font-bold mr-3">First Name : </label>
                                 <p>{{user_profile_data.first_name}}</p>
