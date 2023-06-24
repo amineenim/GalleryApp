@@ -122,6 +122,38 @@
                 </div>
             {% else %}
                 <p class="self-center m-auto">No Profile data availabe for {{username}}</p>
+                <div class="col-span-2 flex items-center">
+                    {% if are_we_friends %}
+                        <button class="py-2 px-4 bg-gray-200 hover:bg-gray-600 hover:text-white m-auto">
+                            Message 
+                        </button>
+                    {% else %}
+                        {% if no_invitation %}
+                            <form action="{% url 'friends:send_request' username %}" method="POST" class="m-auto h-fit w-fit mb-6">
+                                {% csrf_token %}
+                                <button class="py-2 px-4 flex items-center bg-green-300 hover:bg-green-600 hover:text-white">
+                                    <i class="fa-solid fa-plus"></i> <p class="ml-2">Add as a Friend</p> 
+                                </button>
+                            </form>
+                        {% else %}
+                            {% if i_invited_him %}
+                                <form action="{% url 'friends:send_request' username %}" method="POST" class="m-auto h-fit w-fit mb-6">
+                                    {% csrf_token %}
+                                    <button class="py-2 px-4 flex items-center bg-green-300 hover:bg-green-600 hover:text-white">
+                                        <i class="fa-solid fa-x"></i> <p class="ml-2">Cancel my Request</p>  
+                                    </button>
+                                </form>
+                            {% elif he_invited_me %}
+                                <button class="py-2 px-4 bg-gray-200 hover:bg-gray-600 hover:text-white">
+                                    Accept  
+                                </button>
+                                <button class="py-2 px-4 bg-gray-200 hover:bg-gray-600 hover:text-white">
+                                    Decline  
+                                </button>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                </div>
             {% endif %}
         </div>
     </div>
