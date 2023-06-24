@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'userprofile.apps.UserprofileConfig',
     'fontawesomefree',
     'django_countries',
+    'friends.apps.FriendsConfig',
 ]
 
 MIDDLEWARE = [
