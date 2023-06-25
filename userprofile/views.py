@@ -33,6 +33,7 @@ def get_my_profile(request) :
                 # we look for matches in both username and email fields 
                 searched_value = html.escape(searched_value)
                 results = User.objects.filter(Q(username__icontains=searched_value) | Q(email__icontains=searched_value))
+                results = results.exclude(username=request.user.username)
                 is_a_list = False 
         if is_editing :
             user_profile_data = user_profile_data[0]

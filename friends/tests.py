@@ -60,7 +60,48 @@ class SendFriendshipRequestViewTests(TestCase) :
         self.assertEqual(response.context['i_invited_him'], True)
         self.assertEqual(response.context['no_invitation'], False)
         self.assertContains(response, 'Cancel my Request')        
-
+    
+    # test send_friendship request to a user to whom i've already sent a friendship request 
+    def test_send_friendship_request_to_user_to_whom_i_already_sent_one(self) :
+        # create the user to whom send the request 
+        user_to_receive_request = User.objects.create_user(username='receiver', password='test')
+        # create a user and authenticate him
+        sender = User.objects.create_user(username='sender', password='1234')
+        self.client.login(username='sender', password='1234')
+        # create a FriendshipRequest object 
+        FriendshipRequest.objects.create(
+            initiated_by = sender,
+            sent_to = user_to_receive_request,
+        )
+        # since now the request has been already sent, when going to the receiver profile the sender can not send once again
+        target_url = reverse('profile:view_profile', args=('receiver',))
+        response = self.client.get(target_url)
+        # check the response status and data 
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['username'], 'receiver')
+        self.assertEqual(response.context['are_we_friends'], False)
+        self.assertEqual(response.context['he_invited_me'], False)
+        self.assertEqual(response.context['i_invited_him'], True)
+        self.assertEqual(response.context['no_invitation'], False)
+        #check that the user can only cancel the request he already sent 
+        self.assertContains(response, 'Cancel my Request')
+        # try to cancel the request 
+        response = self.client.post(reverse('friends:send_request',args=('receiver',)), {})
+        # now that the request has been deleted , check that there are no FriendshipRequest objects
+        self.assertFalse(FriendshipRequest.objects.exists())
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'success')
+            self.assertEqual(message.message, 'Your Freindship request to receiver has been canceled')
+        self.assertEqual(response.status_code, 302)
+        # check that we will redirect to the receiver profile again
+        self.assertRedirects(response, target_url)
+        # now that the friendship request has been canceled, get the receiver profile again
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['no_invitation'], True)
+        self.assertContains(response, 'Add as a Friend')
 
 
 
