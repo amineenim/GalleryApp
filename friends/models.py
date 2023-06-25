@@ -15,7 +15,7 @@ class FriendshipRequest(models.Model) :
         return self.initiated_by.username + ' sent a request to ' + self.sent_to.username 
     
 
-# class that reprensts a FriendsList object 
+# class that reprsents a FriendsList object 
 class FriendsList(models.Model) :
     belongs_to = models.OneToOneField(User, on_delete=models.CASCADE)
     friends = models.ManyToManyField(User, related_name='my_friends')
@@ -31,4 +31,15 @@ class FriendsList(models.Model) :
     )
     def get_number_of_friends(self) :
         return self.friends.count()
+
+# class that represents notification linked to friedship 
+class FriendshipNotification(models.Model) :
+    intended_to = models.ForeignKey(User, related_name='my_friendship_notifications', on_delete=models.CASCADE)
+    content = models.CharField(null=False, blank=False, max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) :
+        return self.content
+    
+
     

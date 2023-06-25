@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import FriendshipRequest, FriendsList
+from .models import FriendshipRequest, FriendsList, FriendshipNotification
 # Register your models here.
 
 class FriendshipRequestAdmin(admin.ModelAdmin) :
@@ -16,4 +16,9 @@ class FriendsListAdmin(admin.ModelAdmin) :
 admin.site.register(FriendsList, FriendsListAdmin)
 
 
+class FriendshipNotificationAdmin(admin.ModelAdmin) :
+    fields = ['intended_to', 'content', 'created_at']
+    list_display = ['intended_to', 'content', 'created_at']
+    list_filter = ['intended_to', 'created_at']
 
+admin.site.register(FriendshipNotification, FriendshipNotificationAdmin)
