@@ -10,6 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from likes.models import Like, Comment
 from likes.forms import CommentCreateForm
 from django.core.paginator import Paginator
+from friends.models import FriendshipNotification
 
 # Create your views here.
 # define a namespace for the app 
@@ -81,7 +82,8 @@ def gellery(request) :
             photo_notifications = photo.notifications.filter(is_seen=False)
             for notification in photo_notifications :
                 user_notifications.append(notification)
-    
+    # get notifications for freindship 
+    friendship_notifications = FriendshipNotification.objects.filter(intended_to=request.user, is_seen=False)
 
     # create a paginator instance
     p = Paginator(Photo.objects.all(), 6)
@@ -93,10 +95,11 @@ def gellery(request) :
         p = Paginator(Photo.objects.filter(category=selected_category), 6)
         page = request.GET.get('page')
         photos = p.get_page(page)
-        context = {'categories' : categories, 'photos' : photos, 'category' : selected_category }
+        context = {'categories' : categories, 'photos' : photos, 'category' : selected_category,
+                   'notifications' : user_notifications, 'friendship_notifications' : friendship_notifications }
         return render(request, 'photoshare/gallery.html', context)
    
-    context = {'categories' : categories, 'photos' : photos, 'notifications' : user_notifications}
+    context = {'categories' : categories, 'photos' : photos, 'notifications' : user_notifications, 'friendship_notifications' : friendship_notifications}
     return render(request, 'photoshare/gallery.html', context)
 
 
