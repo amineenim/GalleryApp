@@ -102,6 +102,30 @@ class SendFriendshipRequestViewTests(TestCase) :
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['no_invitation'], True)
         self.assertContains(response, 'Add as a Friend')
+    
+    # test send_friendship_request to a user who already sent me one 
+    def test_send_friendship_request_to_a_user_who_already_sent_me_one(self) :
+        # create the receiver user 
+        user_to_receive_friendship_request = User.objects.create_user(username='receiver', password='receiver')
+        # create the user who will send a friendship request to 'receiver'
+        sender = User.objects.create_user(username='sender', password='sender')
+        # create the FriendshipRequest Object 
+        FriendshipRequest.objects.create(initiated_by=sender, sent_to=user_to_receive_friendship_request)
+        # authenticate the receiver
+        self.client.login(username='receiver', password='receiver')
+        # check the sender profile 
+        target_url = reverse('profile:view_profile', args=('sender',))
+        response = self.client.get(target_url)
+        # check response status and data
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['no_invitation'], False)
+        self.assertEqual(response.context['are_we_friends'], False)
+        self.assertEqual(response.context['i_invited_him'], False)
+        self.assertEqual(response.context['he_invited_me'], True)
+        self.assertEqual(response.context['username'], 'sender')
+        self.assertContains(response, 'Accept')
+        self.assertContains(response, 'Decline')
+
 
 
 
