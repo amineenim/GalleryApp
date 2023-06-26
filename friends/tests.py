@@ -230,10 +230,24 @@ class GetNotificationsViewTests(TestCase) :
         self.assertQuerysetEqual(response.context['friendship_notifications'], [])
         self.assertFalse(FriendshipNotification.objects.exists())
 
-
-
-
-
+# class to test the operation of accept_friendship_request View 
+class AcceptFriendshipRequestViewTests(TestCase) :
+    # test accept_friendship_request View with unauthenticated user 
+    def test_accept_friendship_request_with_unauthenticated_user(self):
+        target_url = reverse('friends:accept_request', args=('test',))
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+    
+    # test accept_friendship_request with unexisting user 
+    def test_accept_friendship_request_with_unexisting_user(self) :
+        User.objects.create_user(username='amine', password='amine')
+        self.client.login(username='amine', password='amine')
+        # no user with does_not_exist username exists
+        target_url = reverse('friends:accept_request', args=('does_not_exist',))
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
 
 
 
