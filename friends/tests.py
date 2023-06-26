@@ -126,6 +126,14 @@ class SendFriendshipRequestViewTests(TestCase) :
         self.assertContains(response, 'Accept')
         self.assertContains(response, 'Decline')
 
+# class to test the operation of get_notifications view
+class GetNotificationsViewTests(TestCase) :
+    # test get_notifications view with an unauthenticated user 
+    def test_get_friendship_notifications_with_unauthenticated_user(self) :
+        target_url = reverse('friends:notifications')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
 
 
 
