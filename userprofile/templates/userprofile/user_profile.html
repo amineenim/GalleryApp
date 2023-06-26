@@ -80,10 +80,13 @@
                                                 </button>
                                             </form>
                                         {% elif he_invited_me %}
-                                            <button class="py-2 px-4 bg-gray-200 hover:bg-gray-600 hover:text-white">
-                                                Accept  
-                                            </button>
-                                            <button class="py-2 px-4 bg-gray-200 hover:bg-gray-600 hover:text-white">
+                                            <form method='POST' action="{% url 'friends:accept_request' username %}" class="h-fit w-fit">
+                                                {% csrf_token %}
+                                                <button type='submit' class="mr-2 py-2 px-4 bg-green-200 hover:bg-green-600 hover:text-white rounded-xl">
+                                                    Accept  
+                                                </button>
+                                            </form>
+                                            <button class="ml-2 py-2 px-4 bg-red-200 hover:bg-red-600 hover:text-white rounded-xl">
                                                 Decline  
                                             </button>
                                         {% endif %}
@@ -144,9 +147,12 @@
                                     </button>
                                 </form>
                             {% elif he_invited_me %}
-                                <button class="py-2 px-4 bg-gray-200 hover:bg-gray-600 hover:text-white">
-                                    Accept  
-                                </button>
+                                <form method='POST' action="{% url 'friends:accept_request' username %}" class="h-fit w-fit">
+                                    {% csrf_token %}
+                                    <button type='submit' class="mr-2 py-2 px-4 bg-green-200 hover:bg-green-600 hover:text-white rounded-xl">
+                                        Accept  
+                                    </button>
+                                </form>
                                 <button class="py-2 px-4 bg-gray-200 hover:bg-gray-600 hover:text-white">
                                     Decline  
                                 </button>

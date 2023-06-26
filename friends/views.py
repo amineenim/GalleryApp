@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User 
-from .models import FriendshipRequest, FriendshipNotification
+from .models import FriendshipRequest, FriendshipNotification, FriendsList
 from django.contrib import messages
 # Create your views here.
 
@@ -17,9 +17,7 @@ def send_friendship_request(request, username) :
         except User.DoesNotExist :
             return redirect(reverse('gallery'))
         # create a FriedshipRequest Object if it doesn't already exist
-        friendshp_request, created = FriendshipRequest.objects.get_or_create(
-            {'initiated_by' : request.user, 'sent_to' : user_to_receive_request }
-        )
+        friendshp_request, created = FriendshipRequest.objects.get_or_create(initiated_by = request.user, sent_to = user_to_receive_request )
         if created :
             # create the corresponding notification
             FriendshipNotification.objects.create(intended_to=user_to_receive_request,
@@ -49,6 +47,25 @@ def get_notifications(request) :
         return render(request, 'friends/notifications.html', {'all_notifications' : notifications})
     return render(request, 'friends/notifications.html', {'all_notifications' : notifications})
 
+
+@login_required
+def accept_friendship_request(request, username) :
+    if request.method == 'POST' :
+        # check for the user with username
+        try : 
+            friendship_request_sender = User.objects.get(username=username)
+        except User.DoesNotExist :
+            return redirect('gallery')
+        # add the friend to the list of friends and generate a notification, set status of friendship request to true
+        friendship_request = FriendshipRequest.objects.filter(initiated_by=friendship_request_sender, sent_to=request.user).first()
+        friendship_request.status = True
+        friendship_request.save()
+        my_friends, created = FriendsList.objects.get_or_create(belongs_to=request.user)
+        my_friends.friends.add(friendship_request_sender)
+        FriendshipNotification.objects.create(intended_to=friendship_request_sender, content=f"{request.user.username} accepted your friendship request")
+        messages.success(request, f"You and {username} are friends now")
+
+    return redirect(reverse('profile:view_profile', args=(username,)))
 
 
 
