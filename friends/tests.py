@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.contrib import messages
-from .models import FriendshipRequest
+from .models import FriendshipRequest, FriendshipNotification
 # Create your tests here.
 
 # class to test the operation of the send_friendship_request View 
@@ -134,6 +134,60 @@ class GetNotificationsViewTests(TestCase) :
         response = self.client.get(target_url)
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+    
+    # test get_notifications view with a user who sends a friendship request to other user 
+    def test_get_notifications_with_user_who_receives_a_friendship_request_from_other_user(self) :
+        # create two users, the sender of friendship request and the receiver
+        sender = User.objects.create_user(username='sender', password='sender')
+        receiver = User.objects.create_user(username='receiver', password='receiver')
+        # authenticate the sender and send a friendship request to 'receiver'
+        self.client.login(username='sender', password='sender')
+        # pass 'receiver' as the username argument to the url
+        target_url = reverse('friends:send_request', args=('receiver',))
+        # send the post request 
+        response = self.client.post(target_url, {})
+        #check the response status and data 
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('profile:view_profile', args=('receiver',)))
+        # check that a FriendshipRequest object has been created 
+        self.assertTrue(FriendshipRequest.objects.exists())
+        self.assertEqual(FriendshipRequest.objects.first().status, False)
+        self.assertEqual(FriendshipRequest.objects.first().initiated_by, sender)
+        self.assertEqual(FriendshipRequest.objects.first().sent_to, receiver)
+        # check that a FriendshipNotification Object has been created 
+        self.assertTrue(FriendshipNotification.objects.exists())
+        # go to the profile of 'receiver'
+        response = self.client.get(reverse('profile:view_profile', args=('receiver',)))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['are_we_friends'], False)
+        self.assertEqual(response.context['no_invitation'], False)
+        self.assertEqual(response.context['i_invited_him'], True)
+        self.assertEqual(response.context['he_invited_me'], False)
+        self.assertContains(response, 'Cancel my Request')
+        # logout 'sender' and authenticate 'receiver'
+        self.client.logout()
+        self.client.login(username='receiver', password='receiver')
+        # go to home page and check that the receiver has one unread notification 
+        response = self.client.get(reverse('gallery'))
+        self.assertEqual(response.status_code, 200)
+        self.assertQuerysetEqual(response.context['friendship_notifications'], FriendshipNotification.objects.all())
+        self.assertEqual(FriendshipNotification.objects.first().is_seen, False)
+        # check that the view displays one unread notification
+        self.assertContains(response, 1)
+        # receiver checks the notifications
+        response = self.client.get(reverse('friends:notifications'))
+        self.assertEqual(response.status_code, 200)
+        self.assertCountEqual(response.context['all_notifications'], FriendshipNotification.objects.filter(intended_to=receiver))
+        # check that there's no unseen notification
+        self.assertFalse(FriendshipNotification.objects.filter(is_seen=False).exists())
+        self.assertContains(response, 'sender sent you a friendship request')
+
+
+
+
+
+
+
 
 
 
