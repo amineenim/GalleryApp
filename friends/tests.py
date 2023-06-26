@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.contrib import messages
-from .models import FriendshipRequest, FriendshipNotification
+from .models import FriendshipRequest, FriendshipNotification, FriendsList
 # Create your tests here.
 
 # class to test the operation of the send_friendship_request View 
@@ -248,6 +248,78 @@ class AcceptFriendshipRequestViewTests(TestCase) :
         response = self.client.post(target_url, {})
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('gallery'))
-
-
-
+    
+    # test accept_friendship_request with user who got a friendship request from other user 
+    def test_accept_friendship_request_from_user_who_already_sent_one(self) :
+        # create 'sender' and 'receiver'
+        sender = User.objects.create_user(username='sender', password='sender')
+        receiver = User.objects.create_user(username='receiver', password='receiver')
+        # authenticate the sender 
+        self.client.login(username='sender', password='sender')
+        # send a friendship request to 'receiver'
+        target_url = reverse('friends:send_request', args=('receiver',))
+        response = self.client.post(target_url, {})
+        # check response status and data 
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('profile:view_profile', args=('receiver',)))
+        # check that a FriendshipRequest object has been created 
+        self.assertTrue(FriendshipRequest.objects.exists())
+        self.assertEqual(FriendshipRequest.objects.first().initiated_by, sender)
+        self.assertEqual(FriendshipRequest.objects.first().sent_to, receiver)
+        self.assertEqual(FriendshipRequest.objects.first().status, False)
+        # check receiver profile 
+        response = self.client.get(reverse('profile:view_profile', args=('receiver',)))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['username'], 'receiver')
+        self.assertEqual(response.context['are_we_friends'], False)
+        self.assertEqual(response.context['i_invited_him'], True)
+        self.assertEqual(response.context['no_invitation'], False)
+        self.assertContains(response, 'Cancel my Request')
+        # now that the request has been sent, authenticate receiver and check notifications
+        self.client.logout()
+        self.client.login(username='receiver', password='receiver')
+        # go to home page and check for notifications
+        response = self.client.get(reverse('gallery'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(FriendshipNotification.objects.exists())
+        self.assertCountEqual(response.context['friendship_notifications'], FriendshipNotification.objects.filter(intended_to=receiver, is_seen=False))
+        self.assertEqual(len(response.context['friendship_notifications']), 1)
+        # check notifications page 
+        response = self.client.get(reverse('friends:notifications'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['all_notifications']), 1)
+        self.assertTrue(FriendshipNotification.objects.exists())
+        self.assertQuerysetEqual(FriendshipNotification.objects.filter(intended_to=receiver, is_seen=False), [])
+        # go to the sender profile 
+        response = self.client.get(reverse('profile:view_profile', args=('sender',)))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['are_we_friends'], False)
+        self.assertEqual(response.context['i_invited_him'], False)
+        self.assertEqual(response.context['he_invited_me'], True)
+        self.assertEqual(response.context['no_invitation'], False)
+        self.assertContains(response, 'Accept')
+        self.assertContains(response, 'Decline')
+        # accept the friendship request 
+        response = self.client.post(reverse('friends:accept_request', args=('sender',)))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('profile:view_profile', args=('sender',)))
+        # check that FriendshipRequest object status is now True
+        self.assertEqual(FriendshipRequest.objects.first().status, True)
+        self.assertEqual(len(FriendshipRequest.objects.all()), 1)
+        # check that a FriendsList object has been created 
+        self.assertTrue(FriendsList.objects.exists())
+        self.assertEqual(FriendsList.objects.first().belongs_to, receiver)
+        #self.assertEqual(FriendsList.objects.first().friends, [sender])
+        self.assertEqual(FriendsList.objects.filter(belongs_to=receiver).first().get_number_of_friends(), 1)
+        # check that a notification has been created 
+        self.assertTrue(FriendshipNotification.objects.filter(intended_to=sender, content='receiver accepted your friendship request' ).exists())
+        # check messages 
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'success')
+            self.assertEqual(message.message, "You and sender are friends now")
+        # check the sender profile again 
+        response = self.client.get(reverse('profile:view_profile', args=('sender',)))
+        self.assertContains(response, 'Message')
+        self.assertEqual(response.context['are_we_friends'], True)
