@@ -309,7 +309,9 @@ class AcceptFriendshipRequestViewTests(TestCase) :
         # check that a FriendsList object has been created 
         self.assertTrue(FriendsList.objects.exists())
         self.assertEqual(FriendsList.objects.first().belongs_to, receiver)
+
         #self.assertEqual(FriendsList.objects.first().friends, [sender])
+        
         self.assertEqual(FriendsList.objects.filter(belongs_to=receiver).first().get_number_of_friends(), 1)
         # check that a notification has been created 
         self.assertTrue(FriendshipNotification.objects.filter(intended_to=sender, content='receiver accepted your friendship request' ).exists())

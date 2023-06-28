@@ -67,5 +67,26 @@ def accept_friendship_request(request, username) :
 
     return redirect(reverse('profile:view_profile', args=(username,)))
 
+@login_required 
+def decline_friendship_request(request, username) :
+    # this function handles declining a friendship request , it must delete
+    # the FriendshipRequest object, and the corresponding FriendshipNotification Object also 
+    if request.method == 'POST' :
+        # check if the user exists or not 
+        try :
+            request_sender = User.objects.get(username=username)
+        except User.DoesNotExist :
+            messages.error(request, 'Oops, something went wrong !')
+            return redirect(reverse('gallery'))
+        # delete the FriendshipRequest Object 
+        friendship_request_to_delete = FriendshipRequest.objects().filter(initiated_by=request_sender, sent_to=request.user, status=False).first()
+        friendship_request_to_delete.delete()
+        # get the corresponding Notification that was sent to the receiver of the request
+        # since the request has been canceled 
+        friendship_notification_to_delete = FriendshipNotification.objects.filter(intended_to=request.user, content=f"{request_sender.username} sent you a friendship request").first()
+        friendship_notification_to_delete.delete()
+        messages.success(request, 'Friendship request declined successefully !')
+    return redirect(reverse('profile:view_profile', args=(username,)))
+
 
 
