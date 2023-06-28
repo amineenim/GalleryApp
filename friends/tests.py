@@ -325,3 +325,12 @@ class AcceptFriendshipRequestViewTests(TestCase) :
         response = self.client.get(reverse('profile:view_profile', args=('sender',)))
         self.assertContains(response, 'Message')
         self.assertEqual(response.context['are_we_friends'], True)
+
+# class to test the operation of decline_frienship_request View 
+class DeclineFriendshipRequestViewTests(TestCase) :
+    # test with unauthenticated user 
+    def test_decline_request_with_unauthenticated_user(self) :
+        target_url = reverse('friends:decline_request', args=('test',))
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")

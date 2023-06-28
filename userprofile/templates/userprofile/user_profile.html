@@ -153,9 +153,11 @@
                                         Accept  
                                     </button>
                                 </form>
-                                <button class="py-2 px-4 bg-gray-200 hover:bg-gray-600 hover:text-white">
-                                    Decline  
-                                </button>
+                                <form method='POST' action="{% url 'friends:decline_request' username %}">
+                                    <button type="submit" class="py-2 px-4 bg-gray-200 hover:bg-gray-600 hover:text-white">
+                                        Decline  
+                                    </button>
+                                </form>
                             {% endif %}
                         {% endif %}
                     {% endif %}
