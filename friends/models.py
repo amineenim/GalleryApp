@@ -1,6 +1,8 @@
+from datetime import datetime, date, timedelta
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib import admin
+from django.utils import timezone
 # Create your models here.
 
 # class that represents a FriendshipRequest Object 
@@ -45,5 +47,28 @@ class FriendshipNotification(models.Model) :
     def __str__(self) :
         return self.content
     
+    def since_when(self) :
+        # check if the creation_date is whitin the last 24 hours 
+        if timezone.now() - timedelta(days=1) <= self.created_at <= timezone.now() :
+            if timezone.now() - timedelta(hours=1) <= self.created_at :
+                difference = timezone.now() - self.created_at 
+                difference_in_seconds = difference.total_seconds()
+                difference_in_minutes =int(difference_in_seconds//60)
+                if difference_in_minutes == 0 :
+                    return 'a few moments ago' 
+                return f"{difference_in_minutes} minutes ago"
+            else :
+                difference = timezone.now() - self.created_at
+                difference_in_seconds = difference.total_seconds()
+                difference_in_hours = int(difference_in_seconds//3600)
+                if difference_in_hours == 1 :
+                    return f"1 hour ago"
+                return f"{difference_in_hours} hours ago"
+            
+        elif timezone.now() - timedelta(days=2) <= self.created_at <= timezone.now() - timedelta(days=1):
+            return "Yesterday"
+        else :
+            return self.created_at 
+         
 
-    
+            
