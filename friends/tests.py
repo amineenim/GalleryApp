@@ -421,6 +421,11 @@ class DeclineFriendshipRequestViewTests(TestCase) :
         self.assertFalse(FriendshipRequest.objects.filter(initiated_by=sender, sent_to=receiver).exists())
         self.assertFalse(FriendshipNotification.objects.filter(intended_to=receiver, content='sender sent you a friendship request').exists())
         self.assertFalse(FriendshipNotification.objects.exists())
+        # go to notifications page 
+        response = self.client.get(reverse('friends:notifications'))
+        self.assertEqual(response.status_code, 200)
+        self.assertQuerysetEqual(response.context['all_notifications'], [])
+        self.assertContains(response, 'No notifications for the moment')
 
 
 
