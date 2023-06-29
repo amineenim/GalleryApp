@@ -1,7 +1,9 @@
+from datetime import timedelta
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.contrib import messages
+from django.utils import timezone
 from .models import FriendshipRequest, FriendshipNotification, FriendsList
 # Create your tests here.
 
@@ -426,6 +428,45 @@ class DeclineFriendshipRequestViewTests(TestCase) :
         self.assertEqual(response.status_code, 200)
         self.assertQuerysetEqual(response.context['all_notifications'], [])
         self.assertContains(response, 'No notifications for the moment')
+
+# class to test the operation of since_when method on FriendshipNotification Model 
+class SinceWhenFriendshipNotificationTests(TestCase) :
+    # function that creates and returns a user 
+    def get_user(self) :
+        return User.objects.create_user(username='test', password='test123')
+    # function that creates a notification a given time ago 
+    def create_notification(self, seconds_ago) :
+        # create a datetime value before seconds_ago seconds 
+        created_at = timezone.now() - timedelta(seconds=seconds_ago)
+        notification = FriendshipNotification.objects.create(
+            intended_to = self.get_user(),
+            content = 'this is a test',
+            created_at = created_at
+        )
+        return notification
+    # test since_when method for a FriendshipRequest created in last minute 
+    def test_since_when_with_record_created_less_than_a_minute_ago(self) :
+        # create a Friendship Notification 
+        notification_in_the_last_minute = self.create_notification(40)
+        self.assertEqual(notification_in_the_last_minute.since_when(), 'a few moments ago')
+
+    # test since when with a Friendship Request created before 59 seconds
+    def test_since_when_with_record_created_before_59_seconds(self) :
+        notification_before_59_seconds = self.create_notification(59)
+        self.assertEqual(notification_before_59_seconds.since_when(), 'a few moments ago')
+    
+    # test since when with a friendship request created 1 minute and 1 second ago
+    def test_since_when_with_record_created_before_61_seconds(self) :
+        notification_before_a_minute_and_one_second = self.create_notification(61)
+        self.assertEqual(notification_before_a_minute_and_one_second.since_when(), '1 minutes ago')
+    
+    # test since when with a record created 59 minutes and 59 seconds ago 
+    def test_since_when_with_record_created_one_hour_minus_one_second_ago(self) :
+        seconds_ago = 59*60 + 59
+        notification = self.create_notification(seconds_ago=seconds_ago)
+        self.assertEqual(notification.since_when(), '59 minutes ago')
+     
+
 
 
 
