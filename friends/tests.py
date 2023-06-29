@@ -334,3 +334,102 @@ class DeclineFriendshipRequestViewTests(TestCase) :
         response = self.client.post(target_url, {})
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+    
+    # test decline_friendship_request with unexisting user 
+    def test_decline_request_fron_unexisting_user(self) :
+        # pass 'test' as the user's username, it doesn't exist
+        target_url = reverse('friends:decline_request', args=('test',))
+        # create a user and authneticate him
+        User.objects.create_user(username='amine', password='1234')
+        self.client.login(username='amine', password='1234')
+        # send a post request to the url to decline the friendship_request
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
+        # check messages 
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'error')
+            self.assertEqual(message.message, 'Oops, something went wrong !')
+    
+    # test decline_friendship_request received from an other user 
+    def test_decline_request_received_from_other_user(self) :
+        # create a sender and a receiver 
+        sender = User.objects.create_user(username='sender', password='sender')
+        receiver = User.objects.create_user(username='receiver', password='receiver')
+        # authenticate sender and check the receiver profile 
+        self.client.login(username='sender', password='sender')
+        target_url = reverse('profile:view_profile', args=('receiver',))
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['username'], 'receiver')
+        self.assertEqual(response.context['are_we_friends'], False)
+        self.assertEqual(response.context['no_invitation'], True)
+        self.assertContains(response, 'Add as a Friend')
+        # send a friendship request to 'receiver'
+        target_url = reverse('friends:send_request', args=('receiver',))
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('profile:view_profile', args=('receiver',)))
+        # check that a FriendshipRequest and FriendshipNotification Objects have been created
+        self.assertTrue(FriendshipRequest.objects.exists())
+        self.assertTrue(FriendshipNotification.objects.exists())
+        self.assertEqual(len(FriendshipRequest.objects.all()), 1)
+        self.assertEqual(len(FriendshipNotification.objects.all()), 1)
+        self.assertTrue(FriendshipRequest.objects.filter(initiated_by=sender, sent_to=receiver, status=False).exists())
+        self.assertTrue(FriendshipNotification.objects.filter(intended_to=receiver, content='sender sent you a friendship request').exists())
+        # logout the sender and authenticate receiver
+        self.client.logout()
+        self.client.login(username='receiver', password='receiver')
+        # check the home page for notifications
+        target_url = reverse('gallery')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['friendship_notifications']), 1)
+        self.assertCountEqual(response.context['friendship_notifications'], FriendshipNotification.objects.filter(intended_to=receiver, is_seen=False, content='sender sent you a friendship request'))
+        # check notifications page 
+        target_url = reverse('friends:notifications')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertCountEqual(response.context['all_notifications'], FriendshipNotification.objects.filter(intended_to=receiver, content='sender sent you a friendship request'))
+        self.assertContains(response, 'sender sent you a friendship request')
+        # check there are no unseen notifications
+        self.assertFalse(FriendshipNotification.objects.filter(is_seen=False).exists())
+        # go to the sender profile
+        target_url = reverse('profile:view_profile', args=('sender',))
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['username'], 'sender')
+        self.assertEqual(response.context['are_we_friends'], False)
+        self.assertEqual(response.context['he_invited_me'], True)
+        self.assertEqual(response.context['no_invitation'], False)
+        self.assertContains(response, 'Accept')
+        self.assertContains(response, 'Decline')
+        # decline the friendship request 
+        target_url = reverse('friends:decline_request', args=('sender',))
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('profile:view_profile', args=('sender',)))
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for msg in my_messages :
+            self.assertEqual(msg.tags, 'success')
+            self.assertEqual(msg.message, 'Friendship request declined successefully !')
+        # check that there are no more FriendshipRequest or FriendshipNotification Objects
+        self.assertFalse(FriendshipRequest.objects.exists())
+        self.assertFalse(FriendshipRequest.objects.filter(initiated_by=sender, sent_to=receiver).exists())
+        self.assertFalse(FriendshipNotification.objects.filter(intended_to=receiver, content='sender sent you a friendship request').exists())
+        self.assertFalse(FriendshipNotification.objects.exists())
+
+
+
+
+
+
+
+
+
+
+
+

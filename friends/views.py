@@ -79,7 +79,7 @@ def decline_friendship_request(request, username) :
             messages.error(request, 'Oops, something went wrong !')
             return redirect(reverse('gallery'))
         # delete the FriendshipRequest Object 
-        friendship_request_to_delete = FriendshipRequest.objects().filter(initiated_by=request_sender, sent_to=request.user, status=False).first()
+        friendship_request_to_delete = FriendshipRequest.objects.filter(initiated_by=request_sender, sent_to=request.user, status=False).first()
         friendship_request_to_delete.delete()
         # get the corresponding Notification that was sent to the receiver of the request
         # since the request has been canceled 
