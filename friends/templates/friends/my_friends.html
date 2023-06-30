@@ -25,7 +25,7 @@
                             {% else %}
                                 <img src="{% static 'profile/anonymous.avif' %}" width='30' class="rounded-full" alt='profile_picture'>
                             {% endif %}
-                            <p class="ml-2">{{ friend }}</p>
+                            <p class="ml-2">{{ friend.username }}</p>
                         </div>
                         <button class="px-3 py-2 rounded-xl flex items-center">
                             <i class="fa-solid fa-message mr-1"></i> Message
