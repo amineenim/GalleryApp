@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from django.test import TestCase
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -466,6 +466,53 @@ class SinceWhenFriendshipNotificationTests(TestCase) :
         notification = self.create_notification(seconds_ago=seconds_ago)
         self.assertEqual(notification.since_when(), '59 minutes ago')
      
+    # test since_when with a record created 1 hour and 1 seconds ago 
+    def test_since_when_with_record_created_one_hour_and_one_second_ago(self) :
+        seconds_ago = 60*60 + 1 
+        notification = self.create_notification(seconds_ago=seconds_ago)
+        self.assertEqual(notification.since_when(), '1 hour ago')
+
+    # test since_when with a record created one hour and 59 minutes before 
+    def test_since_when_with_a_record_created_2_hours_minus_one_second(self) :
+        seconds_ago = 60*60 + 59*60 +59 
+        notification = self.create_notification(seconds_ago=seconds_ago)
+        self.assertEqual(notification.since_when(), '1 hour ago')
+    
+    # test since_when with a record created 2 hours ago 
+    def test_since_when_with_a_record_created_2_hours_ago(self) :
+        seconds_ago = 7200 
+        notification = self.create_notification(seconds_ago=seconds_ago)
+        self.assertEqual(notification.since_when(), '2 hours ago')
+    
+    # test since_when with a record created 23 hours, 59 minutes and 59 seconds ago
+    def test_since_when_with_a_record_created_before_one_day_minus_one_second(self) :
+        seconds_ago = 23*60*60 + 59*60 + 59
+        notification = self.create_notification(seconds_ago=seconds_ago)
+        self.assertEqual(notification.since_when(), '23 hours ago')
+    
+    # test since_when with a record created exactly 24 hours ago
+    def test_since_when_with_a_record_created_24hours_ago(self) :
+        seconds_ago = 24*3600
+        notification = self.create_notification(seconds_ago=seconds_ago)
+        self.assertEqual(notification.since_when(), 'Yesterday')
+
+    # test since_when with a record created 24 hours and 1 second ago
+    def test_since_when_with_record_created_24hours_and_one_second_ago(self) :
+        seconds_ago = 24*3600 + 1
+        notification = self.create_notification(seconds_ago=seconds_ago)
+        self.assertEqual(notification.since_when(), 'Yesterday')
+    
+    # test since_when with a record created 2 days minus one second ago 
+    def test_since_when_with_record_created_2days_minus_one_second_ago(self) :
+        seconds_ago = 48*3600 - 1 
+        notification = self.create_notification(seconds_ago=seconds_ago)
+        self.assertEqual(notification.since_when(), 'Yesterday')
+    
+    # test since_when with a record created 48 hours exactly ago 
+    def test_since_when_with_record_created_48hours_ago(self) :
+        notification = self.create_notification(seconds_ago=48*3600)
+        self.assertEqual(notification.since_when().date(), datetime(2023, 6, 28).date())
+
 
 
 

@@ -49,7 +49,7 @@ class FriendshipNotification(models.Model) :
     
     def since_when(self) :
         # check if the creation_date is whitin the last 24 hours 
-        if timezone.now() - timedelta(days=1) <= self.created_at <= timezone.now() :
+        if timezone.now() - timedelta(days=1) < self.created_at <= timezone.now() :
             if timezone.now() - timedelta(hours=1) <= self.created_at :
                 difference = timezone.now() - self.created_at 
                 difference_in_seconds = difference.total_seconds()
@@ -65,7 +65,7 @@ class FriendshipNotification(models.Model) :
                     return f"1 hour ago"
                 return f"{difference_in_hours} hours ago"
             
-        elif timezone.now() - timedelta(days=2) <= self.created_at <= timezone.now() - timedelta(days=1):
+        elif timezone.now() - timedelta(days=2) < self.created_at <= timezone.now() - timedelta(days=1):
             return "Yesterday"
         else :
             return self.created_at 
