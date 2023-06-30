@@ -76,9 +76,13 @@ class FriendshipNotification(models.Model) :
     
 # class that represents a discussion or conversation Object with two members 
 class Conversation(models.Model) :
-    member_one = models.ForeignKey(User, null=False, on_delete=models.SET_DEFAULT, default=User.objects.get(username='test'), related_name='my_conversations')
-    member_two = models.ForeignKey(User, null=False, on_delete=models.SET_DEFAULT, default=User.objects.get(username='test'))
+    def get_default_user(self) :
+        return User.objects.get(username='test') 
+    
+    member_one = models.ForeignKey(User, null=False, on_delete=models.SET_DEFAULT, default=get_default_user , related_name='conversations_member_one')
+    member_two = models.ForeignKey(User, null=False, on_delete=models.SET_DEFAULT, default=get_default_user , related_name='conversations_member_two')
 
     def __str__(self) :
         return 'conversation between ' + self.member_one.username + ' and ' + self.member_two.username 
+    
     
