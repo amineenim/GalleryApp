@@ -68,7 +68,12 @@ class FriendshipNotification(models.Model) :
         elif timezone.now() - timedelta(days=2) < self.created_at <= timezone.now() - timedelta(days=1):
             return "Yesterday"
         else :
-            return self.created_at 
+            return self.created_at.date()
+    
+    def get_username_who_generated_notification(self) :
+        username = self.content.split()
+        return username[0]
+    
          
 
             

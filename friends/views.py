@@ -62,6 +62,11 @@ def accept_friendship_request(request, username) :
         friendship_request.save()
         my_friends, created = FriendsList.objects.get_or_create(belongs_to=request.user)
         my_friends.friends.add(friendship_request_sender)
+        my_friends.save()
+        # same thing for user with 'username'
+        username_friends, created = FriendsList.objects.get_or_create(belongs_to=friendship_request_sender)
+        username_friends.friends.add(request.user)
+        username_friends.save()
         FriendshipNotification.objects.create(intended_to=friendship_request_sender, content=f"{request.user.username} accepted your friendship request")
         messages.success(request, f"You and {username} are friends now")
 
@@ -88,5 +93,9 @@ def decline_friendship_request(request, username) :
         messages.success(request, 'Friendship request declined successefully !')
     return redirect(reverse('profile:view_profile', args=(username,)))
 
-
+@login_required 
+def get_list_of_my_friends(request) :
+    friends_list = FriendsList.objects.get(belongs_to=request.user)
+    friends = friends_list.friends.all()
+    return render(request, 'friends/my_friends.html', {'friends' : friends, 'friends_list' : friends_list})
 

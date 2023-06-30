@@ -31,17 +31,24 @@
                     {% endif %}
                 {% endfor %}
             {% endif %}
-            <div class="flex justify-between w-1/4 items-center">
+            <div class="flex justify-between w-1/2 items-center">
                 {% if search_results %}
                     {% include 'userprofile/search.html' with results=search_results searched_value=searched_value %}
                 {% else %}
                     {% include 'userprofile/search.html'  %}
                 {% endif %}
-                <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl">
-                    <a href="{% url 'gallery' %}" class="flex items-center">
-                        <i class="fa-solid fa-home mr-1"></i>Home
-                    </a>
-                </button>
+                <div class="w-1/2 flex justify-around">
+                    <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl mx-1">
+                        <a href="{% url 'gallery' %}" class="flex items-center">
+                            <i class="fa-solid fa-home mr-1"></i>Home
+                        </a>
+                    </button>
+                    <button class='py-2 px-4 rounded-xl flex items-center bg-gray-900 text-white hover:bg-gray-700 mx-1'>
+                        <a href="{% url 'friends:my_friends' %}" class="flex items-center">
+                            <i class="fa-solid fa-user-group mr-1"></i>My Friends
+                        </a>
+                    </button>
+                </div>
             </div>
         </div>
         <div class="h-full w-3/4 self-center bg-gray-100 rounded-md">

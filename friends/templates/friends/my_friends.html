@@ -1,0 +1,41 @@
+{% extends 'friends/base.html' %}
+{% load static %}
+{% block title %}
+    My Friends 
+{% endblock %}
+{% block content %}
+    <div class='h-screen flex flex-col'>
+        <div class="flex justify-between py-6 px-8 bg-gray-400 rounded-xl mb-5 items-center">
+            <h3 class='text-xl'>
+                My Friends 
+            </h3>
+            <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl mx-1">
+                <a href="{% url 'gallery' %}" class="flex items-center">
+                    <i class="fa-solid fa-home mr-1"></i>Home
+                </a>
+            </button>
+        </div>
+        <div class="bg-gray-200 rounded-xl h-full flex py-6 px-8">
+            <div class="w-3/4 flex flex-col space-y-2 p-10">
+                {% for friend in friends %}
+                    <div class="py-2 px-4 border-2 flex items-center border-slate-500 rounded-xl justify-between">
+                        <div class='flex items-center'> 
+                            {% if friend.profile_data.exists %}
+                                <img src="{{ friend.profile_data.profile_picture.url }}" width='30' class="rounded-full" alt="profile_picture">
+                            {% else %}
+                                <img src="{% static 'profile/anonymous.avif' %}" width='30' class="rounded-full" alt='profile_picture'>
+                            {% endif %}
+                            <p class="ml-2">{{ friend }}</p>
+                        </div>
+                        <button class="px-3 py-2 rounded-xl flex items-center">
+                            <i class="fa-solid fa-message mr-1"></i> Message
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+            <div class=" w-1/4 flex justify-center py-6">
+                <h4 class='text-lg flex'>Total Friends : <p class='text-xl'>{{ friends_list.get_number_of_friends }}</p></h4>
+            </div>
+        </div>
+    </div>
+{% endblock %}
