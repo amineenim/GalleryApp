@@ -40,7 +40,7 @@ class FriendshipNotification(models.Model) :
         ordering = ('-created_at',)
     intended_to = models.ForeignKey(User, related_name='my_friendship_notifications', on_delete=models.CASCADE)
     content = models.CharField(null=False, blank=False, max_length=200)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
     is_seen = models.BooleanField(null=False, blank=False, default=False)
     
 
