@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib import admin
 from django.utils import timezone
+from django.core import serializers
 # Create your models here.
 
 # class that represents a FriendshipRequest Object 
@@ -85,4 +86,11 @@ class Conversation(models.Model) :
     def __str__(self) :
         return 'conversation between ' + self.member_one.username + ' and ' + self.member_two.username 
     
+    def to_json(self) :
+        return serializers.serialize('json', [self])
+    
+    @classmethod
+    def from_json(cls, json_data) :
+        deserialized_data = serializers.deserialize('json', json_data)
+        return next(deserialized_data).object
     

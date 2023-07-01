@@ -15,27 +15,41 @@
                 </a>
             </button>
         </div>
-        <div class="bg-gray-200 rounded-xl h-full flex py-6 px-8">
-            <div class="w-3/4 flex flex-col space-y-2 p-10">
-                {% for friend in friends %}
-                    <div class="py-2 px-4 border-2 flex items-center border-slate-500 rounded-xl justify-between">
-                        <div class='flex items-center'> 
-                            {% if friend.profile_data.exists %}
-                                <img src="{{ friend.profile_data.profile_picture.url }}" width='30' class="rounded-full" alt="profile_picture">
-                            {% else %}
-                                <img src="{% static 'profile/anonymous.avif' %}" width='30' class="rounded-full" alt='profile_picture'>
-                            {% endif %}
-                            <p class="ml-2">{{ friend.username }}</p>
+        <div class="bg-gray-200 rounded-xl h-full flex flex-col py-6 px-8 relative">
+            <div class="rounded-xl h-full flex py-6 px-8">
+                <div class="w-3/4 flex flex-col space-y-2 p-10">
+                    {% for friend in friends %}
+                        <div class="py-2 px-4 border-2 flex items-center border-slate-500 rounded-xl justify-between">
+                            <div class='flex items-center'> 
+                                {% if friend.profile_data.exists %}
+                                    <img src="{{ friend.profile_data.profile_picture.url }}" width='30' class="rounded-full" alt="profile_picture">
+                                {% else %}
+                                    <img src="{% static 'profile/anonymous.avif' %}" width='30' class="rounded-full" alt='profile_picture'>
+                                {% endif %}
+                                <p class="ml-2">{{ friend.username }}</p>
+                            </div>
+                          
+                            <form method="POST" action="{% url 'friends:my_friends' %}" class="w-fit bg-gray-200 h-fit p-2 rounded-xl hover:bg-gray-700 hover:text-white">
+                                {% csrf_token %}
+                                <i class="fa-solid fa-message"></i> 
+                                <input type='hidden' type='text' name='username' value="{{friend.username}}">
+                                <button type="submit"> Message </button>
+                            </form>
+                           
                         </div>
-                        <button class="px-3 py-2 rounded-xl flex items-center">
-                            <i class="fa-solid fa-message mr-1"></i> Message
-                        </button>
-                    </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
+                <div class=" w-1/4 flex justify-center py-6">
+                    <h4 class='text-lg flex'>Total Friends : <p class='text-xl'>{{ friends_list.get_number_of_friends }}</p></h4>
+                </div>
             </div>
-            <div class=" w-1/4 flex justify-center py-6">
-                <h4 class='text-lg flex'>Total Friends : <p class='text-xl'>{{ friends_list.get_number_of_friends }}</p></h4>
-            </div>
+            {% if conversations %}
+                <div class="flex absolute bottom-6 right-8 z-10">
+                    {% for conversation in conversations %}
+                        {% include 'friends/conversation.html' with conversation=conversation %}
+                    {% endfor %}
+                </div>
+            {% endif %}
         </div>
     </div>
 {% endblock %}
