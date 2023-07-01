@@ -97,29 +97,38 @@ def decline_friendship_request(request, username) :
 def get_list_of_my_friends(request) :
     friends_list = FriendsList.objects.get(belongs_to=request.user)
     friends = friends_list.friends.all()
+    # create a session variable to store opened conversations 
+    conversations = request.session.get('conversations')
+    if conversations is None :
+        conversations = []
+        request.session['conversations'] = conversations
     if request.method == 'GET' :
         return render(request, 'friends/my_friends.html', {'friends' : friends, 'friends_list' : friends_list})
     elif request.method == 'POST' :
         # get the username value submitted 
         username = request.POST.get('username')
         user = User.objects.get(username=username)
-        conversations = request.session.get('conversations', [])
-        # check if there are any discussions between the authenticated user and the one with this username 
-        if Conversation.objects.filter(member_one=request.user, member_two=user).exists() :
-            conversation = Conversation.objects.get(member_one=request.user, member_two=user)
-            conversation_serialized = conversation.to_json()
-            request.session['conversations'].append(conversation_serialized)
-            return render(request, 'friends/my_friends.html', {'friends' : friends, 'friends_list' : friends_list, 'conversations' : conversations})
-        elif Conversation.objects.filter(member_one=user, member_two=request.user).exists() :
-            conversation = Conversation.objects.get(member_one=user, member_two=request.user)
-            conversation_serialized = conversation.to_json()
-            request.session['conversations'].append(conversation_serialized)
-            return render(request, 'friends/my_friends.html', {'friends' : friends, 'friends_list' : friends_list, 'conversations' : conversations})
+        # create a conversation object if it already doesn't exist 
+        if Conversation.objects.filter(member_one=request.user, member_two=user).exists() or Conversation.objects.filter(member_one=user, member_two=request.user).exists() :
+            # get the corresponding Conversation object
+            conversation = Conversation.objects.get(member_one=request.user, member_two=user) or Conversation.objects.get(member_one=user, member_two=request.user)
+            # serialize the conversation object and store it in session
+            serialized_conversation = conversation.to_json()
+            conversations.append(serialized_conversation)
+            request.session['conversations'] = conversations
+            return render(request, 'friends/my_friends.html', 
+                          {'friends' : friends, 'friends_list' : friends_list, 'conversations' : conversations})
         else :
+            # create the conversation object 
             conversation = Conversation.objects.create(member_one=request.user, member_two=user)
-            conversation_serialized = conversation.to_json()
-            request.session['conversations'].append(conversation_serialized)
-            return render(request,'friends/my_friends.html', {'friends' : friends, 'friends_list' : friends_list, 'conversations' : conversations})
+            # serialize and store it in session 
+            serialized_conversation = conversation.to_json()
+            # store in session
+            conversations.append(serialized_conversation)
+            request.session['conversations'] = conversations
+            return render(request, 'friends/my_friend.html', 
+                          {'friends' : friends, 'friends_list' : friends_list, 'conversations' : conversations})
+        
 
 @login_required 
 def start_conversation(request, username) :
