@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User 
 from .models import FriendshipRequest, FriendshipNotification, FriendsList, Conversation
 from django.contrib import messages
+import json
 # Create your views here.
 
 # view that handles sending a friendship request to someone
@@ -99,10 +100,19 @@ def get_list_of_my_friends(request) :
     friends = friends_list.friends.all()
     # create a session variable to store opened conversations 
     conversations = request.session.get('conversations')
+    deserialized_conversations = []
     if conversations is None :
         conversations = []
         request.session['conversations'] = conversations
+    else :
+        # deserialize conversations 
+        for conv in conversations :
+            deserialized_conversation = Conversation.from_json(conv)
+            deserialized_conversations.append(deserialized_conversation)
+
     if request.method == 'GET' :
+        if 'conversations' in request.session :
+            del request.session['conversations']
         return render(request, 'friends/my_friends.html', {'friends' : friends, 'friends_list' : friends_list})
     elif request.method == 'POST' :
         # get the username value submitted 
@@ -114,20 +124,29 @@ def get_list_of_my_friends(request) :
             conversation = Conversation.objects.get(member_one=request.user, member_two=user) or Conversation.objects.get(member_one=user, member_two=request.user)
             # serialize the conversation object and store it in session
             serialized_conversation = conversation.to_json()
-            conversations.append(serialized_conversation)
-            request.session['conversations'] = conversations
+            # check if the conversation doesn't already exist in opened conversations 
+            if serialized_conversation not in request.session['conversations'] :
+                conversations.append(serialized_conversation)
+                deserialized_conversation = Conversation.from_json(serialized_conversation)
+                deserialized_conversations.append(deserialized_conversation)
+                request.session['conversations'] = conversations
+            
             return render(request, 'friends/my_friends.html', 
-                          {'friends' : friends, 'friends_list' : friends_list, 'conversations' : conversations})
+                          {'friends' : friends, 'friends_list' : friends_list, 'conversations' : deserialized_conversations})
         else :
             # create the conversation object 
             conversation = Conversation.objects.create(member_one=request.user, member_two=user)
             # serialize and store it in session 
             serialized_conversation = conversation.to_json()
-            # store in session
-            conversations.append(serialized_conversation)
-            request.session['conversations'] = conversations
+            # check if the conversation is already in opened conversations 
+            if serialized_conversation not in request.session['conversations'] :
+                # store in session
+                conversations.append(serialized_conversation)
+                deserialized_conversation = Conversation.from_json(serialized_conversation)
+                deserialized_conversations.append(deserialized_conversation)
+                request.session['conversations'] = conversations
             return render(request, 'friends/my_friend.html', 
-                          {'friends' : friends, 'friends_list' : friends_list, 'conversations' : conversations})
+                          {'friends' : friends, 'friends_list' : friends_list, 'conversations' : deserialized_conversations})
         
 
 @login_required 

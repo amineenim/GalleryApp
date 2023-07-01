@@ -90,7 +90,11 @@ class Conversation(models.Model) :
         return serializers.serialize('json', [self])
     
     @classmethod
-    def from_json(cls, json_data) :
-        deserialized_data = serializers.deserialize('json', json_data)
-        return next(deserialized_data).object
+    def from_json(cls, serialized_data) :
+        deserialized_data = list(serializers.deserialize('json', serialized_data))
+        deserialized_objects = [deserialized.object for deserialized in deserialized_data]
+        if len(deserialized_objects) > 0 :
+            return deserialized_objects[0]
+        return None 
+       
     
