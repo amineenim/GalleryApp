@@ -543,6 +543,8 @@ class GetListOfMyFriendsViewTests(TestCase) :
         self.assertEqual(response.status_code, 200)
         self.assertCountEqual(response.context['friends'], friends_list.friends.all())
         self.assertEqual(response.context['friends_list'], friends_list)
+        self.assertTrue(FriendsList.objects.exists())
+        self.assertEqual(len(friends_list.friends.all()), 2)
         self.assertContains(response, 'friend1')
         self.assertContains(response, 'friend2')
 
