@@ -571,8 +571,20 @@ class GetListOfMyFriendsViewTests(TestCase) :
         self.assertEqual(response.status_code, 200)
         self.assertCountEqual(response.context['friends'], friends_list.friends.all())
         self.assertQuerysetEqual(response.context['conversations'], Conversation.objects.filter(member_one=user, member_two=User.objects.get(username='friend1')))
-        
-
-
-
-
+        # click 'Message' for friend2 
+        response = self.client.post(target_url, {'username' : 'friend2'})
+        # check that Conversation object has been created 
+        self.assertTrue(Conversation.objects.filter(member_one=user, member_two=User.objects.get(username='friend2')).exists())
+        self.assertTrue(len(Conversation.objects.all()), 2)
+        # check session 
+        session_data = self.client.session
+        self.assertEqual(session_data.get('conversations'), [conv.to_json() for conv in Conversation.objects.filter(member_one=user)])
+        self.assertEqual(response.status_code, 200)
+        self.assertCountEqual(response.context['friends'], friends_list.friends.all())
+        self.assertEqual(len(response.context['conversations']), 2)
+        self.assertQuerysetEqual(response.context['conversations'], Conversation.objects.filter(member_one=user))
+        self.assertContains(response, 'No messages yet')
+        # send a get request and check session 
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(self.client.session.get('conversations') is not None)
