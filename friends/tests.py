@@ -516,14 +516,35 @@ class SinceWhenFriendshipNotificationTests(TestCase) :
 
 # class to test the operation of get_list_of_my_friemds 
 class GetListOfMyFriendsViewTests(TestCase) :
+    # function that creates a user and associated FriendsList 
+    def get_user_and_friendslist(self) :
+        user = User.objects.create_user(username='amine', password='1234')
+        friend1 = User.objects.create_user(username='friend1', password='friend1')
+        friend2 = User.objects.create_user(username='friend2', password='friend2')
+        Friends_list = FriendsList.objects.create(belongs_to=user)
+        Friends_list.friends.set([friend1, friend2])
+        return user, Friends_list
+    
     # test the get_list_of_my_friends with unauthenticated user 
     def test_get_list_of_my_friends_with_unauthenticated_user(self) :
         target_url = reverse('friends:my_friends')
         response = self.client.get(target_url)
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
-        
-
+    
+    # test get_list_of_my_friends with authenticated user with get request
+    def test_get_list_of_my_friends_with_get_request(self) :
+        # get the user and it's friends list
+        user, friends_list = self.get_user_and_friendslist()
+        target_url = reverse('friends:my_friends')
+        # authenticate the user 
+        self.client.login(username='amine', password='1234')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertCountEqual(response.context['friends'], friends_list.friends.all())
+        self.assertEqual(response.context['friends_list'], friends_list)
+        self.assertContains(response, 'friend1')
+        self.assertContains(response, 'friend2')
 
 
 
