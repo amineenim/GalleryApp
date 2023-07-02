@@ -145,7 +145,7 @@ def get_list_of_my_friends(request) :
                 deserialized_conversation = Conversation.from_json(serialized_conversation)
                 deserialized_conversations.append(deserialized_conversation)
                 request.session['conversations'] = conversations
-            return render(request, 'friends/my_friend.html', 
+            return render(request, 'friends/my_friends.html', 
                           {'friends' : friends, 'friends_list' : friends_list, 'conversations' : deserialized_conversations})
         
 

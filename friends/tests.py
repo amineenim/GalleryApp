@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.contrib import messages
 from django.utils import timezone
-from .models import FriendshipRequest, FriendshipNotification, FriendsList
+from .models import FriendshipRequest, FriendshipNotification, FriendsList, Conversation
 # Create your tests here.
 
 # class to test the operation of the send_friendship_request View 
@@ -548,9 +548,30 @@ class GetListOfMyFriendsViewTests(TestCase) :
         self.assertContains(response, 'friend1')
         self.assertContains(response, 'friend2')
 
-
-
-
+    # test get_list_of_my_friends with post request 
+    def test_get_list_of_my_friends_with_post_request_and_no_conversation(self) :
+        # create a user with two friends 
+        user, friends_list = self.get_user_and_friendslist()
+        target_url = reverse('friends:my_friends')
+        # authenticate the user and send a get request
+        self.client.login(username='amine', password='1234')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'friend1')
+        self.assertContains(response, 'friend2')
+        # Click 'Message' button which sends a post request to same url
+        response = self.client.post(target_url, {'username' : 'friend1'})
+        # check that a Conversation object has been created 
+        self.assertTrue(Conversation.objects.exists())
+        self.assertTrue(Conversation.objects.filter(member_one=user, member_two=User.objects.get(username='friend1')).exists())
+        # check the session 
+        created_conversation = Conversation.objects.get(member_one=user, member_two=User.objects.get(username='friend1'))
+        session_data = self.client.session
+        self.assertEqual(session_data.get('conversations'), [created_conversation.to_json()])
+        self.assertEqual(response.status_code, 200)
+        self.assertCountEqual(response.context['friends'], friends_list.friends.all())
+        self.assertQuerysetEqual(response.context['conversations'], Conversation.objects.filter(member_one=user, member_two=User.objects.get(username='friend1')))
+        
 
 
 
