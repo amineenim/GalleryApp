@@ -514,9 +514,15 @@ class SinceWhenFriendshipNotificationTests(TestCase) :
         self.assertEqual(notification.since_when().date(), datetime(2023, 6, 28).date())
 
 
-
-
-
+# class to test the operation of get_list_of_my_friemds 
+class GetListOfMyFriendsViewTests(TestCase) :
+    # test the get_list_of_my_friends with unauthenticated user 
+    def test_get_list_of_my_friends_with_unauthenticated_user(self) :
+        target_url = reverse('friends:my_friends')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+        
 
 
 
