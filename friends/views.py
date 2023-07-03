@@ -159,9 +159,6 @@ def close_conversation(request) :
             user = User.objects.get(username=username)
         except User.DoesNotExist :
             messages.error(request,'Oops ! something went wrong')
-            return render(request, 'friends/my_friends.html', {
-                'username' : username
-            })
             return redirect(reverse('friends:my_friends'))
         # check for session data which holds opened conversations and delete the one with the user having username
         session_data = request.session.get('conversations')

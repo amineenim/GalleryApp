@@ -9,6 +9,33 @@
             <h3 class='text-xl'>
                 My Friends 
             </h3>
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        <div class="bg-green-300 rounded-xl flex justify-between items-center w-1/2 p-3 pl-5 w-1/2">
+                            <p>{{ message }}</p>
+                            <form method="POST" action="{% url 'likes:clear_messages' %}" class="w-fit h-fit">
+                                {% csrf_token %}
+                                <input type="hidden" name="previous_url" value="{{request.path}}">
+                                <button type="submit">
+                                    <i class="fa-solid fa-x"></i>
+                                </button>
+                            </form>
+                        </div>
+                    {% elif message.tags == 'error' %}
+                        <div class="bg-red-300 rounded-xl flex justify-between items-center w-1/2 p-3 pl-5">
+                            <p>{{ message }}</p>
+                            <form method="POST" action="{% url 'likes:clear_messages' %}" class="w-fit h-fit">
+                                {% csrf_token %}
+                                <input type="hidden" name="previous_url" value="{{request.path}}">
+                                <button type="submit">
+                                    <i class="fa-solid fa-x"></i>
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
             <button class="py-2 px-4 bg-gray-900 text-white hover:bg-gray-700 rounded-xl mx-1">
                 <a href="{% url 'gallery' %}" class="flex items-center">
                     <i class="fa-solid fa-home mr-1"></i>Home
