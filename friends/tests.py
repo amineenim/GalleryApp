@@ -591,6 +591,13 @@ class GetListOfMyFriendsViewTests(TestCase) :
 
 # class to test the operation of close_conversation View 
 class CloseConversationViewTests(TestCase) :
+    def create_user_and_friends(self) :
+        user = User.objects.create_user(username='amine', password='1234')
+        user_friends_list = FriendsList.objects.create(belongs_to=user)
+        friend_one = User.objects.create_user(username='friend_one', password='friend_one')
+        friend_two = User.objects.create_user(username='friend_two', password='friend_two')
+        user_friends_list.friends.set([friend_one, friend_two])
+        return user, user_friends_list
     # test with unauthenticated user 
     def test_close_conversation_with_unauthenticated_user(self) :
         target_url = reverse('friends:close_conversation')
@@ -614,4 +621,46 @@ class CloseConversationViewTests(TestCase) :
         for message in my_messages :
             self.assertEqual(message.tags, 'error')
             self.assertEqual(message.message, 'Oops ! something went wrong')
-           
+    
+    # test with authenticated user closing a conversation he opened
+    def test_close_conversation_with_authenticated_user_closing_a_conversation_he_opened(self) :
+        # create a user and authenticate him 
+        user, friends_list = self.create_user_and_friends()
+        self.client.login(username='amine', password='1234')
+        # check my_friends using get request 
+        target_url = reverse('friends:my_friends')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertCountEqual(response.context['friends'], FriendsList.objects.get(belongs_to=user).friends.all())
+        self.assertContains(response, 'friend_one')
+        self.assertContains(response, 'friend_two')
+        # send post request to message 'friend_one'
+        response = self.client.post(target_url, {'username' : 'friend_one'})
+        self.assertEqual(response.status_code, 200)
+        # check that a conversation object has been created 
+        self.assertTrue(Conversation.objects.exists())
+        self.assertQuerysetEqual(response.context['conversations'], Conversation.objects.filter(member_one=user, member_two=User.objects.get(username='friend_one')))
+        # check session data 
+        self.assertEqual(self.client.session.get('conversations'), [conv.to_json() for conv in Conversation.objects.all()])
+        self.assertEqual(len(self.client.session.get('conversations')), 1)
+        # send a get request 
+        response = self.client.get(target_url)
+        # check for 'conversations' in context data
+        self.assertQuerysetEqual(response.context['conversations'], [Conversation.objects.get(member_one=user, member_two=User.objects.get(username='friend_one'))])
+        self.assertCountEqual(response.context['friends'], friends_list.friends.all())
+        self.assertContains(response, 'No messages yet')
+        self.assertEqual(self.client.session.get('conversations'), [conv.to_json() for conv in Conversation.objects.filter(member_one=user, member_two=User.objects.get(username='friend_one'))])
+        # close the discussion by sending a post request 
+        target_url = reverse('friends:close_conversation')
+        response = self.client.post(target_url, {'username' : 'friend_one'})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('friends:my_friends'))
+        # check session data 
+        self.assertEqual(self.client.session.get('conversations'), [])
+        # perform a get request and check context data and session
+        response = self.client.get(reverse('friends:my_friends'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['conversations'], [])
+
+
+        
