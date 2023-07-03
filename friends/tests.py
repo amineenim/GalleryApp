@@ -588,3 +588,30 @@ class GetListOfMyFriendsViewTests(TestCase) :
         response = self.client.get(target_url)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(self.client.session.get('conversations') is not None)
+
+# class to test the operation of close_conversation View 
+class CloseConversationViewTests(TestCase) :
+    # test with unauthenticated user 
+    def test_close_conversation_with_unauthenticated_user(self) :
+        target_url = reverse('friends:close_conversation')
+        response = self.client.post(target_url,{})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+
+    # test with a user who does not exist 
+    def test_close_conversation_with_unexisting_user(self) :
+        # create a user and authenticate him
+        User.objects.create_user(username='amine', password='1234')
+        self.client.login(username='amine', password='1234')
+        target_url = reverse('friends:close_conversation')
+        # send a post request with username that corresponds to no user
+        response = self.client.post(target_url, {'username' : 'test'})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('friends:my_friends'))
+        # check messages 
+        my_messages = list(messages.get_messages(request=response.wsgi_request))
+        self.assertEqual(len(my_messages), 1) 
+        for message in my_messages :
+            self.assertEqual(message.tags, 'error')
+            self.assertEqual(message.message, 'Oops ! something went wrong')
+           

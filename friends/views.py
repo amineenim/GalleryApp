@@ -96,7 +96,7 @@ def decline_friendship_request(request, username) :
 
 @login_required 
 def get_list_of_my_friends(request) :
-    friends_list = FriendsList.objects.get(belongs_to=request.user)
+    friends_list, created = FriendsList.objects.get_or_create(belongs_to=request.user)
     friends = friends_list.friends.all()
     # create a session variable to store opened conversations 
     conversations = request.session.get('conversations')
