@@ -112,7 +112,8 @@ def get_list_of_my_friends(request) :
 
     if request.method == 'GET' :
         if 'conversations' in request.session :
-            del request.session['conversations']
+            return render(request, 'friends/my_friends.html', {'friends' : friends, 'friends_list' : friends_list, 'conversations' : deserialized_conversations})
+            #del request.session['conversations']
         return render(request, 'friends/my_friends.html', {'friends' : friends, 'friends_list' : friends_list})
     elif request.method == 'POST' :
         # get the username value submitted 
@@ -149,16 +150,30 @@ def get_list_of_my_friends(request) :
                           {'friends' : friends, 'friends_list' : friends_list, 'conversations' : deserialized_conversations})
         
 
-@login_required 
-def start_conversation(request, username) :
-    try :
-        user = User.objects.get(username=username)
-    except User.DoesNotExist :
-        messages.error(request, 'something went wrong')
+@login_required
+def close_conversation(request) :
+    username = request.POST.get('username')
+    if request.method == 'POST' :
+        # check for username 
+        try :
+            user = User.objects.get(username=username)
+        except User.DoesNotExist :
+            messages.error(request,'Oops ! something went wrong')
+            return render(request, 'friends/my_friends.html', {
+                'username' : username
+            })
+            return redirect(reverse('friends:my_friends'))
+        # check for session data which holds opened conversations and delete the one with the user having username
+        session_data = request.session.get('conversations')
+        if session_data is None :
+            # no key 'conversations' was found in session data 
+            return redirect(reverse('friends:my_friends'))
+        # get the conversation object between authenticated user and username
+        conversation = Conversation.objects.filter(member_one=request.user, member_two=user).first() or Conversation.objects.filter(member_one=user, member_two=request.user).first()
+        # serialize the conversation instance
+        serialized_conv = conversation.to_json()
+        # filter session data 
+        session_data = [conv for conv in session_data if conv != serialized_conv]
+        request.session['conversations'] = session_data
         return redirect(reverse('friends:my_friends'))
     
-    if request.method == 'POST' :
-        # create a conversation Object , if it already not existing
-        does_conversation_exist = Conversation.objects.filter(member_one=request.user, member_two=user).exists() or Conversation.objects.filter(member_one=user, member_two=request.user).exists()
-        if does_conversation_exist :
-            return redirect(reverse('friends:my_friends'))

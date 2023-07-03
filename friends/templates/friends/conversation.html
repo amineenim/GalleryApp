@@ -3,13 +3,24 @@
     <div class="flex flex-col h-64 mx-1 border-2 border-slate-600 rounded-xl px-2 pb-1">
         <div class="flex justify-between px-2 py-1 border-b-2 border-slate-600">
             {% if conversation.member_one == request.user %}
-            <p>{{ conversation.member_two }}</p>
+            <p>{{ conversation.member_two.username}}</p>
             {% else %}
-            <p> {{ conversation.member_one }} </p>
+            <p> {{ conversation.member_one.username }} </p>
             {% endif %}
             <div class="flex items-center">
                 <i class="fa-solid fa-minus fa-2xs mr-1"></i>
-                <i class="fa-solid fa-x fa-2xs ml-1"></i>
+                <form method='POST' action="{% url 'friends:close_conversation' %}" 
+                class="h-fit w-fit">
+                    {% csrf_token %}
+                    {% if conversation.member_one == request.user %}
+                    <input type='text' hidden name='username' value="{{ conversation.member_two.username }}">
+                    {% else %}
+                    <input type='text' hidden name='username' value="{{ conversation.member_one.username }}">
+                    {% endif %}
+                    <button type='submit' class='h-fit w-fit'>
+                        <i class="fa-solid fa-x fa-2xs ml-1"></i>
+                    </button>
+                </form>
             </div>
         </div>
         <div class="h-3/4 overflow-y-auto py-1 px-1 text-sm">

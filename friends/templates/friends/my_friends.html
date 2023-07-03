@@ -31,9 +31,9 @@
                           
                             <form method="POST" action="{% url 'friends:my_friends' %}" class="w-fit bg-gray-200 h-fit p-2 rounded-xl hover:bg-gray-700 hover:text-white">
                                 {% csrf_token %}
-                                <i class="fa-solid fa-message"></i> 
                                 <input type='hidden' type='text' name='username' value="{{friend.username}}">
-                                <button type="submit"> Message </button>
+                                <button type="submit">
+                                    <i class="fa-solid fa-message"></i>  Message </button>
                             </form>
                            
                         </div>
@@ -49,6 +49,9 @@
                         {% include 'friends/conversation.html' with conversation=conversation %}
                     {% endfor %}
                 </div>
+            {% endif %}
+            {% if username %}
+            {{username}}
             {% endif %}
         </div>
     </div>
