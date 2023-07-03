@@ -122,9 +122,9 @@ def get_list_of_my_friends(request) :
         # create a conversation object if it already doesn't exist 
         if Conversation.objects.filter(member_one=request.user, member_two=user).exists() or Conversation.objects.filter(member_one=user, member_two=request.user).exists() :
             # get the corresponding Conversation object
-            conversation = Conversation.objects.get(member_one=request.user, member_two=user) or Conversation.objects.get(member_one=user, member_two=request.user)
+            conversation = Conversation.objects.filter(member_one=request.user, member_two=user) or Conversation.objects.filter(member_one=user, member_two=request.user)
             # serialize the conversation object and store it in session
-            serialized_conversation = conversation.to_json()
+            serialized_conversation = conversation[0].to_json()
             # check if the conversation doesn't already exist in opened conversations 
             if serialized_conversation not in request.session['conversations'] :
                 conversations.append(serialized_conversation)
