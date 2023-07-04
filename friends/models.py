@@ -96,5 +96,19 @@ class Conversation(models.Model) :
         if len(deserialized_objects) > 0 :
             return deserialized_objects[0]
         return None 
+
+# class that represents a Message object 
+class ConversationMessage(models.Model) :
+    def get_default_user(self) :
+        return User.objects.get(username='test')
+    
+    conversation = models.ForeignKey(Conversation, null=False, on_delete=models.CASCADE, related_name='messages')
+    sent_by = models.ForeignKey(User, null=False, on_delete=models.SET_DEFAULT, default=get_default_user, related_name='my_messages')
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_seen = models.BooleanField(default=False, null=False)
+
+    def __str__(self) :
+        return 'sent by' +  self.sent_by.username
+    
        
     
