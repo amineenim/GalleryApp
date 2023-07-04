@@ -23,8 +23,38 @@
                 </form>
             </div>
         </div>
-        <div class="h-3/4 overflow-y-auto py-1 px-1 text-sm">
-            No messages yet 
+        <div class="h-3/4 flex flex-col space-y-1 overflow-y-auto py-1 px-1 text-sm">
+            {% if conversation.messages.all %}
+                {% for message in conversation.messages.all %}
+                    {% if message.sent_by == request.user %}
+                        <div class='py-1 px-2 bg-blue-400 flex flex-col rounded-xl'>
+                            <p class='text-sm'>{{message.text}}</p>
+                            <div class='self-end text-xs flex items-center'>
+                                <p class='text-xs'> {{message.created_at|timesince}} </p>
+                                {% if message.is_seen %}
+                                    <i class="fa-solid fa-check fa-xs ml-1"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-eye-slash fa-xs ml-1"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class='py-1 px-2 border-2 border-slate-400 flex flex-col rounded-xl'>
+                            <p class='text-sm'>{{message.text}}</p>
+                            <div class='self-end text-xs flex items-center'>
+                                <p> {{message.created_at|timesince}} </p>
+                                {% if message.is_seen %}
+                                    <i class="fa-solid fa-check fa-xs ml-1"></i>
+                                {% else %}
+                                    <i class="fa-solid fa-eye-slash fa-xs ml-1"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <p>No messages yet</p>
+            {% endif %}
         </div>
         {% if conversation.member_one == request.user %}
         <form method='POST' action="{% url 'friends:send_message' conversation.member_two.username %}" class="flex items-center justify-between">
