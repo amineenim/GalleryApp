@@ -26,11 +26,22 @@
         <div class="h-3/4 overflow-y-auto py-1 px-1 text-sm">
             No messages yet 
         </div>
-        <div class="flex items-center justify-between">
+        {% if conversation.member_one == request.user %}
+        <form method='POST' action="{% url 'friends:send_message' conversation.member_two.username %}" class="flex items-center justify-between">
+            {% csrf_token %}
             <input type='text' name='message' class="w-full border-2 border-slate-500 text-sm rounded-xl py-1 pl-3">
             <button type='submit'>
                 <i class="fa-solid fa-paper-plane ml-1"></i>
             </button>
-        </div>
+        </form>
+        {% else %}
+        <form method='POST' action="{% url 'friends:send_message' conversation.member_one.username %}" class="flex items-center justify-between">
+            {% csrf_token %}
+            <input type='text' name='message' class="w-full border-2 border-slate-500 text-sm rounded-xl py-1 pl-3">
+            <button type='submit'>
+                <i class="fa-solid fa-paper-plane ml-1"></i>
+            </button>
+        </form>
+        {% endif %}
     </div>
 {% endblock %}

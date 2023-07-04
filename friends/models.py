@@ -110,7 +110,8 @@ class ConversationMessage(models.Model) :
 
     class Meta :
         db_table = 'messages'
-        
+        verbose_name_plural = 'messages'
+
     def __str__(self) :
         return 'sent by' +  self.sent_by.username
     
