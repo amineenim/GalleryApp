@@ -203,7 +203,7 @@ def send_message(request, username) :
             )
             message.save()
         else :
-            messages.error(request, 'invalid message, enter some text')
+            messages.error(request, 'invalid message, Enter some text')
             
         return redirect('friends:my_friends')
     else :

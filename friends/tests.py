@@ -662,5 +662,30 @@ class CloseConversationViewTests(TestCase) :
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['conversations'], [])
 
-
+# class to test the operation of send_message View
+class SendMessageViewTests(TestCase) :
+    # test with unauthenticated user 
+    def test_send_message_with_unauthenticated_user(self) :
+        # we pass as an argument a username that doesn't exist
+        # it doesn't matter since authentication will prevent the handling logic
+        target_url = reverse('friends:send_message', args=('test',))
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+    
+    # test send_message with a username who does not exist 
+    def test_send_message_to_unexisting_user(self) :
+        # create a user and authenticate him
+        User.objects.create_user(username='amine', password='1234')
+        self.client.login(username='amine', password='1234')
+        target_url = reverse('friends:send_message', args=('not_existing',))
+        response = self.client.post(target_url, {'message' : 'test message'})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('friends:my_friends'))
+        # check for messages 
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'error')
+            self.assertEqual(message.message, 'Oops, something went wrong !')
         
