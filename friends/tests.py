@@ -688,4 +688,22 @@ class SendMessageViewTests(TestCase) :
         for message in my_messages :
             self.assertEqual(message.tags, 'error')
             self.assertEqual(message.message, 'Oops, something went wrong !')
+    
+    # test send_message to a user with whom a Conversation object doesn't exist
+    def test_send_message_to_user_with_whom_no_conversation_object_exists(self) :
+        # create the receiver to whom we will send a message
+        receiver = User.objects.create_user(username='receiver', password='1234')
+        # create a user and authenticate him
+        User.objects.create_user(username='amine', password='1234')
+        self.client.login(username='amine', password='1234')
+        target_url = reverse('friends:send_message', args=('receiver',))
+        response = self.client.post(target_url, {'message' : 'test message'})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('friends:my_friends'))
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'error')
+            self.assertEqual(message.message, 'something went wrong !')
+        
         

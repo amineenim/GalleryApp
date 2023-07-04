@@ -186,10 +186,9 @@ def send_message(request, username) :
     if request.method == 'POST' :
         # get the conversation object 
         try :
-            conversation = Conversation.objects.filter(member_one=request.user, member_two=user) or Conversation.objects.filter(member_one=user, member_two=request.user)
-            conversation = conversation[0]
+            conversation = Conversation.objects.get(member_one=request.user, member_two=user) or Conversation.objects.get(member_one=user, member_two=request.user)
         except Conversation.DoesNotExist :
-            messages.error('something went wrong !')
+            messages.error(request, 'something went wrong !')
             return redirect('friends:my_friends')
         # validate the input received from the form 
         text_message = request.POST.get('message')
