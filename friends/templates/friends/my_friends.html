@@ -42,11 +42,14 @@
                 </a>
             </button>
         </div>
-        <div class="bg-gray-200 rounded-xl h-full flex flex-col py-6 px-8 relative">
-            <div class="rounded-xl h-full flex py-6 px-8">
-                <div class="w-3/4 flex flex-col space-y-2 p-10">
+        <div class="bg-gray-200 rounded-xl h-full flex flex-col py-6 px-8 w-full relative">
+            <div class="rounded-xl flex p-6 h-full">
+                <div class="w-1/2 flex flex-col border-2 border-slate-500 rounded-xl space-y-2 p-5">
+                    <div class="w-1/4 flex justify-center py-2">
+                        <h4 class='text-lg flex mr-1'>Total Friends : <p class='text-xl ml-1'>{{ friends_list.get_number_of_friends }}</p></h4>
+                    </div>
                     {% for friend in friends %}
-                        <div class="py-2 px-4 border-2 flex items-center border-slate-500 rounded-xl justify-between">
+                        <div class="py-2 px-4 border-2 overflow-y-auto flex items-center border-slate-500 rounded-xl justify-between">
                             <div class='flex items-center'> 
                                 {% if friend.profile_data.exists %}
                                     <img src="{{ friend.profile_data.profile_picture.url }}" width='30' class="rounded-full" alt="profile_picture">
@@ -66,12 +69,9 @@
                         </div>
                     {% endfor %}
                 </div>
-                <div class=" w-1/4 flex justify-center py-6">
-                    <h4 class='text-lg flex'>Total Friends : <p class='text-xl'>{{ friends_list.get_number_of_friends }}</p></h4>
-                </div>
             </div>
             {% if conversations %}
-                <div class="flex absolute bottom-6 right-8 z-10">
+                <div class="flex justify-end absolute bottom-6 w-1/2 self-end overflow-x-auto z-10">
                     {% for conversation in conversations %}
                         {% include 'friends/conversation.html' with conversation=conversation %}
                     {% endfor %}
