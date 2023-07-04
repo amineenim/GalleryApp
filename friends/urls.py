@@ -9,4 +9,5 @@ urlpatterns = [
     path('decline/<str:username>', views.decline_friendship_request, name='decline_request'),
     path('all/', views.get_list_of_my_friends, name='my_friends'),
     path('close_conversation/', views.close_conversation, name='close_conversation'),
+    path('send/<str:username>', views.send_message, name='send_message'),
 ]

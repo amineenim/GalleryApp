@@ -31,7 +31,7 @@ admin.site.register(Conversation, ConversationAdmin)
 
 class ConversationMessageAdmin(admin.ModelAdmin) :
     fields = ['conversation', 'sent_by', 'created_at']
-    list_display = ['conversation', 'sent_by', 'created_at', 'is_seen']
+    list_display = ['conversation', 'text', 'sent_by', 'created_at', 'is_seen']
     list_filter = ['conversation', 'sent_by', 'created_at', 'is_seen']
 
 admin.site.register(ConversationMessage, ConversationMessageAdmin)

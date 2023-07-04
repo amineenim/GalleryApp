@@ -103,10 +103,14 @@ class ConversationMessage(models.Model) :
         return User.objects.get(username='test')
     
     conversation = models.ForeignKey(Conversation, null=False, on_delete=models.CASCADE, related_name='messages')
+    text = models.CharField(null=False, blank=False, max_length=400, default='default text')
     sent_by = models.ForeignKey(User, null=False, on_delete=models.SET_DEFAULT, default=get_default_user, related_name='my_messages')
     created_at = models.DateTimeField(auto_now_add=True)
     is_seen = models.BooleanField(default=False, null=False)
 
+    class Meta :
+        db_table = 'messages'
+        
     def __str__(self) :
         return 'sent by' +  self.sent_by.username
     

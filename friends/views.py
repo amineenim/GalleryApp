@@ -2,9 +2,9 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User 
-from .models import FriendshipRequest, FriendshipNotification, FriendsList, Conversation
+from .models import FriendshipRequest, FriendshipNotification, FriendsList, Conversation, ConversationMessage
 from django.contrib import messages
-import json
+from django.utils.html import escape
 # Create your views here.
 
 # view that handles sending a friendship request to someone
@@ -173,4 +173,39 @@ def close_conversation(request) :
         session_data = [conv for conv in session_data if conv != serialized_conv]
         request.session['conversations'] = session_data
         return redirect(reverse('friends:my_friends'))
-    
+
+@login_required 
+def send_message(request, username) :
+    # get the user with 'username'
+    try :
+        user = User.objects.get(username=username)
+    except User.DoesNotExist :
+        messages.error(request, 'Oops, something went wrong !')
+        return redirect('friends:my_friends')
+    # check for post request 
+    if request.method == 'POST' :
+        # get the conversation object 
+        try :
+            conversation = Conversation.objects.filter(member_one=request.user, member_two=user) or Conversation.objects.filter(member_one=user, member_two=request.user)
+            conversation = conversation[0]
+        except Conversation.DoesNotExist :
+            messages.error('something went wrong !')
+            return redirect('friends:my_friends')
+        # validate the input received from the form 
+        text_message = request.POST.get('message')
+        if text_message and text_message.strip() :
+            text_message = escape(text_message)
+            # create the message object
+            message = ConversationMessage.objects.create(
+                conversation=conversation,
+                text = text_message,
+                sent_by = request.user,
+            )
+            message.save()
+        else :
+            messages.error(request, 'invalid message, enter some text')
+            
+        return redirect('friends:my_friends')
+    else :
+        messages.error(request, 'undefined URL !')
+        return redirect('gallery')
