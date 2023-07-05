@@ -110,7 +110,8 @@ def gellery(request) :
         page = request.GET.get('page')
         photos = p.get_page(page)
         context = {'categories' : categories, 'photos' : photos, 'category' : selected_category,
-                   'notifications' : user_notifications, 'friendship_notifications' : friendship_notifications }
+                   'notifications' : user_notifications, 'friendship_notifications' : friendship_notifications,
+                    'unread_messages' : total_unread, 'conversations_with_number_of_unread_messages' : conversations_with_unreaad_messages }
         return render(request, 'photoshare/gallery.html', context)
    
     context = {'categories' : categories, 'photos' : photos, 'notifications' : user_notifications, 

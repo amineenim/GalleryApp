@@ -220,3 +220,8 @@ def send_message(request, username) :
     else :
         messages.error(request, 'undefined URL !')
         return redirect('gallery')
+
+# function that handles displaying messages notifications 
+@login_required
+def get_messages_notifications(request) :
+    pass 
