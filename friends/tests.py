@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 from django.contrib import messages
 from django.utils import timezone
-from .models import FriendshipRequest, FriendshipNotification, FriendsList, Conversation
+from .models import FriendshipRequest, FriendshipNotification, FriendsList, Conversation, ConversationMessage
 # Create your tests here.
 
 # class to test the operation of the send_friendship_request View 
@@ -768,5 +768,31 @@ class SendMessageViewTests(TestCase) :
         for message in my_messages :
             self.assertEqual(message.tags, 'error')
             self.assertEqual(message.message, 'undefined URL !')
+    
+    # test send_message to a user in friends list
+    def test_send_message_to_a_friend_in_friends_list(self) :
+        # create a user and friends list 
+        user, friend1, friend2 = self.create_user_and_friends_list()
+        # create conversation objects 
+        Conversation.objects.create(member_one=user, member_two=friend1)
+        Conversation.objects.create(member_one=friend2, member_two=user)
+        # authenticate the user 
+        self.client.login(username='amine', password='1234')
+        # send a message to friend1
+        target_url = reverse('friends:send_message', args=('friend1',))
+        response = self.client.post(target_url, {'message' : 'hello world'})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('friends:my_friends'))
+        # check that a Message object has been created 
+        self.assertTrue(ConversationMessage.objects.exists())
+        self.assertEqual(ConversationMessage.objects.filter(sent_by=user).first().text, 'hello world')
+        # send a message to friend2 
+        target_url = reverse('friends:send_message', args=('friend2',))
+        response = self.client.post(target_url, {'message' : 'test message'})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('friends:my_friends'))
+        # check Message objects
+        self.assertEqual(len(ConversationMessage.objects.all()), 2)
+        self.assertEqual(ConversationMessage.objects.filter(sent_by=user, text='test message').first().is_seen, False)
         
         
