@@ -1,4 +1,33 @@
 {% extends 'friends/base.html' %}
 {% block title %}Messages{% endblock %}
 {% block content %}
+    <div class="h-screen bg-gray-200 rounded-xl grid grid-cols-2 span-4">
+        <div class="h-full col-span-1 flex flex-col py-4">
+            <h3 class="self-center text-xl underline mb-3">All Conversations</h3>
+            <div class="h-full flex flex-col px-6 py-3 space-y-2 overflow-y-auto rounded-xl">
+                {% for conversation_data in conversations_data %}
+                    <div class="flex flex-col border-b-2 border-l-2 px-2 rounded-xl border-slate-700 py-1 hover:bg-gray-600 hover:text-white">
+                        {% if conversation_data.conversation.member_one == request.user %}
+                            <p class="text-lg font-bold"> {{conversation_data.conversation.member_two|capfirst}} </p>
+                        {% else %}
+                            <p class="text-lg font-bold"> {{conversation_data.conversation.member_one|capfirst}} </p>
+                        {% endif %}
+                        <div class="flex justify-between items-center">
+                            {% if conversation_data.last_message == '' %}
+                                <p class='text-sm m-auto font-italic'>No messages yet</p>
+                            {% else %}
+                                <p class='text-sm ml-10'>{{ conversation_data.last_message }}</p>
+                            {% endif %}
+                            {% if conversation_data.unread_messages > 0 %}
+                                <p class='flex justify-center items-center p-2 h-6 w-6 rounded-full bg-red-400'>
+                                    {{ conversation_data.unread_messages }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="h-full col-span-1"></div>
+    </div>
 {% endblock %}

@@ -236,7 +236,7 @@ def get_messages_notifications(request) :
                 for message in conversation.messages.all() :
                     if message.is_seen == False and message.sent_by != request.user :
                         conversation_data['unread_messages'] += 1
-                last_message = Conversation.messages.filter(conversation=conversation).last()
+                last_message = conversation.messages.all().last()
                 conversation_data['last_message'] = last_message.text 
             conversations_data.append(conversation_data)
         return render(request, 'friends/discussions.html', {'conversations_data' : conversations_data})
