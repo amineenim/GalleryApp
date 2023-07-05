@@ -723,5 +723,22 @@ class SendMessageViewTests(TestCase) :
         for message in my_messages :
             self.assertEqual(message.tags, 'error')
             self.assertEqual(message.message, 'invalid message, Enter some text')
+    
+    # test send_message view with get request
+    def test_send_message_with_get_request(self) :
+        # create the user receiver of message 
+        receiver = User.objects.create_user(username='receiver', password='receiver')
+        # create a user and authenticate him
+        User.objects.create_user(username='amine', password='1234')
+        self.client.login(username='amine', password='1234')
+        target_url = reverse('friends:send_message', args=('receiver',))
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'error')
+            self.assertEqual(message.message, 'undefined URL !')
         
         
