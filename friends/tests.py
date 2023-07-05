@@ -664,6 +664,15 @@ class CloseConversationViewTests(TestCase) :
 
 # class to test the operation of send_message View
 class SendMessageViewTests(TestCase) :
+    # create a user with a friends_list 
+    def create_user_and_friends_list(self) :
+        user = User.objects.create_user(username='amine', password='1234')
+        # create two friend users
+        friend1 = User.objects.create_user(username='friend1', password='friend1')
+        friend2 = User.objects.create_user(username='friend2', password='friend2')
+        friends_list = FriendsList.objects.create(belongs_to = user)
+        friends_list.friends.set([friend1, friend2])
+        return user, friend1, friend2
     # test with unauthenticated user 
     def test_send_message_with_unauthenticated_user(self) :
         # we pass as an argument a username that doesn't exist
@@ -689,14 +698,14 @@ class SendMessageViewTests(TestCase) :
             self.assertEqual(message.tags, 'error')
             self.assertEqual(message.message, 'Oops, something went wrong !')
     
-    # test send_message to a user with whom a Conversation object doesn't exist
-    def test_send_message_to_user_with_whom_no_conversation_object_exists(self) :
-        # create the receiver to whom we will send a message
-        receiver = User.objects.create_user(username='receiver', password='1234')
-        # create a user and authenticate him
-        User.objects.create_user(username='amine', password='1234')
+    # test send_message to a friend with whom a Conversation object doesn't exist
+    def test_send_message_to_a_friend_with_whom_no_conversation_object_exists(self) :
+        # create a user with his friends_list and authenticate him
+        self.create_user_and_friends_list()
+        # authenticate the user 
         self.client.login(username='amine', password='1234')
-        target_url = reverse('friends:send_message', args=('receiver',))
+        # try send a message to one of his friends
+        target_url = reverse('friends:send_message', args=('friend1',))
         response = self.client.post(target_url, {'message' : 'test message'})
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('friends:my_friends'))
@@ -705,16 +714,34 @@ class SendMessageViewTests(TestCase) :
         for message in my_messages :
             self.assertEqual(message.tags, 'error')
             self.assertEqual(message.message, 'something went wrong !')
-    
+
+    # test send_message to a user not in friends_list 
+    def test_send_message_to_user_not_in_friends_list(self) :
+        # create a user with friends_list containing friend1 and friend2
+        self.create_user_and_friends_list()
+        # create a user who's not in friends list 
+        not_friend = User.objects.create_user(username='notfriend', password='notfriend')
+        # authenticate the user 
+        self.client.login(username='amine', password='1234')
+        target_url = reverse('friends:send_message', args=('notfriend',))
+        response = self.client.post(target_url, {'message' : 'test message'})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('friends:my_friends'))
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'error')
+            self.assertEqual(message.message, 'unauthorized action, you are not friends!')       
+
     # test send_message with empty text
     def test_send_message_with_empty_text(self) :
+        # create a user and freinds_list containing two friends
+        user, friend1, friend2 = self.create_user_and_friends_list()
         # create a Conversation instance with two mwmbers
-        user1 = User.objects.create_user(username='amine', password='1234')
-        user2 = User.objects.create_user(username='walid', password='4123')
-        Conversation.objects.create(member_one=user1, member_two=user2)
-        # authenticate user1 and send empty message to user2
+        Conversation.objects.create(member_one=friend1, member_two=user)
+        # authenticate user and send empty message to friend1
         self.client.login(username='amine', password='1234')
-        target_url = reverse('friends:send_message', args=('walid',))
+        target_url = reverse('friends:send_message', args=('friend1',))
         response = self.client.post(target_url, {'message' : '    '})
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('friends:my_friends'))
@@ -726,12 +753,13 @@ class SendMessageViewTests(TestCase) :
     
     # test send_message view with get request
     def test_send_message_with_get_request(self) :
+        # create a user and friends_list containing two friends 
+        self.create_user_and_friends_list()
         # create the user receiver of message 
         receiver = User.objects.create_user(username='receiver', password='receiver')
-        # create a user and authenticate him
-        User.objects.create_user(username='amine', password='1234')
+        # authenticate user
         self.client.login(username='amine', password='1234')
-        target_url = reverse('friends:send_message', args=('receiver',))
+        target_url = reverse('friends:send_message', args=('friend1',))
         response = self.client.get(target_url)
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('gallery'))

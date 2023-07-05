@@ -182,14 +182,26 @@ def send_message(request, username) :
     except User.DoesNotExist :
         messages.error(request, 'Oops, something went wrong !')
         return redirect('friends:my_friends')
+    # check if user is on the authenticated user's friends_list 
+    try :
+        friends_list = FriendsList.objects.get(belongs_to = request.user)
+    except FriendsList.DoesNotExist :
+        messages.error(request, 'something went wrong!, no friends to text')
+        return redirect('friends:my_friends')
+    if user not in friends_list.friends.all() :
+        messages.error(request, 'unauthorized action, you are not friends!')
+        return redirect('friends:my_friends')
     # check for post request 
     if request.method == 'POST' :
         # get the conversation object 
         try :
-            conversation = Conversation.objects.get(member_one=request.user, member_two=user) or Conversation.objects.get(member_one=user, member_two=request.user)
+            conversation = Conversation.objects.get(member_one=request.user, member_two=user)         
         except Conversation.DoesNotExist :
-            messages.error(request, 'something went wrong !')
-            return redirect('friends:my_friends')
+            try :
+                conversation = Conversation.objects.get(member_one=user, member_two=request.user)
+            except Conversation.DoesNotExist :
+                messages.error(request, 'something went wrong !')
+                return redirect('friends:my_friends')
         # validate the input received from the form 
         text_message = request.POST.get('message')
         if text_message and text_message.strip() :
