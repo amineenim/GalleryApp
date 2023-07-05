@@ -705,5 +705,23 @@ class SendMessageViewTests(TestCase) :
         for message in my_messages :
             self.assertEqual(message.tags, 'error')
             self.assertEqual(message.message, 'something went wrong !')
+    
+    # test send_message with empty text
+    def test_send_message_with_empty_text(self) :
+        # create a Conversation instance with two mwmbers
+        user1 = User.objects.create_user(username='amine', password='1234')
+        user2 = User.objects.create_user(username='walid', password='4123')
+        Conversation.objects.create(member_one=user1, member_two=user2)
+        # authenticate user1 and send empty message to user2
+        self.client.login(username='amine', password='1234')
+        target_url = reverse('friends:send_message', args=('walid',))
+        response = self.client.post(target_url, {'message' : '    '})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('friends:my_friends'))
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'error')
+            self.assertEqual(message.message, 'invalid message, Enter some text')
         
         
