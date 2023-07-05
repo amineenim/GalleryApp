@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from .models import FriendshipRequest, FriendshipNotification, FriendsList, Conversation, ConversationMessage
 from django.contrib import messages
 from django.utils.html import escape
+from django.db.models import Q 
 # Create your views here.
 
 # view that handles sending a friendship request to someone
@@ -224,4 +225,24 @@ def send_message(request, username) :
 # function that handles displaying messages notifications 
 @login_required
 def get_messages_notifications(request) :
-    pass 
+    # get all conversations in which the user is a member 
+    user_conversations = Conversation.objects.filter(Q(member_one=request.user) | Q(member_two=request.user))
+    # check if there are any 
+    conversations_data = []
+    if user_conversations.exists() :
+        for conversation in user_conversations :
+            conversation_data = {'conversation' : conversation, 'unread_messages' : 0, 'last_message' : ''}
+            if conversation.messages.exists() :
+                for message in conversation.messages.all() :
+                    if message.is_seen == False and message.sent_by != request.user :
+                        conversation_data['unread_messages'] += 1
+                last_message = Conversation.messages.filter(conversation=conversation).last()
+                conversation_data['last_message'] = last_message.text 
+            conversations_data.append(conversation_data)
+        return render(request, 'friends/discussions.html', {'conversations_data' : conversations_data})
+    else :
+        return render(request, 'friends/discussions.html', {'conversations' : user_conversations})
+    
+            
+
+
