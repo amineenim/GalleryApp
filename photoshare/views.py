@@ -10,7 +10,8 @@ from django.contrib.contenttypes.models import ContentType
 from likes.models import Like, Comment
 from likes.forms import CommentCreateForm
 from django.core.paginator import Paginator
-from friends.models import FriendshipNotification
+from friends.models import FriendshipNotification, Conversation, ConversationMessage
+from django.db.models import Q 
 
 # Create your views here.
 # define a namespace for the app 
@@ -84,6 +85,19 @@ def gellery(request) :
                 user_notifications.append(notification)
     # get notifications for freindship 
     friendship_notifications = FriendshipNotification.objects.filter(intended_to=request.user, is_seen=False)
+    # check for user conversations , the user is member of , either member_one or member_two
+    user_conversations = Conversation.objects.filter(Q(member_one=request.user) | Q(member_two=request.user))
+    conversations_with_unreaad_messages = []
+    total_unread = 0
+    if user_conversations.exists():
+        # see if there are any unread messages 
+        for conversation in user_conversations :
+            unread_messages_in_conversation = {'conversation' : conversation, 'unread_messages' : 0}
+            for message in conversation.messages.all() :
+                if message.is_seen == False and message.sent_by != request.user :
+                    unread_messages_in_conversation['unread_messages'] +=1 
+            conversations_with_unreaad_messages.append(unread_messages_in_conversation)
+            total_unread += unread_messages_in_conversation['unread_messages']
 
     # create a paginator instance
     p = Paginator(Photo.objects.all(), 6)
@@ -99,7 +113,8 @@ def gellery(request) :
                    'notifications' : user_notifications, 'friendship_notifications' : friendship_notifications }
         return render(request, 'photoshare/gallery.html', context)
    
-    context = {'categories' : categories, 'photos' : photos, 'notifications' : user_notifications, 'friendship_notifications' : friendship_notifications}
+    context = {'categories' : categories, 'photos' : photos, 'notifications' : user_notifications, 
+               'friendship_notifications' : friendship_notifications, 'unread_messages' : total_unread, 'conversations_with_number_of_unread_messages' : conversations_with_unreaad_messages}
     return render(request, 'photoshare/gallery.html', context)
 
 
