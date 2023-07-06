@@ -794,5 +794,33 @@ class SendMessageViewTests(TestCase) :
         # check Message objects
         self.assertEqual(len(ConversationMessage.objects.all()), 2)
         self.assertEqual(ConversationMessage.objects.filter(sent_by=user, text='test message').first().is_seen, False)
-        
-        
+
+# class to test the operation of get_messages_notifications
+class GetMessagesNotificationsViewTests(TestCase) :
+    # test with unauthenticted user
+    def test_get_messages_notifications_with_unauthenticated_user(self) :
+        target_url = reverse('friends:messages')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+    
+    # test with user having one conversation 
+    def test_get_messages_with_user_member_in_one_conversation(self) :
+        # create two users members of conversation 
+        user1 = User.objects.create_user(username='amine', password='1234')
+        user2 = User.objects.create_user(username='friend', password='4567')
+        conversation = Conversation.objects.create(member_one=user1, member_two=user2)
+        # authenticate user1 
+        self.client.login(username='amine', password='1234')
+        target_url = reverse('friends:messages')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['conversations_data']), 1)
+        conversation_data = {
+            'conversation' : conversation,
+            'unread_messages' : 0,
+            'last_message' : ''
+        }
+        self.assertQuerysetEqual(response.context['conversations_data'], [conversation_data])
+        self.assertContains(response, 'Friend')
+        self.assertContains(response, 'No messages yet')
