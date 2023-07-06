@@ -216,7 +216,9 @@ def send_message(request, username) :
             message.save()
         else :
             messages.error(request, 'invalid message, Enter some text')
-            
+        # check if there's a hidden input value which stores the conversation opened
+        if request.POST.get('opened_conversation') :
+            return redirect(f"{reverse('friends:messages')}?conversation={int(request.POST.get('opened_conversation'))}")
         return redirect('friends:my_friends')
     else :
         messages.error(request, 'undefined URL !')
@@ -225,8 +227,6 @@ def send_message(request, username) :
 # function that handles displaying messages notifications 
 @login_required
 def get_messages_notifications(request) :
-    # create a session variable to store opened conversation 
-    currently_opened_conversation = request.session.get('opened_conversation')
     if request.method == 'GET' :
         # get all conversations in which the user is a member 
         user_conversations = Conversation.objects.filter(Q(member_one=request.user) | Q(member_two=request.user))
@@ -253,6 +253,10 @@ def get_messages_notifications(request) :
                 return redirect('friends:messages')
             # check if the conversation has the authenticated user as a member 
             if currently_opened_conversation in user_conversations :
+                # set unread_messages for the opened conversation to 0
+                for conv_data in conversations_data :
+                    if conv_data['conversation'] == currently_opened_conversation :
+                        conv_data['unread_messages'] = 0
                 # get conversation messages 
                 messages_for_conversation = currently_opened_conversation.messages.filter(is_seen=False)
                 for message in messages_for_conversation :
