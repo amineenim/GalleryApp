@@ -30,15 +30,15 @@
                 {% endfor %}
             </div>
         </div>
-        <div class="h-full col-span-1 bg-gray-400 flex flex-col space-y-4">
+        <div class="h-full col-span-1 flex flex-col space-y-4">
             {% if messages %}
                 {% for message in messages %}
                     {% if message.tags == 'success' %}
-                        <div class='py-3 px-4 bg-green-300'>
+                        <div class='py-3 px-4 bg-green-300 mt-2 mr-2 text-center rounded-xl'>
                             {{message}}
                         </div>
                     {% elif message.tags == 'error' %}
-                        <div class='py-3 px-4 bg-red-300'>
+                        <div class='py-3 px-4 bg-red-300 mt-2 mr-2 rounded-xl'>
                             {{message}}
                         </div>
                     {% endif %}
@@ -53,23 +53,47 @@
                             <p class='text-lg'> {{opened_conversation.member_one.username|capfirst }} </p>
                         {% endif %}
                     </div>
-                    <div class='flex flex-col h-full space-y-1'>
-                        {% if opened_conversation.messages.all %}
-                            {% for message in opened_conversation.messages.all %}
-                                <div class="flex flex-col">
-                                    <p> {{message.text}} </p>
-                                    <div class='flex items-center h-fit w-fit'>
-                                        <span class='text-xs'> {{message.created|timesince}} </span>
-                                        {% if message.is_seen %}
-                                        <i class="fa-solid fa-check fa-xs ml-1"></i>
-                                        {% else %}
-                                        <i class="fa-solid fa-eye-slash fa-xs ml-1"></i>
-                                        {% endif %}
+                    <div class='flex flex-col h-full p-2'>
+                        <div class='flex flex-col h-full overflow-y-auto space-y-1'>
+                            {% if opened_conversation.messages.all %}
+                                {% for message in opened_conversation.messages.all %}
+                                    {% if message.sent_by == request.user %}
+                                    <div class="flex flex-col self-end bg-gray-300 border-2 border-slate-600 rounded-xl px-2 py-1 w-fit h-fit">
+                                        <p> {{message.text}} </p>
+                                        <div class='flex items-center h-fit w-fit self-end'>
+                                            <span class='text-xs'> {{message.created_at|timesince}} </span>
+                                            {% if message.is_seen %}
+                                            <i class="fa-solid fa-check fa-xs ml-1"></i>
+                                            {% else %}
+                                            <i class="fa-solid fa-eye-slash fa-xs ml-1"></i>
+                                            {% endif %}
+                                        </div>
                                     </div>
-                                </div>
-                            {% endfor %}
+                                    {% else %}
+                                    <div class="flex flex-col bg-blue-300 border-2 border-slate-600 rounded-xl px-2 py-1 w-fit h-fit">
+                                        <p> {{message.text}} </p>
+                                        <div class='flex items-center h-fit w-fit self-end'>
+                                            <span class='text-xs'> {{message.created_at|timesince}} </span>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <p class='self-center m-auto text-lg font-bold'> No messages yet, be the first to send a message </p>
+                            {% endif %}
+                        </div>
+                        {% if request.user == opened_conversation.member_one %}
+                            <form class="w-full flex items-center" action="{% url 'friends:send_message' opened_conversation.member_two.username  %}" method='POST'>
+                                {% csrf_token %}
+                                <input type='text' name='message' class='border-2 rounded-xl w-full mr-2 border-slate-700 py-2 pl-3 text-sm'>
+                                <button type='submit' class='py-2 px-3 rounded-xl bg-green-300 hover:bg-green-600 hover:text-white'>Send</button>
+                            </form>
                         {% else %}
-                            <p class='self-center m-auto text-lg font-bold'> No messages yet, be the first to send a message </p>
+                            <form class="w-full flex items-center" action="{% url 'friends:send_message' opened_conversation.member_one.username  %}" method='POST'>
+                                {% csrf_token %}
+                                <input type='text' name='message' class='border-2 rounded-xl w-full mr-2 border-slate-700 py-2 pl-3 text-sm'>
+                                <button type='submit' class='py-2 px-3 rounded-xl bg-green-300 hover:bg-green-600 hover:text-white'>Send</button>
+                            </form>
                         {% endif %}
                     </div>
                 </div>
