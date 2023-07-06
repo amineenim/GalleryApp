@@ -824,3 +824,51 @@ class GetMessagesNotificationsViewTests(TestCase) :
         self.assertQuerysetEqual(response.context['conversations_data'], [conversation_data])
         self.assertContains(response, 'Friend')
         self.assertContains(response, 'No messages yet')
+    
+    # test with user member in a conversation with messages and other one with no messages yet
+    def test_get_messages_notifications_with_user_involved_in_two_conversations_one_with_messages_and_the_other_with_no_messages(self) :
+        # create three users 
+        user1 = User.objects.create_user(username='amine', password='amine')
+        user2 = User.objects.create_user(username='anas', password='anas')
+        user3 = User.objects.create_user(username='youssef', password='youssef')
+        # create two conversation objects
+        conversation_between_amine_and_anas = Conversation.objects.create(
+            member_one = user1,
+            member_two = user2
+        )
+        conversation_between_amine_and_youssef = Conversation.objects.create(
+            member_one = user3,
+            member_two = user1
+        )
+        # create two ConnversationMessage instances for conversation between amine and anas
+        amine_to_anas = ConversationMessage.objects.create(
+            conversation = conversation_between_amine_and_anas,
+            text = 'hello anas',
+            sent_by = user1 
+        )
+        anas_to_amine = ConversationMessage.objects.create(
+            conversation = conversation_between_amine_and_anas,
+            text = 'heey amine, how r u',
+            sent_by = user2
+        )
+        # authenticate user1 
+        self.client.login(username='amine', password='amine')
+        target_url = reverse('friends:messages')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['conversations_data']), 2)
+        conversation_between_amine_and_anas_data = {
+            'conversation' : conversation_between_amine_and_anas,
+            'unread_messages' : 1,
+            'last_message' : 'heey amine, how r u'
+        }
+        conversation_between_amine_and_youssef_data = {
+            'conversation' : conversation_between_amine_and_youssef,
+            'unread_messages' : 0,
+            'last_message' : ''
+        }
+        self.assertQuerysetEqual(response.context['conversations_data'], [conversation_between_amine_and_anas_data, conversation_between_amine_and_youssef_data])
+        self.assertContains(response, 'Anas')
+        self.assertContains(response, 'Youssef')
+        self.assertContains(response, 'No messages yet')
+        self.assertContains(response, 'heey amine, how r u')
