@@ -225,23 +225,50 @@ def send_message(request, username) :
 # function that handles displaying messages notifications 
 @login_required
 def get_messages_notifications(request) :
-    # get all conversations in which the user is a member 
-    user_conversations = Conversation.objects.filter(Q(member_one=request.user) | Q(member_two=request.user))
-    # check if there are any 
-    conversations_data = []
-    if user_conversations.exists() :
-        for conversation in user_conversations :
-            conversation_data = {'conversation' : conversation, 'unread_messages' : 0, 'last_message' : ''}
-            if conversation.messages.exists() :
-                for message in conversation.messages.all() :
-                    if message.is_seen == False and message.sent_by != request.user :
-                        conversation_data['unread_messages'] += 1
-                last_message = conversation.messages.all().last()
-                conversation_data['last_message'] = last_message.text 
-            conversations_data.append(conversation_data)
+    # create a session variable to store opened conversation 
+    currently_opened_conversation = request.session.get('opened_conversation')
+    if request.method == 'GET' :
+        # get all conversations in which the user is a member 
+        user_conversations = Conversation.objects.filter(Q(member_one=request.user) | Q(member_two=request.user))
+        # check if there are any 
+        conversations_data = []
+        if user_conversations.exists() :
+            for conversation in user_conversations :
+                conversation_data = {'conversation' : conversation, 'unread_messages' : 0, 'last_message' : ''}
+                if conversation.messages.exists() :
+                    for message in conversation.messages.all() :
+                        if message.is_seen == False and message.sent_by != request.user :
+                            conversation_data['unread_messages'] += 1
+                    last_message = conversation.messages.all().last()
+                    conversation_data['last_message'] = last_message.text 
+                conversations_data.append(conversation_data)
+        # check if there is any specific conversation opened 
+        opened_conversation_id = request.GET.get('conversation')
+        if opened_conversation_id :
+            # get the conversation and it's messages and set them to seen
+            try :
+                currently_opened_conversation = Conversation.objects.get(id=opened_conversation_id)
+            except Conversation.DoesNotExist :
+                messages.error(request, 'no corresponding conversation exists')
+                return redirect('friends:messages')
+            # check if the conversation has the authenticated user as a member 
+            if currently_opened_conversation in user_conversations :
+                # get conversation messages 
+                messages_for_conversation = currently_opened_conversation.messages.filter(is_seen=False)
+                for message in messages_for_conversation :
+                    if message.sent_by != request.user :
+                        message.is_seen = True 
+                        message.save()
+                context = {'conversations_data' : conversations_data, 'opened_conversation' : currently_opened_conversation}
+                return render(request, 'friends/discussions.html', context=context)
+            else :
+                messages.error(request, 'unauthorized action')
+                return redirect('friends:messages')
+
         return render(request, 'friends/discussions.html', {'conversations_data' : conversations_data})
-    else :
-        return render(request, 'friends/discussions.html', {'conversations' : user_conversations})
+    
+
+  
     
             
 

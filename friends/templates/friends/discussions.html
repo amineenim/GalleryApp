@@ -6,28 +6,75 @@
             <h3 class="self-center text-xl underline mb-3">All Conversations</h3>
             <div class="h-full flex flex-col px-6 py-3 space-y-2 overflow-y-auto rounded-xl">
                 {% for conversation_data in conversations_data %}
-                    <div class="flex flex-col border-b-2 border-l-2 px-2 rounded-xl border-slate-700 py-1 hover:bg-gray-600 hover:text-white">
-                        {% if conversation_data.conversation.member_one == request.user %}
-                            <p class="text-lg font-bold"> {{conversation_data.conversation.member_two|capfirst}} </p>
-                        {% else %}
-                            <p class="text-lg font-bold"> {{conversation_data.conversation.member_one|capfirst}} </p>
-                        {% endif %}
-                        <div class="flex justify-between items-center">
-                            {% if conversation_data.last_message == '' %}
-                                <p class='text-sm m-auto font-italic'>No messages yet</p>
+                    <a href="{% url 'friends:messages' %}?conversation={{conversation_data.conversation.id}}">
+                        <div class="flex flex-col border-b-2 border-l-2 px-2 rounded-xl border-slate-700 py-1 hover:bg-gray-600 hover:text-white">
+                            {% if conversation_data.conversation.member_one == request.user %}
+                                <p class="text-lg font-bold"> {{conversation_data.conversation.member_two|capfirst}} </p>
                             {% else %}
-                                <p class='text-sm ml-10'>{{ conversation_data.last_message }}</p>
+                                <p class="text-lg font-bold"> {{conversation_data.conversation.member_one|capfirst}} </p>
                             {% endif %}
-                            {% if conversation_data.unread_messages > 0 %}
-                                <p class='flex justify-center items-center p-2 h-6 w-6 rounded-full bg-red-400'>
-                                    {{ conversation_data.unread_messages }}
-                                </p>
-                            {% endif %}
+                            <div class="flex justify-between items-center">
+                                {% if conversation_data.last_message == '' %}
+                                    <p class='text-sm m-auto font-italic'>No messages yet</p>
+                                {% else %}
+                                    <p class='text-sm ml-10'>{{ conversation_data.last_message }}</p>
+                                {% endif %}
+                                {% if conversation_data.unread_messages > 0 %}
+                                    <p class='flex justify-center items-center p-2 h-6 w-6 rounded-full bg-red-400'>
+                                        {{ conversation_data.unread_messages }}
+                                    </p>
+                                {% endif %}
+                            </div>
                         </div>
-                    </div>
+                    </a>
                 {% endfor %}
             </div>
         </div>
-        <div class="h-full col-span-1"></div>
+        <div class="h-full col-span-1 bg-gray-400 flex flex-col space-y-4">
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        <div class='py-3 px-4 bg-green-300'>
+                            {{message}}
+                        </div>
+                    {% elif message.tags == 'error' %}
+                        <div class='py-3 px-4 bg-red-300'>
+                            {{message}}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            {% if opened_conversation %}
+                <div class="h-full flex flex-col border-2 border-slate-600 rounded-xl p-4">
+                    <div class='flex'>
+                        {% if opened_conversation.member_one == request.user %}
+                            <p> {{opened_conversation.member_two.username }} </p>
+                        {% else %}
+                            <p> {{opened_conversation.member_one.username }} </p>
+                        {% endif %}
+                    </div>
+                    <div class='flex flex-col space-y-1'>
+                        {% if opened_conversation.messages.all %}
+                            {% for message in opened_conversation.messages.all %}
+                                <div class="flex flex-col">
+                                    <p> {{message.text}} </p>
+                                    <div class='flex items-center h-fit w-fit'>
+                                        <span class='text-xs'> {{message.created|timesince}} </span>
+                                        {% if message.is_seen %}
+                                        <i class="fa-solid fa-check fa-xs ml-1"></i>
+                                        {% else %}
+                                        <i class="fa-solid fa-eye-slash fa-xs ml-1"></i>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p> No messages yet, be the first to send a message </p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+            {% endif %}
+        </div>
     </div>
 {% endblock %}
