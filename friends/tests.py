@@ -919,6 +919,22 @@ class GetMessagesNotificationsViewTests(TestCase) :
         self.assertContains(response, 1)
         self.assertContains(response, 'hey amine, how are u my friend!')
         self.assertContains(response, 'boobix cc')
+        # simulate opening the conversation between amine amd anas
+        target_url = f"{reverse('friends:messages')}?conversation=1"
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        # check that the conversation has been opened
+        # so the message from anas is seen and all messages are displayed
+        # not only the last one
+        self.assertContains(response, 'hello anas')
+        self.assertTrue(conversation_between_amine_and_anas.messages.filter(sent_by=user2).first().is_seen == True)
+        # check for context data 
+        self.assertQuerysetEqual(response.context['conversations_data'], [
+            {'conversation' : conversation_between_amine_and_anas, 'unread_messages' : 0, 'last_message' : 'hey amine, how are u my friend!'},
+            {'conversation' : conversation_between_amine_and_youssef, 'unread_messages' : 1, 'last_message' : 'boobix cc'}
+        ])
+        self.assertEqual(response.context['opened_conversation'], conversation_between_amine_and_anas)
+
 
 
 
