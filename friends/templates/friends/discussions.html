@@ -61,7 +61,7 @@
                                     <div class="flex flex-col self-end bg-gray-300 border-2 border-slate-600 rounded-xl px-2 py-1 w-fit h-fit">
                                         <p> {{message.text}} </p>
                                         <div class='flex items-center h-fit w-fit self-end'>
-                                            <span class='text-xs'> {{message.created_at|timesince}} </span>
+                                            <span class='text-xs'> {{message.sent_since}} </span>
                                             {% if message.is_seen %}
                                             <i class="fa-solid fa-check fa-xs ml-1"></i>
                                             {% else %}
@@ -73,7 +73,7 @@
                                     <div class="flex flex-col bg-blue-300 border-2 border-slate-600 rounded-xl px-2 py-1 w-fit h-fit">
                                         <p> {{message.text}} </p>
                                         <div class='flex items-center h-fit w-fit self-end'>
-                                            <span class='text-xs'> {{message.created_at|timesince}} </span>
+                                            <span class='text-xs'> {{message.sent_since}} </span>
                                         </div>
                                     </div>
                                     {% endif %}
