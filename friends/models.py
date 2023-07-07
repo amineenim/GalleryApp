@@ -115,5 +115,41 @@ class ConversationMessage(models.Model) :
     def __str__(self) :
         return 'sent by' +  self.sent_by.username
     
-       
-    
+    def sent_since(self) :
+        # check if the message has been sent in the last 24 hours 
+        time_now = timezone.now()
+        if time_now - timedelta(days=1) < self.created_at < time_now :
+            # check for the last hour 
+            if time_now - timedelta(hours=1) < self.created_at :
+                # check within the last minute 
+                if time_now - timedelta(minutes=1) < self.created_at :
+                    return 'few moments ago'
+                else :
+                    # get total number of seconds 
+                    time_difference = time_now - self.created_at 
+                    time_difference_in_seconds = time_difference.total_seconds()
+                    time_difference_in_minutes = time_difference_in_seconds // 60
+                    if time_difference_in_minutes == 1 :
+                        return '1 minute ago'
+                    else :
+                        return f"{time_difference_in_minutes} minutes ago"
+            else :
+                time_difference_in_seconds = time_now - self.created_at 
+                time_difference_in_hours = time_difference_in_seconds // 3600
+                if time_difference_in_hours == 1 :
+                    return '1 hour ago'
+                else :
+                    return f"{time_difference_in_hours} hours ago"
+                
+        elif time_now - timedelta(days=2) < self.created_at <= time_now - timedelta(days=1) :
+            return 'yesterday'
+        elif time_now - timedelta(days=7) < self.created_at <= time_now - timedelta(days=2) :
+            time_difference_in_seconds = (time_now - self.created_at).total_seconds()
+            seconds_in_a_day = 24*60*60
+            time_difference_in_days = time_difference_in_seconds // seconds_in_a_day 
+            return f"{time_difference_in_days} days ago"
+        elif time_now - timedelta(days=14) < self.created_at <= time_now - timedelta(days=7) :
+            return 'last week'
+        else :
+            return self.created_at.date()
+        
