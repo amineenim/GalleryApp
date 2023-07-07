@@ -872,3 +872,55 @@ class GetMessagesNotificationsViewTests(TestCase) :
         self.assertContains(response, 'Youssef')
         self.assertContains(response, 'No messages yet')
         self.assertContains(response, 'heey amine, how r u')
+
+    # test get_messages_notifications with user having two conversations and opens one og them
+    def test_get_messages_notifications_with_user_having_two_conversations_and_opening_a_conversation_of_them(self) :
+        # create three users
+        user1 = User.objects.create_user(username='amine', password='1234')
+        user2 = User.objects.create_user(username='anas', password='7896')
+        user3 = User.objects.create_user(username='youssef', password='boba')
+        # create two conversation instances 
+        conversation_between_amine_and_anas = Conversation.objects.create(
+            member_one = user1,
+            member_two = user2
+        )
+        conversation_between_amine_and_youssef = Conversation.objects.create(
+            member_one = user3,
+            member_two = user1
+        )
+        # add some messages to each conversation
+        amine_to_anas = ConversationMessage.objects.create(
+            conversation = conversation_between_amine_and_anas,
+            text = 'hello anas',
+            sent_by = user1
+        )
+        anas_to_amine = ConversationMessage.objects.create(
+            conversation = conversation_between_amine_and_anas,
+            text = 'hey amine, how are u my friend!',
+            sent_by = user2
+        )
+        youssef_to_amine = ConversationMessage.objects.create(
+            conversation = conversation_between_amine_and_youssef,
+            text = 'boobix cc',
+            sent_by = user3
+        )
+        # authenticate user1 'amine'
+        self.client.login(username='amine', password='1234')
+        target_url = reverse('friends:messages')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['conversations_data']), 2)
+        self.assertQuerysetEqual(response.context['conversations_data'], [
+            {'conversation' : conversation_between_amine_and_anas, 'unread_messages' : 1, 'last_message' : 'hey amine, how are u my friend!'},
+            {'conversation' : conversation_between_amine_and_youssef, 'unread_messages' : 1, 'last_message' :'boobix cc'}
+        ])
+        self.assertContains(response, 'Anas')
+        self.assertContains(response, 'Youssef')
+        self.assertContains(response, 1)
+        self.assertContains(response, 'hey amine, how are u my friend!')
+        self.assertContains(response, 'boobix cc')
+
+
+
+
+
