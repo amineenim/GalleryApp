@@ -879,6 +879,9 @@ class GetMessagesNotificationsViewTests(TestCase) :
         user1 = User.objects.create_user(username='amine', password='1234')
         user2 = User.objects.create_user(username='anas', password='7896')
         user3 = User.objects.create_user(username='youssef', password='boba')
+        # create a Friendslist object for user 'amine'
+        amine_friends = FriendsList.objects.create(belongs_to = user1)
+        amine_friends.friends.set([user2, user3])
         # create two conversation instances 
         conversation_between_amine_and_anas = Conversation.objects.create(
             member_one = user1,
@@ -919,6 +922,7 @@ class GetMessagesNotificationsViewTests(TestCase) :
         self.assertContains(response, 1)
         self.assertContains(response, 'hey amine, how are u my friend!')
         self.assertContains(response, 'boobix cc')
+        self.assertTrue(conversation_between_amine_and_anas.messages.filter(sent_by=user2).first().is_seen == False)
         # simulate opening the conversation between amine amd anas
         target_url = f"{reverse('friends:messages')}?conversation=1"
         response = self.client.get(target_url)
@@ -934,6 +938,20 @@ class GetMessagesNotificationsViewTests(TestCase) :
             {'conversation' : conversation_between_amine_and_youssef, 'unread_messages' : 1, 'last_message' : 'boobix cc'}
         ])
         self.assertEqual(response.context['opened_conversation'], conversation_between_amine_and_anas)
+        # send message to anas and check if it appears on the opened discussion
+        target_url = reverse('friends:send_message', args=('anas',))
+        response = self.client.post(target_url, {'message' : 'fine, what about you','opened_conversation' : conversation_between_amine_and_anas.id})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('friends:messages')}?conversation={conversation_between_amine_and_anas.id}")
+        target_url = f"{reverse('friends:messages')}?conversation={conversation_between_amine_and_anas.id}"
+        response = self.client.get(target_url)
+        self.assertContains(response, 'fine, what about you')
+        self.assertQuerysetEqual(response.context['conversations_data'], [
+            {'conversation' : conversation_between_amine_and_anas, 'unread_messages' : 0, 'last_message' : 'fine, what about you'},
+            {'conversation' : conversation_between_amine_and_youssef, 'unread_messages' : 1, 'last_message' : 'boobix cc'}
+        ])
+        self.assertEqual(response.context['opened_conversation'], conversation_between_amine_and_anas)
+
 
 
 
