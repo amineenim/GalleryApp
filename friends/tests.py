@@ -951,6 +951,47 @@ class GetMessagesNotificationsViewTests(TestCase) :
             {'conversation' : conversation_between_amine_and_youssef, 'unread_messages' : 1, 'last_message' : 'boobix cc'}
         ])
         self.assertEqual(response.context['opened_conversation'], conversation_between_amine_and_anas)
+        # test the scenario where the user passes an id for conversation query parameter in url which
+        # doesn't correspond to no conversation 
+        target_url = f"{reverse('friends:messages')}?conversation=3"
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('friends:messages'))
+        # check messages 
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'error')
+            self.assertEqual(message.message, 'no corresponding conversation exists')
+        # logout and login as user2 'anas'
+        self.client.logout()
+        self.client.login(username='anas', password='7896')
+        target_url = reverse('friends:messages')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Amine')
+        self.assertContains(response, 'fine, what about you')
+        self.assertQuerysetEqual(response.context['conversations_data'], [{
+            'conversation' : conversation_between_amine_and_anas,
+            'unread_messages' : 2,
+            'last_message' : 'fine, what about you'
+        }])
+        # check that the messages are not yet seen because the conversation isn't yet opened
+        for message in conversation_between_amine_and_anas.messages.filter(sent_by=user1) :
+            self.assertTrue(message.is_seen == False)
+        # try to check the conversation between amine_and_youssef 
+        target_url = f"{reverse('friends:messages')}?conversation={conversation_between_amine_and_youssef.id}"
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('friends:messages'))
+        # check messages 
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for mess in my_messages :
+            self.assertEqual(mess.tags, 'error')
+            self.assertEqual(mess.message, 'unauthorized action')
+            
+
 
 
 
