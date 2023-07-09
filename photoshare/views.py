@@ -205,3 +205,16 @@ def get_perms(request) :
     content_type = ContentType.objects.get_for_model(Photo)
     Permissions = Permission.objects.filter(content_type=content_type, user=current_user)
     return render(request, 'photoshare/perms.html', {'permissions' : Permissions})
+
+# view that handles password forgotten
+def reset_password(request) :
+    # check first if the user is authenticated 
+    if request.user.is_authenticated :
+        return redirect('gallery')
+    else :
+        # check if get request
+        if request.method == 'GET' :
+            return render(request, 'photoshare/password_reset.html')
+        elif request.method == 'POST' :
+            pass  
+

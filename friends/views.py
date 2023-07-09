@@ -271,7 +271,6 @@ def get_messages_notifications(request) :
 
         return render(request, 'friends/discussions.html', {'conversations_data' : conversations_data})
     
-
   
     
             
