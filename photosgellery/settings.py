@@ -141,7 +141,11 @@ LOGIN_URL = 'login'
 # Email sending configuration 
 # the email backend used to send emails 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# hostname of the email server
-EMAIL_HOST = 'gallery.com'
 # the default email sender
-DEFAULT_FROM_EMAIL = 'gallery_amine@gmail.com'
+DEFAULT_FROM_EMAIL = 'aminemaourid1@gmail.com'
+# hostname of the email server
+EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
+EMAIL_PORT = 2525
+# credentials for the email address that sends email 
+EMAIL_HOST_USER = 'f9220e0ae08d39'
+EMAIL_HOST_PASSWORD = '86b1949c989c1a'

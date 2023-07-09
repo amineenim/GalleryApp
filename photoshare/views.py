@@ -237,6 +237,7 @@ def reset_password(request) :
                     user = User.objects.get(email=email_address)
                 except User.DoesNotExist :
                     error_message = 'Given email address does not correspond to a user'
+                    return render(request, 'photoshare/password_reset.html', {'error' : error_message})
                 # generate a password reset token 
                 token_generator = PasswordResetTokenGenerator()
                 token = token_generator.make_token(user)
@@ -244,8 +245,8 @@ def reset_password(request) :
                 password_reset_url = f"http://{domain}/resetpassword/?token={token}"
                 # send an email to the user with the generated password reset url 
                 email_subject = 'Password Reset'
-                email_message = f"to reset your password, click the following url {password_reset_url}"
-                from_email = 'amine_maourid@gmail.com'
+                email_message = f"to reset your password, click the following url : {password_reset_url}"
+                from_email = 'aminemaourid1@gmail.com'
                 sent_emails_number = send_mail(subject=email_subject, message=email_message, from_email=from_email, recipient_list=[email_address])
                 if sent_emails_number == 1 :
                     # the email has been successefully delivred to one recipient 
@@ -254,6 +255,7 @@ def reset_password(request) :
                 else :
                     error_message = 'Oops, something went wrong!'
                     return render(request, 'photoshare/password_reset.html', {'error' : error_message})
+                
 
 
 
