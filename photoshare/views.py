@@ -1,3 +1,4 @@
+import re
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from .models import Category, Photo
@@ -208,6 +209,7 @@ def get_perms(request) :
 
 # view that handles password forgotten
 def reset_password(request) :
+    regex_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     # check first if the user is authenticated 
     if request.user.is_authenticated :
         return redirect('gallery')
@@ -216,5 +218,18 @@ def reset_password(request) :
         if request.method == 'GET' :
             return render(request, 'photoshare/password_reset.html')
         elif request.method == 'POST' :
-            pass  
+            # get the email input from user and validate it 
+            email_address = request.POST.get('email')
+            # check if email is empty
+            if not email_address :
+                error_message = 'Enter an email address, empty value submitted'
+                return render(request, 'photoshare/password_reset.html', {'error' : error_message})
+            # validate the email 
+            if re.match(regex_pattern, email_address) is None :
+                error_message = 'invalid email address'
+                return render(request, 'photoshare/password_reset.html', {'error' : error_message})
+            else :
+                # now that all is valid, send an email to the given address 
+                pass 
+
 
