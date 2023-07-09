@@ -137,3 +137,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # th url the user is redirected to if not authenticated 
 LOGIN_URL = 'login'
+
+# Email sending configuration 
+# the email backend used to send emails 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# hostname of the email server
+EMAIL_HOST = 'gallery.com'
+# the default email sender
+DEFAULT_FROM_EMAIL = 'gallery_amine@gmail.com'

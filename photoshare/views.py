@@ -13,7 +13,10 @@ from likes.forms import CommentCreateForm
 from django.core.paginator import Paginator
 from friends.models import FriendshipNotification, Conversation, ConversationMessage
 from django.db.models import Q 
-
+from django.contrib.auth.models import User
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.core.mail import send_mail
+from django.contrib.sites.shortcuts import get_current_site
 # Create your views here.
 # define a namespace for the app 
 app_name = 'photoshare'
@@ -229,7 +232,30 @@ def reset_password(request) :
                 error_message = 'invalid email address'
                 return render(request, 'photoshare/password_reset.html', {'error' : error_message})
             else :
-                # now that all is valid, send an email to the given address 
-                pass 
+                # now that the email is valid, get the user who has it 
+                try :
+                    user = User.objects.get(email=email_address)
+                except User.DoesNotExist :
+                    error_message = 'Given email address does not correspond to a user'
+                # generate a password reset token 
+                token_generator = PasswordResetTokenGenerator()
+                token = token_generator.make_token(user)
+                domain = 'localhost:8000'
+                password_reset_url = f"http://{domain}/resetpassword/?token={token}"
+                # send an email to the user with the generated password reset url 
+                email_subject = 'Password Reset'
+                email_message = f"to reset your password, click the following url {password_reset_url}"
+                from_email = 'amine_maourid@gmail.com'
+                sent_emails_number = send_mail(subject=email_subject, message=email_message, from_email=from_email, recipient_list=[email_address])
+                if sent_emails_number == 1 :
+                    # the email has been successefully delivred to one recipient 
+                    succes_message = 'Password reset url sent, check your email'
+                    return render(request, 'photoshare/password_reset.html', {'success' : succes_message})
+                else :
+                    error_message = 'Oops, something went wrong!'
+                    return render(request, 'photoshare/password_reset.html', {'error' : error_message})
+
+
+
 
 
