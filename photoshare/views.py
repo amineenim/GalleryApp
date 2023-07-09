@@ -219,6 +219,10 @@ def reset_password(request) :
     else :
         # check if get request
         if request.method == 'GET' :
+            # check for token query parameter 
+            token = request.GET.get('token')
+            if token :
+                pass 
             return render(request, 'photoshare/password_reset.html')
         elif request.method == 'POST' :
             # get the email input from user and validate it 

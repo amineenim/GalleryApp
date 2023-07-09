@@ -27,3 +27,9 @@ class Photo(models.Model) :
     
     def get_not_hidden_comments(self) :
         return self.comments.filter(is_hidden=False)
+
+class PasswordResetToken(models.Model) :
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='my_reset_password_token')
+    token = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
