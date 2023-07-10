@@ -31,5 +31,5 @@ class Photo(models.Model) :
 class PasswordResetToken(models.Model) :
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='my_reset_password_token')
     token = models.CharField(max_length=255)
-    created_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
