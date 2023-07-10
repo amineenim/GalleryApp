@@ -24,7 +24,7 @@ class PasswordResetViewTests(TestCase) :
         target_url = reverse('reset_password')
         response = self.client.get(target_url)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'an email with a link to reset your password will be sent to your email adress')
+        self.assertContains(response, 'an email with a link to reset your password will be sent to your email address')
     
     # the following tests serve for the form where the user enters his email
     # address in order to get a reset password link 
@@ -35,4 +35,22 @@ class PasswordResetViewTests(TestCase) :
         response = self.client.post(target_url, {'email' : ''})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Enter an email address, empty value submitted')
-        self.assertContains(response, 'an email with a link to reset your password will be sent to your email adress')
+        self.assertContains(response, 'an email with a link to reset your password will be sent to your email address')
+
+    # test with unauthenticated user and post request , with a value for emaail invalid 
+    def test_reset_password_with_post_request_and_invalid_email_address(self) :
+        target_url = reverse('reset_password')
+        # pass an invalid email 
+        response = self.client.post(target_url, {'email' : 'aminemaourid'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'invalid email address')
+        self.assertContains(response, 'an email with a link to reset your password will be sent to your email address')
+    
+    # test with unauthenticated user and a valid email which doesn't correspond to no user
+    def test_reset_password_with_post_request_and_valid_email_not_referencing_no_user(self) :
+        target_url = reverse('reset_password')
+        # valid email, not belonging to no user 
+        response = self.client.post(target_url, {'email' : 'test.test@gmail.com'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Given email address does not correspond to a user')
+        self.assertContains(response, 'an email with a link to reset your password will be sent to your email address')
