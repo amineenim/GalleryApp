@@ -1,9 +1,12 @@
+from datetime import timedelta
 from django.test import TestCase, override_settings
 from django.contrib.auth.models import User
 from .models import PasswordResetToken
 from django.urls import reverse
 from django.core import mail
 from django.contrib import messages
+from django.utils import timezone
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 # Create your tests here.
 # class to test the operation of reset_password view
 class PasswordResetViewTests(TestCase) :
@@ -127,7 +130,56 @@ class PasswordResetViewTests(TestCase) :
         for message in my_messages :
             self.assertEqual(message.tags, 'error')
             self.assertEqual(message.message, 'invalid Token')
+    
+    # test reset_password using get request and expired token 
+    def test_reset_password_with_get_request_and_expired_token(self) :
+        # create a user instance to which the token will be associated 
+        user = User.objects.create_user(username='amine', password='1234')
+        token_generator = PasswordResetTokenGenerator()
+        token = token_generator.make_token(user)
+        # set the created_at to 1hour and 1 second before so the expires_at
+        # would be 1 second ago 
+        time_now = timezone.now()
+        created_at = time_now - timedelta(hours=1, seconds=1)
+        token_object = PasswordResetToken.objects.create(
+            user = user,
+            token = token,
+            created_at = created_at,
+            expires_at = time_now - timedelta(seconds=1)
+        )
+        target_url = f"{reverse('reset_password')}?token={token}"
+        # send a get request
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('reset_password'))
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'error')
+            self.assertEqual(message.message, 'Token expired, Get a new one to reset your Password')
         
+    # test reset_password using get request and token expiring after a few seconds
+    def test_reset_password_with_get_request_and_token_near_expiring(self) :
+        user = User.objects.create_user(username='amine', password='1234')
+        token_generator = PasswordResetTokenGenerator()
+        token = token_generator.make_token(user)
+        # create a token object whith token having 1s left before expiring
+        time_now = timezone.now()
+        token_object = PasswordResetToken.objects.create(
+            user=user,
+            token = token,
+            created_at = time_now - timedelta(minutes=59, seconds=59),
+            expires_at = time_now + timedelta(seconds=1)
+        )
+        target_url = f"{reverse('reset_password')}?token={token}"
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['token'], token_object)
+        self.assertContains(response, 'Reset Paasword')
+        self.assertContains(response, 'Enter your password')
+        self.assertContains(response, 'Confirm password')
+
+
 
 
 
