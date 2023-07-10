@@ -1,14 +1,15 @@
 import re
+from datetime import timedelta
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
-from .models import Category, Photo
+from .models import Category, Photo, PasswordResetToken
 from django.contrib import messages
 from .forms import PhotoForm, EditPhotoForm, CreateUserForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, permission_required, user_passes_test
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from likes.models import Like, Comment
+from likes.models import Like
 from likes.forms import CommentCreateForm
 from django.core.paginator import Paginator
 from friends.models import FriendshipNotification, Conversation, ConversationMessage
@@ -16,7 +17,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
-from django.contrib.sites.shortcuts import get_current_site
+from django.utils import timezone
 # Create your views here.
 # define a namespace for the app 
 app_name = 'photoshare'
@@ -245,6 +246,14 @@ def reset_password(request) :
                 # generate a password reset token 
                 token_generator = PasswordResetTokenGenerator()
                 token = token_generator.make_token(user)
+                # create the PasswordResetToekn object and store it in db 
+                toekn_data = PasswordResetToken.objects.create(
+                    user=user,
+                    token = token,
+                    expires_at = timezone.now() + timedelta(hours=1)
+                )
+                # save it to db
+                toekn_data.save()
                 domain = 'localhost:8000'
                 password_reset_url = f"http://{domain}/resetpassword/?token={token}"
                 # send an email to the user with the generated password reset url 
