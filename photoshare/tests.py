@@ -83,4 +83,32 @@ class PasswordResetViewTests(TestCase) :
         self.assertIn('to reset your password, click the following url :', sent_mail.body)
         reset_url = f"http://localhost:8000/gallery/accounts/resetpassword/?token={PasswordResetToken.objects.first().token}"
         self.assertIn(reset_url, sent_mail.body)
+    
+    # the following tests concern the password reset form where the user 
+    # enters the new password and confirmation 
+
+    # function that simulates the scenario where a user enters his email address and gets
+    # a password reset token
+    def simulate_getting_password_reset_token(self) :
+        user = User.objects.create_user(username='amine', password='1234', email='amine_maourid@gmail.com')
+        # submit the email corresponding to the user 'amine'
+        self.client.post(reverse('reset_password'), {'email' : 'amine_maourid@gmail.com'})
+        # get the token generated 
+        generated_token = PasswordResetToken.objects.filter(user=user).first()
+        token = generated_token.token 
+        return token 
+
+    def test_reset_password_with_get_request_after_getting_a_token(self) :
+        token = self.simulate_getting_password_reset_token()
+        target_url = f"{reverse('reset_password')}?token={token}"
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'password must be at least 8 characters')
+        self.assertContains(response, 'Enter your password')
+        self.assertContains(response, 'Confirm password')
+        self.assertEqual(response.context['token'], PasswordResetToken.objects.get(token=token))
+
+
+         
+
 
