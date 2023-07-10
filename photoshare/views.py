@@ -1,5 +1,6 @@
 import re
 from datetime import timedelta
+from django.forms import ValidationError
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from .models import Category, Photo, PasswordResetToken
@@ -18,6 +19,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
 from django.utils import timezone
+from django.contrib.auth.password_validation import validate_password
 # Create your views here.
 # define a namespace for the app 
 app_name = 'photoshare'
@@ -231,19 +233,45 @@ def reset_password(request) :
                     return redirect(reverse('reset_password'))
                 # check if the token has expired 
                 if token_object.expires_at < timezone.now() :
-                    messages.error(request, 'Token expired, get a new one to reset your password')
+                    messages.error(request, 'Token expired, Get a new one to reset your Password')
                     return redirect(reverse('reset_password'))
                 # the token is yet valid 
-                if request.method == 'GET' :
-                    return render(request, 'photoshare/new_password.html')
+                return render(request, 'photoshare/new_password.html', {'token' : token_object})
              
             return render(request, 'photoshare/password_reset.html')
         elif request.method == 'POST' :
-            # check is the form being submitted is the one for reseting password and confirmation of password 
-            if request.POST.get('reset') :
-                # validate the password and check if it matches with confirm password
-                # test with a redirect
-                pass 
+            # check is the form being submitted is the one for password confirmation  
+            if request.POST.get('token') :
+                # get the user from the hidden field submitted
+                user = User.objects.get(username=request.POST.get('user'))
+                token_object = PasswordResetToken.objects.get(token=request.POST.get('token'))
+                # check for password1 and password2
+                if not request.POST.get('password1') or not request.POST.get('password2') :
+                    error_message = 'both fields are required'
+                    return render(request, 'photoshare/new_password.html', {'error' : error_message,'token' : token_object})
+                # validate password1
+                password1 = request.POST.get('password1')
+                try : 
+                    validate_password(password1, user)
+                except ValidationError as e :
+                    error_messages = list(e.messages)
+                    return render(request, 'photoshare/new_password.html', {'errors' : error_messages,'token' : token_object})
+                # check password2 matches password1
+                password2 = request.POST.get('password2')
+                if password1 != password2 :
+                    error_message = "The two passwords don't match"
+                    return render(request, 'photoshare/new_password.html', {'error' : error_message,'token' : token_object})
+                # now that all is valid store the new password for user 
+                user.set_password(password1)
+                user.save()
+                # delete the token used to reset password
+                token_object.delete()
+                # authenticate the user 
+                user = authenticate(request, username=user.username, password=password1)
+                if user is not None :
+                    login(request, user)
+                    messages.success(request, 'Password reset successefully !')
+                    return redirect(reverse('gallery'))
             else :
                 # get the email input from user and validate it 
                 email_address = request.POST.get('email')
