@@ -223,51 +223,70 @@ def reset_password(request) :
             # check for token query parameter 
             token = request.GET.get('token')
             if token :
-                pass 
+                # get the PasswordResetToken corresponding to the token value 
+                try :
+                    token_object = PasswordResetToken.objects.get(token=token)
+                except PasswordResetToken.DoesNotExist :
+                    messages.error(request, 'invalid Token')
+                    return redirect(reverse('reset_password'))
+                # check if the token has expired 
+                if token_object.expires_at < timezone.now() :
+                    messages.error(request, 'Token expired, get a new one to reset your password')
+                    return redirect(reverse('reset_password'))
+                # the token is yet valid 
+                if request.method == 'GET' :
+                    return render(request, 'photoshare/new_password.html')
+             
             return render(request, 'photoshare/password_reset.html')
         elif request.method == 'POST' :
-            # get the email input from user and validate it 
-            email_address = request.POST.get('email')
-            # check if email is empty
-            if not email_address :
-                error_message = 'Enter an email address, empty value submitted'
-                return render(request, 'photoshare/password_reset.html', {'error' : error_message})
-            # validate the email 
-            if re.match(regex_pattern, email_address) is None :
-                error_message = 'invalid email address'
-                return render(request, 'photoshare/password_reset.html', {'error' : error_message})
+            # check is the form being submitted is the one for reseting password and confirmation of password 
+            if request.POST.get('reset') :
+                # validate the password and check if it matches with confirm password
+                # test with a redirect
+                pass 
             else :
-                # now that the email is valid, get the user who has it 
-                try :
-                    user = User.objects.get(email=email_address)
-                except User.DoesNotExist :
-                    error_message = 'Given email address does not correspond to a user'
+                # get the email input from user and validate it 
+                email_address = request.POST.get('email')
+                # check if email is empty
+                if not email_address :
+                    error_message = 'Enter an email address, empty value submitted'
                     return render(request, 'photoshare/password_reset.html', {'error' : error_message})
-                # generate a password reset token 
-                token_generator = PasswordResetTokenGenerator()
-                token = token_generator.make_token(user)
-                # create the PasswordResetToekn object and store it in db 
-                toekn_data = PasswordResetToken.objects.create(
-                    user=user,
-                    token = token,
-                    expires_at = timezone.now() + timedelta(hours=1)
-                )
-                # save it to db
-                toekn_data.save()
-                domain = 'localhost:8000'
-                password_reset_url = f"http://{domain}/resetpassword/?token={token}"
-                # send an email to the user with the generated password reset url 
-                email_subject = 'Password Reset'
-                email_message = f"to reset your password, click the following url : {password_reset_url}"
-                from_email = 'aminemaourid1@gmail.com'
-                sent_emails_number = send_mail(subject=email_subject, message=email_message, from_email=from_email, recipient_list=[email_address])
-                if sent_emails_number == 1 :
-                    # the email has been successefully delivred to one recipient 
-                    succes_message = 'Password reset url sent, check your email'
-                    return render(request, 'photoshare/password_reset.html', {'success' : succes_message})
+                # validate the email 
+                if re.match(regex_pattern, email_address) is None :
+                    error_message = 'invalid email address'
+                    return render(request, 'photoshare/password_reset.html', {'error' : error_message})
                 else :
-                    error_message = 'Oops, something went wrong!'
-                    return render(request, 'photoshare/password_reset.html', {'error' : error_message})
+                    # now that the email is valid, get the user who has it 
+                    try :
+                        user = User.objects.get(email=email_address)
+                    except User.DoesNotExist :
+                        error_message = 'Given email address does not correspond to a user'
+                        return render(request, 'photoshare/password_reset.html', {'error' : error_message})
+                    # generate a password reset token 
+                    token_generator = PasswordResetTokenGenerator()
+                    token = token_generator.make_token(user)
+                    # create the PasswordResetToekn object and store it in db 
+                    toekn_data = PasswordResetToken.objects.create(
+                        user=user,
+                        token = token,
+                        expires_at = timezone.now() + timedelta(hours=1)
+                    )
+                    # save it to db
+                    toekn_data.save()
+                    domain = 'localhost:8000'
+                    password_reset_url = f"http://{domain}/gallery/accounts/resetpassword/?token={token}"
+                    # send an email to the user with the generated password reset url 
+                    email_subject = 'Password Reset'
+                    email_message = f"to reset your password, click the following url : {password_reset_url}"
+                    from_email = 'aminemaourid1@gmail.com'
+                    sent_emails_number = send_mail(subject=email_subject, message=email_message, from_email=from_email, recipient_list=[email_address])
+                    if sent_emails_number == 1 :
+                        # the email has been successefully delivred to one recipient 
+                        succes_message = 'Password reset url sent, check your email'
+                        return render(request, 'photoshare/password_reset.html', {'success' : succes_message})
+                    else :
+                        error_message = 'Oops, something went wrong!'
+                        return render(request, 'photoshare/password_reset.html', {'error' : error_message})
                 
 
 
