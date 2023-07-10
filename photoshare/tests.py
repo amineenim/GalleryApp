@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from .models import PasswordResetToken
 from django.urls import reverse
 from django.core import mail
+from django.contrib import messages
 # Create your tests here.
 # class to test the operation of reset_password view
 class PasswordResetViewTests(TestCase) :
@@ -97,7 +98,8 @@ class PasswordResetViewTests(TestCase) :
         generated_token = PasswordResetToken.objects.filter(user=user).first()
         token = generated_token.token 
         return token 
-
+    
+    # test reset_password using get request and appending a valid token
     def test_reset_password_with_get_request_after_getting_a_token(self) :
         token = self.simulate_getting_password_reset_token()
         target_url = f"{reverse('reset_password')}?token={token}"
@@ -107,8 +109,28 @@ class PasswordResetViewTests(TestCase) :
         self.assertContains(response, 'Enter your password')
         self.assertContains(response, 'Confirm password')
         self.assertEqual(response.context['token'], PasswordResetToken.objects.get(token=token))
+    
+    # test reset_password using get request and invalid token 
+    def test_reset_password_with_get_request_and_invalid_token(self) :
+        token = self.simulate_getting_password_reset_token()
+        # check that a PasswordResetToken object has been created
+        self.assertTrue(PasswordResetToken.objects.exists())
+        # alter the token so it becomes invalid 
+        
+        target_url = f"{reverse('reset_password')}?token={token}7"
+        # send a get request 
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('reset_password'))
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'error')
+            self.assertEqual(message.message, 'invalid Token')
+        
 
 
-         
+
+
 
 
