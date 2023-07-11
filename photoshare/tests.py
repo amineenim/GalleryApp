@@ -210,6 +210,20 @@ class PasswordResetViewTests(TestCase) :
         self.assertContains(response, 'both fields are required')
         self.assertContains(response, 'Enter your password')
 
+        # same thing if password2 which corresponds to password confirmation is missing
+        data = {'password1' : 'test123',
+                'password2' : '',
+                'token' : token,
+                'user' : user}
+        response = self.client.post(target_url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['error'], 'both fields are required')
+        self.assertEqual(response.context['token'], PasswordResetToken.objects.get(token=token))
+        self.assertContains(response, 'both fields are required')
+        self.assertContains(response, 'Enter your password')
+        self.assertContains(response, 'Confirm password')
+        
+
 
 
 
