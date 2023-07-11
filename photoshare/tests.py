@@ -318,3 +318,63 @@ class LoginUserViewTests(TestCase) :
         self.assertContains(response, 'both fields are required')
         self.assertContains(response, 'Enter your username')
         self.assertContains(response, 'Enter your password')
+
+        # submit form with password field empty
+        response = self.client.post(target_url, {
+            'username' : 'amine',
+            'password' : ''
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['error_message'], 'both fields are required')
+        # check for error display 
+        self.assertContains(response, 'both fields are required')
+        self.assertContains(response, 'Enter your username')
+        self.assertContains(response, 'Enter your password')
+    
+    # test login user with unauthenticated user and post request and invalid username
+    def test_login_user_using_post_request_and_invalid_username(self) :
+        target_url = reverse('login')
+        # define a username where length exceeds 20 characters
+        data = {
+            'username' : 'blablablablablablabla',
+            'password' : 'test123'
+        }
+        response = self.client.post(target_url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['error_message'], "Username can not exceed 20 characters")
+        # check for errror display 
+        self.assertContains(response, "Username can not exceed 20 characters")
+        self.assertContains(response, 'Enter your username')
+        self.assertContains(response, 'Enter your password')
+    
+    # test with unauthenticated user using post request and valid data which corresponds to no user
+    def test_login_user_using_post_request_and_credentials_corresponding_to_no_user(self) :
+        data = {
+            'username' : 'amine',
+            'password' : 'test123'
+        }
+        target_url = reverse('login')
+        response = self.client.post(target_url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['error_message'], 'Please check your credentials')
+        self.assertContains(response, 'Enter your password')
+        self.assertContains(response, 'Enter your username')
+        self.assertContains(response, 'Please check your credentials')
+    
+    # test with unauthenticated user using post request and credentials corresponding to a user
+    def test_login_user_using_post_request_and_credentials_corresponding_to_a_user(self):
+        # create a user
+        user = User.objects.create_user(username='amine', password='1234')
+        target_url = reverse('login')
+        data = { 'username' : 'amine', 'password' : '1234'}
+        response = self.client.post(target_url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
+        # check messages 
+        my_messages = list(messages.get_messages(request=response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'success')
+            self.assertEqual(message.message, 'Glad to see you again amine')
+        # check that user is authenticated 
+        self.assertTrue(user.is_authenticated)

@@ -41,7 +41,7 @@ def loginUser(request) :
                 return render(request, 'photoshare/login.html',{'error_message' : error_message})
             # validate username 
             if len(username) >= 20 :
-                error_message = "Username can't exceed 20 characters"
+                error_message = "Username can not exceed 20 characters"
                 return render(request, 'photoshare/login.html',{'error_message' : error_message})
             # authenticate the user 
             user = authenticate(request, username=username, password=password)
