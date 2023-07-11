@@ -256,6 +256,30 @@ class PasswordResetViewTests(TestCase) :
         self.assertContains(response, 'Confirm password')
         self.assertContains(response, "The two passwords are not matching")
 
+        # all is set correctly
+        data = {'password1' : 'test123@',
+                'password2' : 'test123@',
+                'token' : token,
+                'user' : user}
+        response = self.client.post(target_url, data)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
+        # check that user is authenticated after successefully reseting the password
+        self.assertTrue(User.objects.get(username='amine').is_authenticated)
+        # check messages 
+        my_messages = list(messages.get_messages(request=response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'success')
+            self.assertEqual(message.message, 'Password reset successefully !')
+        # check that the PasswordResetToken has been removed
+        self.assertFalse(PasswordResetToken.objects.filter(token=token).exists())
+        # check that the user password is now updated and set to the new value
+        # using this method instead of directly grabbing user.password because the
+        # stored value is hached 
+        self.assertTrue(User.objects.get(username='amine').check_password('test123@'))
+
+
 
 
 
