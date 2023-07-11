@@ -7,7 +7,7 @@
         {% if messages %}
             {% for message in messages %}
                 {% if message.tags == 'success' %}
-                    <div class="bg-green-300 rounded-xl flex justify-between items-center w-1/2 p-3 pl-5 w-1/2">
+                    <div class="bg-green-300 rounded-xl flex justify-between items-center w-1/2 p-3 pl-5 w-1/2 my-1">
                         <p>{{ message }}</p>
                         <form method="POST" action="{% url 'likes:clear_messages' %}" class="w-fit h-fit">
                             {% csrf_token %}
@@ -19,6 +19,17 @@
                     </div>
                 {% elif message.tags == 'error' %}
                     <div class="bg-red-300 rounded-xl flex justify-between items-center w-1/2 p-3 pl-5">
+                        <p>{{ message }}</p>
+                        <form method="POST" action="{% url 'likes:clear_messages' %}" class="w-fit h-fit">
+                            {% csrf_token %}
+                            <input type="hidden" name="previous_url" value="{{request.path}}">
+                            <button type="submit">
+                                <i class="fa-solid fa-x"></i>
+                            </button>
+                        </form>
+                    </div>
+                {% elif message.tags == 'info' %}
+                    <div class="bg-yellow-300 rounded-xl flex justify-between items-center w-1/2 p-3 pl-5">
                         <p>{{ message }}</p>
                         <form method="POST" action="{% url 'likes:clear_messages' %}" class="w-fit h-fit">
                             {% csrf_token %}
