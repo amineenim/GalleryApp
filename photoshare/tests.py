@@ -178,6 +178,37 @@ class PasswordResetViewTests(TestCase) :
         self.assertContains(response, 'Reset Paasword')
         self.assertContains(response, 'Enter your password')
         self.assertContains(response, 'Confirm password')
+        self.assertEqual(response.context['token'], PasswordResetToken.objects.filter(user=user).first())
+    
+    # test reset password with post request and password1 field missing
+    def test_reset_password_with_post_request_and_password1_missing(self) :
+        # simulate a user that gets a token to reset his forgotten password
+        token = self.simulate_getting_password_reset_token()
+        # build the url which will be sent by enail to the user 
+        password_reset_url = f"{reverse('reset_password')}?token={token}"
+        # send a get request to this url, since after clicking on it the user will hit the url with a get request
+        response = self.client.get(password_reset_url)
+        # check that we land on the page with the form for password and confirmation since token is valid
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Enter your password')
+        self.assertContains(response, 'Confirm password')
+        # check that context data contains the PasswordResetToken object
+        self.assertEqual(response.context['token'], PasswordResetToken.objects.get(token=token))
+        # simulate sending a post request while password1 field is empty
+        target_url = reverse('reset_password')
+        # get user and token value from response context object
+        user = response.context['token'].user
+        data = {'password1' : '',
+                'password2' : 'blabla123',
+                'token' : token,
+                'user' : user}
+        response = self.client.post(target_url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['error'], 'both fields are required')
+        self.assertEqual(response.context['token'], PasswordResetToken.objects.get(user=user))
+        # check that the error message is displayed
+        self.assertContains(response, 'both fields are required')
+        self.assertContains(response, 'Enter your password')
 
 
 
