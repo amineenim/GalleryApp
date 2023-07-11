@@ -279,8 +279,28 @@ class PasswordResetViewTests(TestCase) :
         # stored value is hached 
         self.assertTrue(User.objects.get(username='amine').check_password('test123@'))
 
-
-
-
-
+# class to test the operation of loginUser view
+class LoginUserViewTests(TestCase) :
+    # test with authenticated user 
+    def test_login_user_with_authenticated_user(self) :
+        User.objects.create_user(username='amine', password='1234')
+        self.client.login(username='amine', password='1234')
+        target_url = reverse('login')
+        # check for get request
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
+        # check for post request 
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
+    
+    # test with unauthenticated user and get request 
+    def test_login_user_with_unauthenticated_user_and_get_request(self) :
+        target_url = reverse('login')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Authenticate here and enjoy our plateform')
+        self.assertContains(response, 'Enter your username')
+        self.assertContains(response, 'Enter your password')
 
