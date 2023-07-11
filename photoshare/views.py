@@ -3,7 +3,7 @@ from datetime import timedelta
 from django.forms import ValidationError
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
-from .models import Category, Photo, PasswordResetToken
+from .models import Category, Photo, PasswordResetToken, EmailVerificationToken
 from django.contrib import messages
 from .forms import PhotoForm, EditPhotoForm, CreateUserForm
 from django.contrib.auth import authenticate, login, logout
@@ -20,6 +20,8 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.mail import send_mail
 from django.utils import timezone
 from django.contrib.auth.password_validation import validate_password
+from .tokens import EmailVerificationTokenGenerator
+from django.template.loader import render_to_string
 # Create your views here.
 # define a namespace for the app 
 app_name = 'photoshare'
@@ -70,8 +72,24 @@ def registerUser(request) :
             if form.is_valid() :
                 user = form.save()
                 # generate a token for the user and send him an email to check their email
-
-
+                email_verification_token_generator = EmailVerificationTokenGenerator()
+                token = email_verification_token_generator.make_token(user)
+                email_verification_token = EmailVerificationToken.objects.create(
+                    user = user,
+                    token = token,
+                    expires_at = timezone.now() + timedelta(hours=1)
+                )
+                email_verification_token.save()
+                # send an email to the user with the token 
+                subject = 'Email Verification'
+                # load a template and render it with context 
+                html_content = render_to_string('photoshare/verify_mail.html', {'token' : token})
+                from_email = 'aminemaourid1@gmail.com'
+                recipent = [user.email]
+                sent_mail = send_mail(subject=subject, from_email=from_email, recipient_list=recipent, html_message=html_content)
+                if sent_mail == 1 :
+                    # the email is sent with success 
+                    messages.info(request, 'a verification email request was emailed to you, check your email to confirm your email')
                 login(request, user)
                 messages.success(request, f"Glad to have you {request.user.username}, Enjoy our plateform")
                 return redirect('gallery')
@@ -322,6 +340,32 @@ def reset_password(request) :
                 
 
 # view that handles verifying email 
-
+def verify_email(request) :
+    if request.method == 'POST' : 
+        # get the token 
+        if not request.POST.get('token') :
+            messages.error(request, 'Something went wrong')
+            return redirect('gallery')
+        else : 
+            token = request.POST.get('token')
+            # check for the user associated with token and if still valid or expired
+            try : 
+                email_verification_token = EmailVerificationToken.objects.get(token=token)
+            except EmailVerificationToken.DoesNotExist :
+                messages.error(request, 'Invalid token, request another one to verify your email')
+                return redirect('gallery')
+            if email_verification_token.expires_at > timezone.now() :
+                messages.error(request, 'Token expired , get a new one')
+                return redirect('gallery')
+            user = email_verification_token.user 
+            # set the user's email_verified to true 
+            user.email_verified = True 
+            user.save()
+            # delete the EmailVerificationToken
+            email_verification_token.delete()
+            messages.success(request, 'Email verified successefully')
+            return redirect('gallery')
+    else : 
+        pass 
 
 
