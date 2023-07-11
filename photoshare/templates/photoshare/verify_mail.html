@@ -1,7 +1,7 @@
 {% extends 'likes/base.html' %}
 {% block content %}
     <form class='h-fit w-fit p-4 flex self-center flex-col border-2 border-slate-600 rounded-xl'
-    method='POST' action="{% url 'verify_email' %}">
+    method='GET' action="http://localhost:8000/gallery/accounts/verify_email">
         <div class='flex items-center justify-between p-2'>
             <i class="fa-solid fa-image"></i>
             <h2 class='text-xl'>

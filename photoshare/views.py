@@ -86,7 +86,11 @@ def registerUser(request) :
                 html_content = render_to_string('photoshare/verify_mail.html', {'token' : token})
                 from_email = 'aminemaourid1@gmail.com'
                 recipent = [user.email]
-                sent_mail = send_mail(subject=subject, from_email=from_email, recipient_list=recipent, html_message=html_content)
+                sent_mail = send_mail(subject=subject, 
+                                      message = '',
+                                      from_email=from_email, 
+                                      recipient_list=recipent, 
+                                      html_message=html_content)
                 if sent_mail == 1 :
                     # the email is sent with success 
                     messages.info(request, 'a verification email request was emailed to you, check your email to confirm your email')
@@ -341,13 +345,13 @@ def reset_password(request) :
 
 # view that handles verifying email 
 def verify_email(request) :
-    if request.method == 'POST' : 
+    if request.method == 'GET' : 
         # get the token 
-        if not request.POST.get('token') :
+        if not request.GET.get('token') :
             messages.error(request, 'Something went wrong')
             return redirect('gallery')
         else : 
-            token = request.POST.get('token')
+            token = request.GET.get('token')
             # check for the user associated with token and if still valid or expired
             try : 
                 email_verification_token = EmailVerificationToken.objects.get(token=token)
