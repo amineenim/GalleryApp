@@ -69,7 +69,8 @@ def registerUser(request) :
             form = CreateUserForm(request.POST)
             if form.is_valid() :
                 user = form.save()
-                # associate the permissions to the newly created user 
+                # generate a token for the user and send him an email to check their email
+
 
                 login(request, user)
                 messages.success(request, f"Glad to have you {request.user.username}, Enjoy our plateform")
@@ -320,7 +321,7 @@ def reset_password(request) :
                         return render(request, 'photoshare/password_reset.html', {'error' : error_message})
                 
 
-
+# view that handles verifying email 
 
 
 

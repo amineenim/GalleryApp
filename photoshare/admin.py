@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Photo, PasswordResetToken
+from .models import Category, Photo, PasswordResetToken, EmailVerificationToken
 # Register your models here.
 admin.site.register(Category)
 
@@ -16,3 +16,10 @@ class PasswordResetTokenAdmin(admin.ModelAdmin) :
     list_filter = ['user', 'created_at', 'expires_at']
 
 admin.site.register(PasswordResetToken, PasswordResetTokenAdmin)
+
+class EmailVerificationTokenAdmin(admin.ModelAdmin) :
+    fields = ['user', 'token', 'created_at', 'expires_at']
+    list_display = ['user', 'token', 'created_at', 'expires_at']
+    list_filter = ['user', 'created_at', 'expires_at']
+    
+admin.site.register(EmailVerificationToken, EmailVerificationTokenAdmin)

@@ -33,3 +33,11 @@ class PasswordResetToken(models.Model) :
     token = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
+
+
+class EmailVerificationToken(models.Model) :
+    user = models.ForeignKey(User, on_delete=models.CASCADE,null=False, related_name='email_verification_tokens')
+    token = models.CharField(max_length=255, null=False)
+    created_at = models.DateTimeField(auto_now_add=True, null=False)
+    expires_at = models.DateTimeField(null=False)
+    
