@@ -259,7 +259,7 @@ def reset_password(request) :
                 # check password2 matches password1
                 password2 = request.POST.get('password2')
                 if password1 != password2 :
-                    error_message = "The two passwords don't match"
+                    error_message = "The two passwords are not matching"
                     return render(request, 'photoshare/new_password.html', {'error' : error_message,'token' : token_object})
                 # now that all is valid store the new password for user 
                 user.set_password(password1)

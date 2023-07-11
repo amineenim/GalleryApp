@@ -222,10 +222,39 @@ class PasswordResetViewTests(TestCase) :
         self.assertContains(response, 'both fields are required')
         self.assertContains(response, 'Enter your password')
         self.assertContains(response, 'Confirm password')
-        
+
+        # if the two fields are submitted but with invalid password 
+        # the password is the same as username so password_validator will reject it
+        data = {'password1' : 'amine',
+                'password2' : 'amine',
+                'token' : token,
+                'user' : user}
+        response = self.client.post(target_url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['token'], PasswordResetToken.objects.get(token=token))
+        self.assertTrue(len(response.context['errors']) > 1)
+        self.assertContains(response, 'Enter your password')
+        self.assertContains(response, 'Confirm password')
+        self.assertQuerysetEqual(response.context['errors'], 
+                                 ['The password is too similar to the username.', 
+                                  'This password is too short. It must contain at least 8 characters.'])
+        # check errors are displayed
+        self.assertContains(response, 'The password is too similar to the username.')
+        self.assertContains(response, "This password is too short. It must contain at least 8 characters.")
 
 
-
+        # the two fields are submitted, the password is valid but it password confirmation mismatches password
+        data = {'password1' : 'test123@',
+                'password2' : 'test123',
+                'token' : token,
+                'user' : user}
+        response = self.client.post(target_url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['token'], PasswordResetToken.objects.get(token=token))
+        self.assertEqual(response.context['error'], "The two passwords are not matching")
+        self.assertContains(response, 'Enter your password')
+        self.assertContains(response, 'Confirm password')
+        self.assertContains(response, "The two passwords are not matching")
 
 
 
