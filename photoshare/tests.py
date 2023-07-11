@@ -304,3 +304,17 @@ class LoginUserViewTests(TestCase) :
         self.assertContains(response, 'Enter your username')
         self.assertContains(response, 'Enter your password')
 
+    # test with unauthenticated user using a post request and username or password are 
+    # missing after form submission
+    def test_login_user_using_post_request_with_empty_value_in_one_field(self) :
+        target_url = reverse('login')
+        response = self.client.post(target_url, {
+            'username' : '', 
+            'password' : 'test1234'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['error_message'], 'both fields are required')
+        # check for error display
+        self.assertContains(response, 'both fields are required')
+        self.assertContains(response, 'Enter your username')
+        self.assertContains(response, 'Enter your password')

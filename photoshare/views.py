@@ -36,6 +36,9 @@ def loginUser(request) :
         elif request.method == "POST" :
             username = request.POST.get('username')
             password = request.POST.get('password')
+            if not username or not password :
+                error_message = 'both fields are required'
+                return render(request, 'photoshare/login.html',{'error_message' : error_message})
             # validate username 
             if len(username) >= 20 :
                 error_message = "Username can't exceed 20 characters"
