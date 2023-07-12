@@ -378,3 +378,20 @@ class LoginUserViewTests(TestCase) :
             self.assertEqual(message.message, 'Glad to see you again amine')
         # check that user is authenticated 
         self.assertTrue(user.is_authenticated)
+
+# class to test the operation of registerUser View
+class RegisterUserViewTests(TestCase) :
+    # test registerUser with authenticated request
+    def test_register_user_with_authenticated_user(self) :
+        # create a user and authenticate him
+        User.objects.create_user(username='amine', password='1234')
+        self.client.login(username='amine', password='1234')
+        target_url = reverse('register')
+        # using get request
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
+        # using post request 
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))

@@ -347,13 +347,13 @@ def reset_password(request) :
 def verify_email(request) :
     if request.method == 'GET' : 
         # get the token 
-        if not request.GET.get('token') :
+        if not request.GET.get('token') or request.GET.get('user') :
             messages.error(request, 'Something went wrong')
             return redirect('gallery')
         else : 
             token = request.GET.get('token')
             user = request.GET.get('user')
-            # check for the user associated with token and if still valid or expired
+            # check for the token and if it's valid or expired
             try : 
                 email_verification_token = EmailVerificationToken.objects.get(token=token)
             except EmailVerificationToken.DoesNotExist :
