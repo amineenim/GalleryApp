@@ -1,7 +1,6 @@
 {% extends 'likes/base.html' %}
 {% block content %}
-    <form class='h-fit w-fit p-4 flex self-center flex-col border-2 border-slate-600 rounded-xl'
-    method='GET' action="http://localhost:8000/gallery/accounts/verify_email">
+    <div class='h-fit w-fit p-4 flex self-center flex-col border-2 border-slate-600 rounded-xl'>
         <div class='flex items-center justify-between p-2'>
             <i class="fa-solid fa-image"></i>
             <h2 class='text-xl'>
@@ -12,10 +11,12 @@
             Welcome to our community, Glad to have yet another member among us <br/>
             Please click the button to confirm your email Address
         </h2>
-        <input type='hidden' name='token' value={{token}}>
-        <button type='submit' class='flex items-center px-3 py-2 bg-gray-200 hover:bg-gray-600 hover:text-white'>
-            <i class="fa-solid fa-check mr-1"></i>
-            <span>Confirm my email</span>
-        </button>
-    </form>
+        <input type='hidden' name='token' value="{{token}}">
+        <a href="http://localhost:8000/gallery/accounts/verify_email?token={{token}}" target="_blank" rel="noopener noreferrer">
+            <button class='flex items-center px-3 py-2 bg-gray-200 hover:bg-gray-600 hover:text-white'>
+                <i class="fa-solid fa-check mr-1"></i>
+                <span>Confirm my email</span>
+            </button>
+        </a>
+    </div>
 {% endblock %}

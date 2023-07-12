@@ -358,7 +358,7 @@ def verify_email(request) :
             except EmailVerificationToken.DoesNotExist :
                 messages.error(request, 'Invalid token, request another one to verify your email')
                 return redirect('gallery')
-            if email_verification_token.expires_at > timezone.now() :
+            if email_verification_token.expires_at < timezone.now() :
                 messages.error(request, 'Token expired , get a new one')
                 return redirect('gallery')
             user = email_verification_token.user 
@@ -369,7 +369,6 @@ def verify_email(request) :
             email_verification_token.delete()
             messages.success(request, 'Email verified successefully')
             return redirect('gallery')
-    else : 
-        pass 
+        
 
 
