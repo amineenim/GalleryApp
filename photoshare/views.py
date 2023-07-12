@@ -83,7 +83,7 @@ def registerUser(request) :
                 # send an email to the user with the token 
                 subject = 'Email Verification'
                 # load a template and render it with context 
-                html_content = render_to_string('photoshare/verify_mail.html', {'token' : token})
+                html_content = render_to_string('photoshare/verify_mail.html', {'token' : email_verification_token})
                 from_email = 'aminemaourid1@gmail.com'
                 recipent = [user.email]
                 sent_mail = send_mail(subject=subject, 
@@ -352,11 +352,22 @@ def verify_email(request) :
             return redirect('gallery')
         else : 
             token = request.GET.get('token')
+            user = request.GET.get('user')
             # check for the user associated with token and if still valid or expired
             try : 
                 email_verification_token = EmailVerificationToken.objects.get(token=token)
             except EmailVerificationToken.DoesNotExist :
-                messages.error(request, 'Invalid token, request another one to verify your email')
+                # here it could be that the user already verified his email so the token is deleted
+                try :
+                    user = User.objects.get(username=user)
+                except User.DoesNotExist :
+                    messages.error(request, f"No user with username {user.username} found")
+                    return redirect('login')
+                # check if the user already has email verified 
+                if user.email_verified :
+                    messages.info(request, 'Email already verified')
+                else :
+                    messages.error(request, 'Invalid token, request another one to verify your email')
                 return redirect('gallery')
             if email_verification_token.expires_at < timezone.now() :
                 messages.error(request, 'Token expired , get a new one')
