@@ -61,5 +61,5 @@ class CreateUserForm(UserCreationForm) :
 
     password2 = forms.CharField(label='Password confirmation', help_text="Enter the same password as before, for verification", widget=forms.PasswordInput(attrs={
         'class' : "w-full py-2 pl-4 border rounded-xl",
-        'placeholder' : "confirm your password"
+        'placeholder' : "Confirm your password"
     }))

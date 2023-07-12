@@ -6,6 +6,7 @@ from django.urls import reverse
 from django.core import mail
 from django.contrib import messages
 from django.utils import timezone
+from .forms import CreateUserForm
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 # Create your tests here.
 # class to test the operation of reset_password view
@@ -395,3 +396,18 @@ class RegisterUserViewTests(TestCase) :
         response = self.client.post(target_url, {})
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('gallery'))
+    
+    # test registerUser with unauthenticated user using get request
+    def test_register_user_with_unauthenticated_user_and_get_request(self) :
+        target_url = reverse('register')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        form = CreateUserForm()
+        self.assertIsInstance(response.context['form'], CreateUserForm)
+        self.assertEqual(response.context['form'].initial, form.initial)
+        # check for rendered html
+        self.assertContains(response, 'Create an account Here')
+        self.assertContains(response, 'Email Address')
+        self.assertContains(response, 'Username')
+        self.assertContains(response, 'Password')
+        self.assertContains(response, 'Password confirmation')
