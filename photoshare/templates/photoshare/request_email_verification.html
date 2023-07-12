@@ -1,0 +1,84 @@
+{% extends 'photoshare/base.html' %}
+{% block title %}
+Email verification
+{% endblock %}
+{% block content %}
+    <div class="h-screen bg-gray-200 rounded-xl flex flex-col">
+        {% if messages %}
+            <div class="w-full p-4 flex flex-col">
+                {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        <div class="bg-green-300 rounded-xl flex justify-between items-center p-3 pl-5 w-1/2 my-1">
+                            <p>{{ message }}</p>
+                            <form method="POST" action="{% url 'likes:clear_messages' %}" class="w-fit h-fit">
+                                {% csrf_token %}
+                                <input type="hidden" name="previous_url" value="{{request.path}}">
+                                <button type="submit">
+                                    <i class="fa-solid fa-x"></i>
+                                </button>
+                            </form>
+                        </div>
+                    {% elif message.tags == 'info' %}
+                        <div class="bg-yellow-300 rounded-xl flex justify-between items-center p-3 pl-5 w-1/2 my-1">
+                            <p>{{ message }}</p>
+                            <form method="POST" action="{% url 'likes:clear_messages' %}" class="w-fit h-fit">
+                                {% csrf_token %}
+                                <input type="hidden" name="previous_url" value="{{request.path}}">
+                                <button type="submit">
+                                    <i class="fa-solid fa-x"></i>
+                                </button>
+                            </form>
+                        </div>
+                    {% elif message.tags == 'error' %}
+                        <div class="bg-red-400 rounded-xl flex justify-between items-center w-1/2 p-3 pl-5 w-1/2 my-1">
+                            <p>{{ message }}</p>
+                            <form method="POST" action="{% url 'likes:clear_messages' %}" class="w-fit h-fit">
+                                {% csrf_token %}
+                                <input type="hidden" name="previous_url" value="{{request.path}}">
+                                <button type="submit">
+                                    <i class="fa-solid fa-x"></i>
+                                </button>
+                            </form>
+                        </div>
+                    {% elif message.tags == 'warning' %}
+                        <div class="bg-red-200 rounded-xl flex justify-between items-center w-1/2 p-3 pl-5 w-1/2 my-1">
+                            <p>{{ message }}</p>
+                            <form method="POST" action="{% url 'likes:clear_messages' %}" class="w-fit h-fit">
+                                {% csrf_token %}
+                                <input type="hidden" name="previous_url" value="{{request.path}}">
+                                <button type="submit">
+                                    <i class="fa-solid fa-x"></i>
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+        <div class="w-full h-full flex flex-col">
+            {% if is_verified %}
+                <div class="self-center flex items-center">
+                    <p class='text-lg'> Email {{email_address}} already verified </p>
+                    <span> <i class="fa-solid fa-check-double fa-2xl" style="color: #1ac725;"></i> </span>
+                </div>
+            {% else %}
+                <div class='self-center flex flex-col'>
+                    {% if can_get_new_token %}
+                        {% if got_token_during_registration %}
+                            <p class='text-lg'>Your previous token has expired, get new One</p>
+                        {% else %}
+                            <p class='text-lg'> Get a Token, to verify your Email Address</p>
+                        {% endif %}
+                        <form class="flex  flex-col">
+                            {% csrf_token %}
+                            <p>an Email with a verification Token will be sent to {{email_address}}</p>
+                            <button class="self-end px-3 py-2 rounded-xl bg-green-300 hover:bg-green-500 hover:text-white">Get New One</button>
+                        </form>
+                    {% else %}
+                        <p class='text-lg'> a valid Verification Token has been sent to {{email_address}}, check it </p>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
