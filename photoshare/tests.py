@@ -487,4 +487,19 @@ class RegisterUserViewTests(TestCase) :
         self.assertEqual(len(my_messages), 2)
         self.assertCountEqual([message.tags for message in my_messages], ['success', 'info'])
     
-    
+# class to test operation of verify_email View 
+class VerifyEmailViewTests(TestCase) :
+    # test with unauthenticated user 
+    def test_verify_email_with_unauthenticated_user(self) :
+        # create a user 
+        User.objects.create_user(username='amine', password='1234')
+        target_url = reverse('verify_email')
+        # using get request 
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+        # using post request 
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+        
