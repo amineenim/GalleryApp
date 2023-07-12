@@ -344,42 +344,100 @@ def reset_password(request) :
                 
 
 # view that handles verifying email 
+@login_required
 def verify_email(request) :
-    if request.method == 'GET' : 
-        # get the token 
-        if not request.GET.get('token') or request.GET.get('user') :
-            messages.error(request, 'Something went wrong')
-            return redirect('gallery')
-        else : 
-            token = request.GET.get('token')
-            user = request.GET.get('user')
-            # check for the token and if it's valid or expired
-            try : 
-                email_verification_token = EmailVerificationToken.objects.get(token=token)
-            except EmailVerificationToken.DoesNotExist :
-                # here it could be that the user already verified his email so the token is deleted
-                try :
-                    user = User.objects.get(username=user)
-                except User.DoesNotExist :
-                    messages.error(request, f"No user with username {user.username} found")
-                    return redirect('login')
-                # check if the user already has email verified 
-                if user.email_verified :
-                    messages.info(request, 'Email already verified')
+    if request.method == 'GET' :
+        # check for token query parameter 
+        if not request.GET.get('token') :
+            is_verified = False 
+            user_email = request.user.email 
+            can_get_new_token = False 
+            got_token_during_registration = True 
+            # check if the user has already verified mail 
+            if request.user.email_verified :
+                is_verified = True
+                return render(request, 'photoshare/request_email_verification.html',{
+                    'is_verified' : is_verified,
+                    'email_address' : user_email,
+                    'can_get_new_token' : can_get_new_token,
+                    'got_token_during_registration' : got_token_during_registration
+                })
+            else :
+                if request.user.email_verification_tokens.exists() :
+                    user_token_to_check_email = request.user.email_varification_tokens.first()
+                    if user_token_to_check_email.expires_at < timezone.now() :
+                        # delete the expired token
+                        user_token_to_check_email.delete()
+                        can_get_new_token = True 
+                    return render(request, 'photoshare/request_email-verification.html', {
+                        'is_verified' : is_verified,
+                        'email_address' : user_email,
+                        'can_get_new_token' : can_get_new_token,
+                        'got_token_during_registration' : got_token_during_registration
+                    })
                 else :
-                    messages.error(request, 'Invalid token, request another one to verify your email')
-                return redirect('gallery')
-            if email_verification_token.expires_at < timezone.now() :
-                messages.error(request, 'Token expired , get a new one')
-                return redirect('gallery')
-            user = email_verification_token.user 
-            # set the user's email_verified to true 
-            user.email_verified = True 
-            user.save()
-            # delete the EmailVerificationToken
-            email_verification_token.delete()
+                    # in this case the user has the right to get a new token , he didn't got one after registration
+                    # at that time this functionnality was yet not implemented
+                    can_get_new_token = True 
+                    got_token_during_registration = False 
+                    return render(request, 'photoshare/request_email_verification.htmtl', {
+                        'is_verified' : is_verified,
+                        'email_address' : user_email,
+                        'can_get_new_token' : can_get_new_token,
+                        'got_token_during_registration' : got_token_during_registration
+                    })
+        else :
+            # get the token from the query parameter in URL 
+            token = request.GET.get('token')
+            # get the corresponding token object 
+            try :
+                token_object = EmailVerificationToken.objects.get(token=token)
+                if token_object.user != request.user :
+                    messages.warning(request, 'Unauthorized action')
+                    return redirect(reverse('gallery'))
+            except EmailVerificationToken.DoesNotExist :
+                messages.error(request, 'invalid Token')
+                return redirect(reverse('gallery'))
+            # check for token validity 
+            if token_object.expires_at < timezone.now() :
+                messages.info(request, 'Token expired')
+                return redirect(reverse('verify_email'))
+            # set the user's email_verified attribute to True 
+            request.user.email_verified = True 
+            # delete the token 
+            token_object.delete()
+            # redirect with a message 
             messages.success(request, 'Email verified successefully')
-            return redirect('gallery')
-        
+            return redirect(reverse('verifiy_email'))
+    
+    elif request.method == 'POST' :
+        if request.user.email_verified :
+            return redirect(reverse('verify_email'))
+        # generate a token for the authenticated user 
+        token_generator = EmailVerificationTokenGenerator()
+        token = token_generator.make_token(request.user)
+        # create the object and store it 
+        token_object = EmailVerificationToken.objects.create(
+            user = request.user,
+            token = token,
+            expires_at = timezone.now() + timedelta(hours=1)
+        )
+        token_object.save()
+        # send a mail to the user 
+        subject = 'Email Verification'
+        message = ''
+        from_email = 'aminemaourid1@gmail.com'
+        recipient = [request.user.email]
+        html_message = render_to_string('photoshare/verify_mail.html', {'token' : token})
+        sent_mails = send_mail(subject=subject, 
+                  message=message, 
+                  from_email=from_email, 
+                  recipient_list=recipient, 
+                  html_message=html_message)
+        if sent_mails == 1 :
+            messages.success(request, 'a verification email request was emailed to you, check your email to confirm your email')
+        else :
+            messages.error(request, 'something went wrong')
+        return redirect(reverse('verify_email'))
 
-
+       
