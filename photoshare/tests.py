@@ -486,3 +486,5 @@ class RegisterUserViewTests(TestCase) :
         my_messages = list(messages.get_messages(request=response.wsgi_request))
         self.assertEqual(len(my_messages), 2)
         self.assertCountEqual([message.tags for message in my_messages], ['success', 'info'])
+    
+    

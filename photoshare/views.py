@@ -83,7 +83,7 @@ def registerUser(request) :
                 # send an email to the user with the token 
                 subject = 'Email Verification'
                 # load a template and render it with context 
-                html_content = render_to_string('photoshare/verify_mail.html', {'token' : email_verification_token})
+                html_content = render_to_string('photoshare/verify_mail.html', {'token' : token})
                 from_email = 'aminemaourid1@gmail.com'
                 recipent = [user.email]
                 sent_mail = send_mail(subject=subject, 
@@ -364,12 +364,12 @@ def verify_email(request) :
                 })
             else :
                 if request.user.email_verification_tokens.exists() :
-                    user_token_to_check_email = request.user.email_varification_tokens.first()
+                    user_token_to_check_email = request.user.email_verification_tokens.first()
                     if user_token_to_check_email.expires_at < timezone.now() :
                         # delete the expired token
                         user_token_to_check_email.delete()
                         can_get_new_token = True 
-                    return render(request, 'photoshare/request_email-verification.html', {
+                    return render(request, 'photoshare/request_email_verification.html', {
                         'is_verified' : is_verified,
                         'email_address' : user_email,
                         'can_get_new_token' : can_get_new_token,
@@ -380,7 +380,7 @@ def verify_email(request) :
                     # at that time this functionnality was yet not implemented
                     can_get_new_token = True 
                     got_token_during_registration = False 
-                    return render(request, 'photoshare/request_email_verification.htmtl', {
+                    return render(request, 'photoshare/request_email_verification.html', {
                         'is_verified' : is_verified,
                         'email_address' : user_email,
                         'can_get_new_token' : can_get_new_token,
@@ -389,6 +389,7 @@ def verify_email(request) :
         else :
             # get the token from the query parameter in URL 
             token = request.GET.get('token')
+
             # get the corresponding token object 
             try :
                 token_object = EmailVerificationToken.objects.get(token=token)
@@ -396,19 +397,23 @@ def verify_email(request) :
                     messages.warning(request, 'Unauthorized action')
                     return redirect(reverse('gallery'))
             except EmailVerificationToken.DoesNotExist :
-                messages.error(request, 'invalid Token')
-                return redirect(reverse('gallery'))
+                if request.user.email_verified :
+                    messages.info(request, 'Email already verified')
+                else :
+                    messages.error(request, 'invalid Token')
+                return redirect(reverse('verify_email'))
             # check for token validity 
             if token_object.expires_at < timezone.now() :
                 messages.info(request, 'Token expired')
                 return redirect(reverse('verify_email'))
             # set the user's email_verified attribute to True 
             request.user.email_verified = True 
+            request.user.save()
             # delete the token 
             token_object.delete()
             # redirect with a message 
             messages.success(request, 'Email verified successefully')
-            return redirect(reverse('verifiy_email'))
+            return redirect(reverse('verify_email'))
     
     elif request.method == 'POST' :
         if request.user.email_verified :

@@ -5,7 +5,7 @@ Email verification
 {% block content %}
     <div class="h-screen bg-gray-200 rounded-xl flex flex-col">
         {% if messages %}
-            <div class="w-full p-4 flex flex-col">
+            <div class="w-full p-4 flex flex-col items-center">
                 {% for message in messages %}
                     {% if message.tags == 'success' %}
                         <div class="bg-green-300 rounded-xl flex justify-between items-center p-3 pl-5 w-1/2 my-1">
@@ -55,27 +55,27 @@ Email verification
                 {% endfor %}
             </div>
         {% endif %}
-        <div class="w-full h-full flex flex-col">
+        <div class="w-full h-full flex flex-col justify-center">
             {% if is_verified %}
                 <div class="self-center flex items-center">
-                    <p class='text-lg'> Email {{email_address}} already verified </p>
-                    <span> <i class="fa-solid fa-check-double fa-2xl" style="color: #1ac725;"></i> </span>
+                    <p class='text-lg mr-2'> Email : <span class="underline">{{email_address}}</p> already verified </p>
+                    <span class='ml-2'> <i class="fa-solid fa-check-double fa-xl" style="color: #1ac725;"></i> </span>
                 </div>
             {% else %}
-                <div class='self-center flex flex-col'>
+                <div class='self-center flex flex-col space-y-3'>
                     {% if can_get_new_token %}
                         {% if got_token_during_registration %}
                             <p class='text-lg'>Your previous token has expired, get new One</p>
                         {% else %}
                             <p class='text-lg'> Get a Token, to verify your Email Address</p>
                         {% endif %}
-                        <form class="flex  flex-col">
+                        <form class="flex  flex-col space-y-2" method='POST' action="{% url 'verify_email' %}" >
                             {% csrf_token %}
                             <p>an Email with a verification Token will be sent to {{email_address}}</p>
-                            <button class="self-end px-3 py-2 rounded-xl bg-green-300 hover:bg-green-500 hover:text-white">Get New One</button>
+                            <button type='submit' class="self-end px-3 py-2 rounded-xl bg-green-300 hover:bg-green-500 hover:text-white">Get New One</button>
                         </form>
                     {% else %}
-                        <p class='text-lg'> a valid Verification Token has been sent to {{email_address}}, check it </p>
+                        <p class='text-lg'> a valid Verification Token has been sent to : <span class="underline">{{email_address}}</span>, check it </p>
                     {% endif %}
                 </div>
             {% endif %}
