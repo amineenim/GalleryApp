@@ -1,7 +1,7 @@
 from datetime import timedelta
 from django.test import TestCase, override_settings
 from django.contrib.auth.models import User
-from .models import PasswordResetToken
+from .models import PasswordResetToken, EmailVerificationToken
 from django.urls import reverse
 from django.core import mail
 from django.contrib import messages
@@ -435,6 +435,55 @@ class RegisterUserViewTests(TestCase) :
         # check for errors in the rendered page 
         self.assertContains(response, 'The password is too similar to the username.')
         self.assertContains(response, 'Enter a valid email address.')
+        # check that the form instance passed in context data is prefilled with submitted data
         self.assertEqual(response.context['form'].initial, CreateUserForm(data).initial)
 
+
+    # test registerUser with post request and valid data
+    @override_settings(EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend')
+    def test_register_user_with_unauthenticated_user_using_post_request_and_valid_data(self) :
+        target_url = reverse('register')
+        data = {
+            'email' : 'aminemaourid@gmail.com',
+            'username' : 'amine',
+            'password1' : 'anas1234',
+            'password2' : 'anas1234'
+        }
+        response = self.client.post(target_url, data)
         
+        # check for response status and redirect
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
+        # check that a User instance has been created 
+        self.assertTrue(User.objects.exists())
+        self.assertEqual(User.objects.first().username, 'amine')
+        # check that the user has been authenticated after successeful registration
+        self.assertTrue(User.objects.get(username='amine').is_authenticated)
+        # check that an email verification mail has been sent to the new user
+        # assert the number of sent mails
+        self.assertEqual(len(mail.outbox), 1)
+        # check for mail attributes
+        self.assertEqual(mail.outbox[0].subject, 'Email Verification')
+        self.assertEqual(mail.outbox[0].to , ['aminemaourid@gmail.com'])
+        self.assertEqual(mail.outbox[0].from_email, 'aminemaourid1@gmail.com')
+        # check for html_message in the mail 
+        html_message = None
+        # iterate over the parts of the email message using walk
+        for part in mail.outbox[0].message().walk() :
+            if part.get_content_type() == 'text/html' :
+                html_message = part.get_payload(decode=True).decode(part.get_content_charset())
+                break
+        self.assertIsNotNone(html_message)
+        self.assertIn('Welcome to our community, Glad to have yet another member among us', html_message)
+        self.assertIn('Please click the button to confirm your email Address', html_message)
+        # check for EmailVerificationToken
+        self.assertTrue(EmailVerificationToken.objects.exists())
+        self.assertEqual(len(EmailVerificationToken.objects.all()), 1)
+        self.assertEqual(EmailVerificationToken.objects.first().user, User.objects.get(username='amine'))
+        # check that the new user email_verified attribute is False
+        self.assertFalse(User.objects.get(username='amine').email_verified)
+        # check for messages 
+        my_messages = list(messages.get_messages(request=response.wsgi_request))
+        self.assertEqual(len(my_messages), 2)
+        self.assertCountEqual([message.tags for message in my_messages], ['success', 'info'])
+       
