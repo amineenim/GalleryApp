@@ -411,3 +411,30 @@ class RegisterUserViewTests(TestCase) :
         self.assertContains(response, 'Username')
         self.assertContains(response, 'Password')
         self.assertContains(response, 'Password confirmation')
+    
+    # test registerUser with unauthenticated user using post request and invalid form data
+    def test_register_user_with_unauthenticated_user_using_post_request_and_invalid_data(self) :
+        target_url = reverse('register')
+        data = {
+            'email' : 'test',
+            'username' : 'amine',
+            'password1' : 'amine123',
+            'password2' : 'amine123'
+        }
+        response = self.client.post(target_url, data)
+        self.assertEqual(response.status_code, 200)
+        # check for form 
+        self.assertEqual(response.context['form'].is_valid(), False)
+        self.assertTrue(len(response.context['form'].errors) > 1)
+        # check that email and password2 exist in form.errors dictionnary
+        self.assertIn('email', response.context['form'].errors)
+        self.assertIn('password2', response.context['form'].errors)
+        # check for email error
+        self.assertEqual(response.context['form'].errors['email'], ['Enter a valid email address.'])
+        self.assertEqual(response.context['form'].errors['password2'], ['The password is too similar to the username.'])
+        # check for errors in the rendered page 
+        self.assertContains(response, 'The password is too similar to the username.')
+        self.assertContains(response, 'Enter a valid email address.')
+        self.assertEqual(response.context['form'].initial, CreateUserForm(data).initial)
+
+        
