@@ -403,7 +403,7 @@ def verify_email(request) :
                     messages.error(request, 'invalid Token')
                 return redirect(reverse('verify_email'))
             # check for token validity 
-            if token_object.expires_at < timezone.now() :
+            if token_object.expires_at <= timezone.now() :
                 messages.info(request, 'Token expired')
                 return redirect(reverse('verify_email'))
             # set the user's email_verified attribute to True 

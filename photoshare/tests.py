@@ -694,7 +694,6 @@ class VerifyEmailViewTests(TestCase) :
         # get the associated token 
         associated_token = EmailVerificationToken.objects.get(user=User.objects.get(username='amine'))
         token = associated_token.token 
-        user = associated_token.user
         # build the url to which the user will be redirected after clicking the button on the received mail
         target_url = f"{reverse('verify_email')}?token={token}"
         # simulate the button click
@@ -731,4 +730,37 @@ class VerifyEmailViewTests(TestCase) :
         for message in my_messages :
             self.assertEqual(message.tags, 'error')
             self.assertEqual(message.message, 'invalid Token')
-            
+    
+    # test with an EmailVerificationToken appended to URL which has already expired 
+    def test_verify_email_with_token_query_parameter_already_expired(self) :
+        # register a user 
+        user_data = {
+            'username' : 'amine',
+            'email' : 'test@gmail.com',
+            'password1' : 'af507890',
+            'password2' : 'af507890'
+        }
+        registration_url = reverse('register')
+        response = self.client.post(registration_url, user_data)
+        self.assertTrue(User.objects.exists())
+        self.assertTrue(EmailVerificationToken.objects.filter(user=User.objects.get(username='amine')).exists())
+        self.assertFalse(User.objects.get(username='amine').email_verified)
+        self.assertTrue(User.objects.get(username='amine').is_authenticated)
+        # get the associated token 
+        associated_token = EmailVerificationToken.objects.get(user=User.objects.get(username='amine'))
+        token = associated_token.token 
+        # patch the current time to the token's expiration date 
+        with patch('django.utils.timezone.now') as mock :
+            mock.return_value = associated_token.expires_at
+            target_url = f"{reverse('verify_email')}?token={token}"
+            response = self.client.get(target_url)
+            self.assertEqual(response.status_code, 302)
+            self.assertRedirects(response, reverse('verify_email'))
+            my_messages = list(messages.get_messages(request=response.wsgi_request))
+            self.assertEqual(len(my_messages), 3)
+            self.assertCountEqual([message.tags for message in my_messages], ['info', 'success', 'info'])
+            self.assertCountEqual([message.message for message in my_messages], [
+                'a verification email request was emailed to you, check your email to confirm your email',
+                'Glad to have you amine, Enjoy our plateform',
+                'Token expired'
+            ])
