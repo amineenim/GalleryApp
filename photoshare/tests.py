@@ -635,3 +635,45 @@ class VerifyEmailViewTests(TestCase) :
         self.assertContains(response, 'Get a Token, to verify your Email Address')
         self.assertContains(response, 'an Email with a verification Token will be sent to')
         self.assertContains(response, 'Get New One')
+
+    
+    # the following tests are for the same url buth with a 'token' query parameter using get request
+
+    # test with a valid token in query parameter but the token's user is not the authenticated user
+    def test_verify_email_with_token_query_parameter_not_corresponding_to_the_authenticated_user(self) :
+        # simulate registrating a user which generates a token for him and authenticates him
+        # this user provides an email address not his
+        user_data = {
+            'username' : 'amine',
+            'email' : 'test@gmail.com',
+            'password1' : 'af507890',
+            'password2' : 'af507890'
+        }
+        registartion_url = reverse('register')
+        self.client.post(registartion_url, user_data)
+        # check that a user has been created 
+        self.assertTrue(User.objects.filter(username='amine').exists())
+        # check that a token is associated to this user
+        self.assertTrue(EmailVerificationToken.objects.exists())
+        self.assertTrue(EmailVerificationToken.objects.filter(user=User.objects.get(username='amine')).exists())
+        # get the token object created for the user after registration
+        associated_token = EmailVerificationToken.objects.get(user=User.objects.get(username='amine'))
+        # logout the user 
+        self.client.logout()
+        # extract the token value 
+        token = associated_token.token 
+        
+        # create a user and authenticate him , this user is the owner of 'test@gmail.com'
+        User.objects.create_user(username='test', password='12345', email='test@gmail.com')
+        self.client.login(username='test', password='12345')
+        # simulate the user clicking the button on the received email to check that the email belongs to him
+        target_url = f"{reverse('verify_email')}?token={token}"
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
+        my_messages = list(messages.get_messages(request=response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'warning')
+            self.assertEqual(message.message, 'Unauthorized action')
+        
