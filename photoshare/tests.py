@@ -714,3 +714,21 @@ class VerifyEmailViewTests(TestCase) :
         for message in my_messages :
             self.assertEqual(message.tags, 'info')
             self.assertEqual(message.message, 'Email already verified')
+    
+    # test with an EmailVerificationToken appended to the url which is not valid 
+    # the user passes a rendom string for example
+    def test_verify_email_with_invalid_token_query_parameter(self) :
+        # create a user and authenticate him
+        User.objects.create_user(username='amine', password='1234', email='amine@gmail.com')
+        self.client.login(username='amine', password='1234')
+        random_token = 'sjfefkfe'
+        target_url = f"{reverse('verify_email')}?token={random_token}"
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('verify_email'))
+        my_messages = list(messages.get_messages(request=response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'error')
+            self.assertEqual(message.message, 'invalid Token')
+            
