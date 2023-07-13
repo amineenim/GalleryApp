@@ -802,3 +802,38 @@ class VerifyEmailViewTests(TestCase) :
             message = my_messages[0]
             self.assertEqual(message.tags, 'success')
             self.assertEqual(message.message, 'Email verified successefully')
+    
+    # test verify_email using post request with user already verified his email address
+    def test_verify_email_with_post_request_for_user_who_already_verified_his_email(self) :
+        # register a user
+        user_data = {
+            'username' : 'amine',
+            'email' : 'test@gmail.com',
+            'password1' : 'af507890',
+            'password2' : 'af507890'
+        }
+        registration_url = reverse('register')
+        self.client.post(registration_url, user_data)
+        self.assertTrue(User.objects.filter(username='amine').exists())
+        self.assertTrue(EmailVerificationToken.objects.exists())
+        self.assertFalse(User.objects.get(username='amine').email_verified)
+        # get associated token
+        associated_token = EmailVerificationToken.objects.get(user=User.objects.get(username='amine'))
+        token = associated_token.token 
+        # simulate clicking the button and setting the email to verified as a result
+        target_url = f"{reverse('verify_email')}?token={token}"
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('verify_email'))
+        # check that user's email_verified is true
+        self.assertTrue(User.objects.get(username='amine').email_verified)
+        response = self.client.post(reverse('verify_email'), {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('verify_email'))
+        
+
+
+
+
+
+
