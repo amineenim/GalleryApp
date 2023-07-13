@@ -9,6 +9,7 @@ from django.utils import timezone
 from .forms import CreateUserForm
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from unittest.mock import patch 
+from django.template.loader import render_to_string
 # Create your tests here.
 # class to test the operation of reset_password view
 class PasswordResetViewTests(TestCase) :
@@ -543,15 +544,12 @@ class VerifyEmailViewTests(TestCase) :
         self.assertContains(response, 'already verified')
         # send post request to target_url 
         response = self.client.post(target_url, {})
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse('verify_email'))
-        # go to the redirect url and check content 
-        response = self.client.get(target_url)
-        self.assertContains(response, 'amine@gmail.com')
-        self.assertContains(response, 'already verified')
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['is_verified'])
+        self.assertTrue(response.context['got_token_during_registration'])
         self.assertFalse(response.context['can_get_new_token'])
+        self.assertEqual(response.context['email_address'],'amine@gmail.com')
+        
     
     # test with authenticated user with email_verified attribute False and having an Expired email verification token
     def test_verify_email_with_authenticated_user_who_has_not_yet_verified_his_email_address_and_his_token_expired(self) :
@@ -827,9 +825,75 @@ class VerifyEmailViewTests(TestCase) :
         self.assertRedirects(response, reverse('verify_email'))
         # check that user's email_verified is true
         self.assertTrue(User.objects.get(username='amine').email_verified)
+        # send a post request to 'verify_email' view
         response = self.client.post(reverse('verify_email'), {})
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse('verify_email'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['is_verified'])
+        self.assertEqual(response.context['email_address'], 'test@gmail.com')
+        self.assertFalse(response.context['can_get_new_token'], False)
+        self.assertTrue(response.context['got_token_during_registration'])
+        # check for rendered page content
+        self.assertContains(response, 'already verified')
+        self.assertContains(response, 'test@gmail.com')
+        self.assertContains(response, "Email address already verified")
+        my_messages = list(messages.get_messages(request=response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        message = my_messages[0]
+        self.assertEqual(message.tags, 'info')
+        self.assertEqual(message.message, 'Email address already verified')
+    
+    # test with post request for user not verified and doesn't have an EmailVerificationToken 
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    def test_verify_email_with_post_request_for_user_not_verified_and_no_emailVerificationToken_associated(self):
+        # create a user and authenticate him
+        user = User.objects.create_user(username='amine', password='1234', email='amine@gmail.com')
+        self.client.login(username='amine', password='1234')
+        target_url = reverse('verify_email')
+        # get request for verify_email view
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['is_verified'])
+        self.assertEqual(response.context['email_address'], 'amine@gmail.com')
+        self.assertTrue(response.context['can_get_new_token'])
+        self.assertFalse(response.context['got_token_during_registration'])
+        # check for rendered page content
+        self.assertContains(response, 'Get a Token, to verify your Email Address')
+        self.assertContains(response, 'an Email with a verification Token will be sent to amine@gmail.com')
+        self.assertContains(response, 'Get New One')
+
+        # simulate a post request to ask for a token 
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['is_verified'])
+        self.assertEqual(response.context['email_address'], 'amine@gmail.com')
+        self.assertFalse(response.context['can_get_new_token'])
+        self.assertFalse(response.context['got_token_during_registration'])
+        # check for rendered page content
+        self.assertContains(response, 'a valid Verification Token has been sent to')
+        self.assertContains(response, 'amine@gmail.com')
+        # check for mail sending
+        self.assertEqual(len(mail.outbox), 1)
+        subject = 'Email Verification'
+        from_email = 'aminemaourid1@gmail.com'
+        recipient = ['amine@gmail.com']
+        html_content = render_to_string('photoshare/verify_mail.html', 
+                                        {'token' :EmailVerificationToken.objects.get(user=user).token})
+        self.assertEqual(mail.outbox[0].subject, subject)
+        self.assertEqual(mail.outbox[0].to, recipient)
+        self.assertEqual(mail.outbox[0].from_email, from_email)
+        self.assertEqual(mail.outbox[0].body, '')
+        # check for html message sent , alternatives is a list where the 
+        # first element is a tuple, where the first element is html message
+        self.assertEqual(mail.outbox[0].alternatives[0][0], html_content)
+        self.assertContains(response, 'a verification email request was emailed to you, check your email to confirm your email')
+        # simulate a get request to verify_email view 
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['is_verified'])
+        self.assertFalse(response.context['can_get_new_token'])
+        self.assertContains(response, 'a valid Verification Token has been sent to :')
+        self.assertContains(response, 'amine@gmail.com')
+        
         
 
 

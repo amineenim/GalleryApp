@@ -428,13 +428,14 @@ def verify_email(request) :
         # check if the user has the right to get a new token
         try :
             existing_token = EmailVerificationToken.objects.get(user=request.user)
+            if existing_token.expires_at <= timezone.now() :
+                existing_token.delete()
+                can_get_new_token = True 
         except EmailVerificationToken.DoesNotExist :
             # since the user's email is not verified, he didn't get a token during registration (the functionnality wasn't implemented yet)
             got_token_during_registration = False 
             can_get_new_token = True 
-        if existing_token.expires_at <= timezone.now() :
-            existing_token.delete()
-            can_get_new_token = True 
+    
         if can_get_new_token :
             # generate a token for the authenticated user 
             token_generator = EmailVerificationTokenGenerator()
@@ -458,8 +459,10 @@ def verify_email(request) :
                     recipient_list=recipient, 
                     html_message=html_message)
             if sent_mails == 1 :
+                can_get_new_token = False 
                 messages.success(request, 'a verification email request was emailed to you, check your email to confirm your email')
             else :
+                token_object.delete()
                 messages.error(request, 'something went wrong')
             return render(request, 'photoshare/request_email_verification.html', {
                 'is_verified' : is_verified,
