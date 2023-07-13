@@ -676,4 +676,41 @@ class VerifyEmailViewTests(TestCase) :
         for message in my_messages :
             self.assertEqual(message.tags, 'warning')
             self.assertEqual(message.message, 'Unauthorized action')
-        
+    
+    # test with an EmailVerificationToken appended to url that doesn't exist no more because the user has already
+    # verified his email address 
+    def test_verify_email_with_token_query_parameter_after_already_verifying_his_email_address(self) :
+        # simulate registering a user
+        user_data = {
+            'username' : 'amine',
+            'email' : 'test@gmail.com',
+            'password1' : 'af507890',
+            'password2' : 'af507890'
+        }
+        registration_url = reverse('register')
+        response = self.client.post(registration_url, user_data)
+        self.assertTrue(User.objects.filter(username='amine').exists())
+        self.assertTrue(EmailVerificationToken.objects.filter(user=User.objects.get(username='amine')).exists())
+        # get the associated token 
+        associated_token = EmailVerificationToken.objects.get(user=User.objects.get(username='amine'))
+        token = associated_token.token 
+        user = associated_token.user
+        # build the url to which the user will be redirected after clicking the button on the received mail
+        target_url = f"{reverse('verify_email')}?token={token}"
+        # simulate the button click
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('verify_email'))
+        # check that the user's email_verified is now true 
+        self.assertTrue(User.objects.get(username='amine').email_verified)
+        # check that the token has been deleted 
+        self.assertFalse(EmailVerificationToken.objects.filter(token=token).exists())
+        # simulate the user revisiting the mail and reclicking the button a second time
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('verify_email'))
+        my_messages = list(messages.get_messages(request=response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        for message in my_messages :
+            self.assertEqual(message.tags, 'info')
+            self.assertEqual(message.message, 'Email already verified')
