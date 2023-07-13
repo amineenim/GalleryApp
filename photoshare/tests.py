@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.utils import timezone
 from .forms import CreateUserForm
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from .tokens import EmailVerificationTokenGenerator
 # Create your tests here.
 # class to test the operation of reset_password view
 class PasswordResetViewTests(TestCase) :
@@ -489,6 +490,23 @@ class RegisterUserViewTests(TestCase) :
     
 # class to test operation of verify_email View 
 class VerifyEmailViewTests(TestCase) :
+    # function that simulates a user who verified his email address
+    def simulate_user_verifying_his_email_address(self) :
+        # register a user , since after registraion the user receives an email to verify his email address
+        user_data = {
+            'username' : 'amine',
+            'email' : 'amine@gmail.com',
+            'password1' : 'test1234',
+            'password2' : 'test1234'
+        }
+        registration_url = reverse('register')
+        self.client.post(registration_url, user_data)
+        # get the token associated with the user 
+        user_token = EmailVerificationToken.objects.get(user=User.objects.get(username='amine')).token
+        verification_url = f"{reverse('verify_email')}?token={user_token}"
+        # simulate verifying the email 
+        self.client.get(verification_url)
+        
     # test with unauthenticated user 
     def test_verify_email_with_unauthenticated_user(self) :
         # create a user 
@@ -502,4 +520,52 @@ class VerifyEmailViewTests(TestCase) :
         response = self.client.post(target_url, {})
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
-        
+    
+    # test with authenticated user who already verified his email address and no query parameter
+    def test_verify_email_with_authenticated_user_who_already_verified_his_email_and_no_query_parameter(self) :
+        # first register a user , after registration a verification email token is emailed to the user
+        user_data = {
+            'username' : 'amine',
+            'email' : 'amine@gmail.com',
+            'password1' : 'af507890',
+            'password2' : 'af507890'
+        }
+        registration_url = reverse('register')
+        self.client.post(registration_url, user_data)
+        # check that a user instance has been created 
+        self.assertTrue(User.objects.exists())
+        # check that an EmailVerificationToken is associated to the user just registered
+        self.assertTrue(EmailVerificationToken.objects.filter(user=User.objects.get(username='amine')).exists())
+        # check that the user is authenticated 
+        self.assertTrue(User.objects.get(username='amine').is_authenticated)
+        # build the url to verify email for the user 
+        user_token = EmailVerificationToken.objects.get(user=User.objects.get(username='amine'))
+        verification_url = f"{reverse('verify_email')}?token={user_token.token}"
+        # perform get request to verification_url to simulate user verifying his email
+        self.client.get(verification_url)
+        # check that the email address has been verified 
+        self.assertTrue(User.objects.get(username='amine').email_verified)
+        # check the token has been deleted 
+        self.assertFalse(EmailVerificationToken.objects.filter(user=User.objects.get(username='amine')).exists())
+        # now that the user's email_verified is true send a request to 'verify_email' view
+        target_url = reverse('verify_email')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['is_verified'])
+        self.assertTrue(response.context['got_token_during_registration'])
+        self.assertFalse(response.context['can_get_new_token'])
+        self.assertEqual(response.context['email_address'],'amine@gmail.com')
+        # check for rendered html
+        self.assertContains(response, 'already verified')
+        # send post request to target_url 
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('verify_email'))
+        # go to the redirect url and check content 
+        response = self.client.get(target_url)
+        self.assertContains(response, 'amine@gmail.com')
+        self.assertContains(response, 'already verified')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['is_verified'])
+        self.assertFalse(response.context['can_get_new_token'])
+
