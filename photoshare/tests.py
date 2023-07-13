@@ -616,4 +616,22 @@ class VerifyEmailViewTests(TestCase) :
             # check for the response content
             self.assertContains(response, 'a valid Verification Token has been sent to :')
             self.assertContains(response, 'amine@gmail.com')
-
+    
+    # test with authenticated user with email not verified and has no EmailVerificationToken generated for him
+    def test_verify_email_with_authenticated_user_having_unverified_email_and_no_email_verification_token(self) :
+        # create a user and authenticate him 
+        user = User.objects.create_user(username='amine', password='1234', email='amine@gmail.com')
+        self.client.login(username='amine', password='1234')
+        # check that email is not verified 
+        self.assertFalse(user.email_verified)
+        target_url = reverse('verify_email')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['is_verified'])
+        self.assertEqual(response.context['email_address'], 'amine@gmail.com')
+        self.assertTrue(response.context['can_get_new_token'])
+        self.assertFalse(response.context['got_token_during_registration'])
+        # check for response content 
+        self.assertContains(response, 'Get a Token, to verify your Email Address')
+        self.assertContains(response, 'an Email with a verification Token will be sent to')
+        self.assertContains(response, 'Get New One')
