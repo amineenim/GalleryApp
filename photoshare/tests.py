@@ -556,7 +556,7 @@ class VerifyEmailViewTests(TestCase) :
     # test with authenticated user with email_verified attribute False and having an Expired email verification token
     def test_verify_email_with_authenticated_user_who_has_not_yet_verified_his_email_address_and_his_token_expired(self) :
         # register a user 
-        user_data = user_data = {
+        user_data = {
             'username' : 'amine',
             'email' : 'amine@gmail.com',
             'password1' : 'af507890',
@@ -584,6 +584,36 @@ class VerifyEmailViewTests(TestCase) :
             self.assertContains(response, 'Your previous token has expired, get new One')
             self.assertContains(response, 'an Email with a verification Token will be sent to amine@gmail.com')
             self.assertContains(response, 'Get New One')
-
-
+    
+    # test verify_email with unauthenticated user who has not yet verified his email address and having a valid EmailVerificationToken
+    def test_verify_email_with_authenticated_user_who_has_not_verified_his_email_yet_but_still_having_a_valid_token_after_registration(self) :
+        # register a user 
+        user_data =  {
+            'username' : 'amine',
+            'email' : 'amine@gmail.com',
+            'password1' : 'af507890',
+            'password2' : 'af507890'
+        }
+        registration_url = reverse('register')
+        self.client.post(registration_url, user_data)
+        # check that a user instance has been created 
+        self.assertTrue(User.objects.exists())
+        self.assertTrue(User.objects.filter(username='amine').exists())
+        # check that an EmailVerificationToken has ben generated for the new user
+        self.assertTrue(EmailVerificationToken.objects.filter(user=User.objects.get(username='amine')).exists())
+        # get the associated token
+        associated_token = EmailVerificationToken.objects.get(user=User.objects.get(username='amine'))
+        # patch the current time to the token expiration date minus 1 second 
+        with patch('django.utils.timezone.now') as mock_now :
+            mock_now.return_value = associated_token.expires_at - timedelta(seconds=1)
+            target_url = reverse('verify_email')
+            response = self.client.get(target_url)
+            self.assertEqual(response.status_code, 200)
+            self.assertFalse(response.context['is_verified'])
+            self.assertEqual(response.context['email_address'], 'amine@gmail.com')
+            self.assertFalse(response.context['can_get_new_token'])
+            self.assertTrue(response.context['got_token_during_registration'])
+            # check for the response content
+            self.assertContains(response, 'a valid Verification Token has been sent to :')
+            self.assertContains(response, 'amine@gmail.com')
 
