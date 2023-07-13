@@ -764,3 +764,41 @@ class VerifyEmailViewTests(TestCase) :
                 'Glad to have you amine, Enjoy our plateform',
                 'Token expired'
             ])
+    
+    # test with an EmailVerificationToken appended to url which is still valid 
+    def test_verify_email_with_token_query_parameter_still_valid(self) :
+        # register a user 
+        user_data = {
+            'username' : 'amine',
+            'email' : 'test@gmail.com',
+            'password1' : 'af507890',
+            'password2' : 'af507890'
+        }
+        registration_url = reverse('register')
+        self.client.post(registration_url, user_data)
+        self.assertTrue(User.objects.filter(username='amine').exists())
+        self.assertTrue(EmailVerificationToken.objects.exists())
+        associated_token = EmailVerificationToken.objects.get(user=User.objects.get(username='amine'))
+        token = associated_token.token 
+        self.assertFalse(User.objects.get(username='amine').email_verified)
+        self.assertTrue(User.objects.get(username='amine').is_authenticated)
+        self.client.logout()
+        # reauthenticate the user
+        self.client.login(username='amine', password='af507890')
+        target_url = f"{reverse('verify_email')}?token={token}"
+        # patch the current time to token's expiration date minus 1 second
+        with patch('django.utils.timezone.now') as mock :
+            mock.return_value = associated_token.expires_at - timedelta(seconds=1)
+            response = self.client.get(target_url)
+            self.assertEqual(response.status_code, 302)
+            self.assertRedirects(response, reverse('verify_email'))
+            # check that user's email_verified is now true
+            self.assertTrue(User.objects.get(username='amine').email_verified)
+            # check that the associated token is deleted 
+            self.assertFalse(EmailVerificationToken.objects.filter(token=token).exists())
+            # check for messages 
+            my_messages = list(messages.get_messages(request=response.wsgi_request))
+            self.assertEqual(len(my_messages), 1)
+            message = my_messages[0]
+            self.assertEqual(message.tags, 'success')
+            self.assertEqual(message.message, 'Email verified successefully')
