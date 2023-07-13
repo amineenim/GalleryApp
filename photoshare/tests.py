@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.utils import timezone
 from .forms import CreateUserForm
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from .tokens import EmailVerificationTokenGenerator
+from unittest.mock import patch 
 # Create your tests here.
 # class to test the operation of reset_password view
 class PasswordResetViewTests(TestCase) :
@@ -490,22 +490,6 @@ class RegisterUserViewTests(TestCase) :
     
 # class to test operation of verify_email View 
 class VerifyEmailViewTests(TestCase) :
-    # function that simulates a user who verified his email address
-    def simulate_user_verifying_his_email_address(self) :
-        # register a user , since after registraion the user receives an email to verify his email address
-        user_data = {
-            'username' : 'amine',
-            'email' : 'amine@gmail.com',
-            'password1' : 'test1234',
-            'password2' : 'test1234'
-        }
-        registration_url = reverse('register')
-        self.client.post(registration_url, user_data)
-        # get the token associated with the user 
-        user_token = EmailVerificationToken.objects.get(user=User.objects.get(username='amine')).token
-        verification_url = f"{reverse('verify_email')}?token={user_token}"
-        # simulate verifying the email 
-        self.client.get(verification_url)
         
     # test with unauthenticated user 
     def test_verify_email_with_unauthenticated_user(self) :
@@ -568,4 +552,38 @@ class VerifyEmailViewTests(TestCase) :
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['is_verified'])
         self.assertFalse(response.context['can_get_new_token'])
+    
+    # test with authenticated user with email_verified attribute False and having an Expired email verification token
+    def test_verify_email_with_authenticated_user_who_has_not_yet_verified_his_email_address_and_his_token_expired(self) :
+        # register a user 
+        user_data = user_data = {
+            'username' : 'amine',
+            'email' : 'amine@gmail.com',
+            'password1' : 'af507890',
+            'password2' : 'af507890'
+        }
+        registration_url = reverse('register')
+        self.client.post(registration_url, user_data)
+        # check that the user and an associated EmailVerificationToken have been created
+        self.assertTrue(User.objects.filter(username='amine').exists())
+        self.assertTrue(EmailVerificationToken.objects.filter(user=User.objects.get(username='amine')).exists())
+        associated_token = EmailVerificationToken.objects.get(user=User.objects.get(username='amine'))
+        # path the current time to be the token expires_at value, so we simulate the 1 hour passage
+        # to get an expired token 
+        with patch('django.utils.timezone.now') as mock_now :
+            mock_now.return_value = associated_token.expires_at 
+            target_url = reverse('verify_email')
+            response = self.client.get(target_url)
+            self.assertEqual(response.status_code, 200)
+            self.assertFalse(response.context['is_verified'])
+            self.assertTrue(response.context['can_get_new_token'])
+            self.assertTrue(response.context['got_token_during_registration'])
+            self.assertEqual(response.context['email_address'], 'amine@gmail.com')
+            # check that the expired token has been deleted 
+            self.assertFalse(EmailVerificationToken.objects.filter(user=User.objects.get(username='amine')).exists())
+            self.assertContains(response, 'Your previous token has expired, get new One')
+            self.assertContains(response, 'an Email with a verification Token will be sent to amine@gmail.com')
+            self.assertContains(response, 'Get New One')
+
+
 

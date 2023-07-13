@@ -365,7 +365,7 @@ def verify_email(request) :
             else :
                 if request.user.email_verification_tokens.exists() :
                     user_token_to_check_email = request.user.email_verification_tokens.first()
-                    if user_token_to_check_email.expires_at < timezone.now() :
+                    if user_token_to_check_email.expires_at <= timezone.now() :
                         # delete the expired token
                         user_token_to_check_email.delete()
                         can_get_new_token = True 
