@@ -893,10 +893,73 @@ class VerifyEmailViewTests(TestCase) :
         self.assertFalse(response.context['can_get_new_token'])
         self.assertContains(response, 'a valid Verification Token has been sent to :')
         self.assertContains(response, 'amine@gmail.com')
-        
-        
+    
+    # test with user already having a valid EmailVerificationToken and requesting a new one
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    def test_verify_email_with_post_request_for_user_still_having_a_valid_token_and_requesting_another_one(self) :
+        # register a user, this will create for him a token and mails him 
+        user_data = {
+            'username' : 'amine',
+            'email' : 'test@gmail.com',
+            'password1' : 'af507890',
+            'password2' : 'af507890'
+        }
+        registration_url = reverse('register')
+        self.client.post(registration_url, user_data)
+        # check that a user has been created 
+        self.assertTrue(User.objects.exists())
+        # check that an EmailVerificationToken has been created and associate with the newly registred user
+        self.assertTrue(EmailVerificationToken.objects.exists())
+        self.assertTrue(EmailVerificationToken.objects.filter(user=User.objects.get(username='amine')).exists())
+        # get the associated token 
+        associated_token = EmailVerificationToken.objects.get(user=User.objects.get(username='amine'))
+        token = associated_token.token
+        # check that the user is authenticated and email_verified is false
+        self.assertTrue(User.objects.get(username='amine').is_authenticated)
+        self.assertFalse(User.objects.get(username='amine').email_verified)
+        # check that an email has been sent to newly registred user
+        self.assertEqual(len(mail.outbox), 1)
+        sent_mail = mail.outbox[0]
+        self.assertEqual(sent_mail.subject, 'Email Verification')
+        self.assertEqual(sent_mail.body, '')
+        self.assertEqual(sent_mail.to, ['test@gmail.com'])
+        self.assertEqual(sent_mail.from_email, 'aminemaourid1@gmail.com')
+        expected_html = render_to_string('photoshare/verify_mail.html', 
+                                         {'token' : token})
+        self.assertEqual(sent_mail.alternatives[0][0], expected_html)
+        # build the url to which the user will be redirected 
+        verification_url = f"{reverse('verify_email')}?token={token}"
+        # simulate user clicking the button on the received mail
+        response = self.client.get(verification_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('verify_email'))
+        # check that the user's email is now verified
+        self.assertTrue(User.objects.get(username='amine').email_verified)
+        # check the Token has been deleted
+        self.assertFalse(EmailVerificationToken.objects.filter(user=User.objects.get(username='amine')).exists())
 
+        # send a get request to verify_email view
+        target_url = reverse('verify_email')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['is_verified'])
+        self.assertFalse(response.context['can_get_new_token'])
+        self.assertTrue(response.context['got_token_during_registration'])
+        self.assertContains(response,  'already verified')
 
+        # now that the user's mail is verified , test sending a post request to ask for new EmailVerificationToken
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['email_address'], 'test@gmail.com')
+        self.assertFalse(response.context['can_get_new_token'])
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        message = my_messages[0]
+        self.assertEqual(message.tags, 'info')
+        self.assertEqual(message.message, 'Email address already verified')
+        self.assertContains(response, 'Email address already verified')
+        self.assertContains(response, 'already verified')
+        
 
 
 
