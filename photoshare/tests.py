@@ -12,7 +12,7 @@ from unittest.mock import patch
 from django.template.loader import render_to_string
 from django.core.files.uploadedfile import SimpleUploadedFile
 import os 
-from django.http import Http404
+
 # Create your tests here.
 # class to test the operation of reset_password view
 class PasswordResetViewTests(TestCase) :
@@ -1149,13 +1149,16 @@ class DeletePhotoViewTests(TestCase) :
         self.create_and_authenticate_a_user(is_superuser=False)
         # there's no Photo object, pass 1 as pk for the photo to delete
         target_url = reverse('delete', args=(1,))
-        # check that a 404 is raised when requesting the url with get method
-       
-        self.assertRaises(Http404) 
+        self.assertFalse(Photo.objects.exists())
+        # target the view using get request
         response = self.client.get(target_url)
-        # assert the response's status and template
         self.assertEqual(response.status_code, 404)
         self.assertTemplateUsed(response, 'photoshare/404.html')
+        # using post request
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, 'photoshare/404.html')
+
 
 
 

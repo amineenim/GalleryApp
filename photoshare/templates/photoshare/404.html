@@ -2,14 +2,15 @@
 {% block title %} Not Found {% endblock %}
 {% block content %}
     <div class="h-screen flex justify-center items-center bg-gray-200 rounded-xl">
-        <div class='flex flex-col items-center'>
-            <h2 class='text-lg'>404</h2>
-            <p>
-                Sorry, we couldn't find this page. But don't worry, You can <br/>
-                find plenty of other things on our <a class="underline text-blue" href="{% url 'gallery' %}">Homepage</a>
+        <div class='flex flex-col items-center space-y-4'>
+            <h2 class='text-2xl font-bold underline'>404</h2>
+            <p class='flex flex-col items-center space-y-2'>
+                <p>Sorry, we couldn't find this page. But don't worry, You can <p>
+                <p>find plenty of other things on our <a class="underline text-blue-400" href="{% url 'gallery' %}">Homepage</a></p>
             </p>
-            <div class=''>
-                <i class="fa-solid fa-image fa-xl"></i>
+            <div class='flex items-center'>
+                <h2 class='text-lg font-bold mr-4'>Amine's Gallery</h2>
+                <i class="fa-solid fa-image fa-2xl"></i>
             </div>
         </div>
     </div>
