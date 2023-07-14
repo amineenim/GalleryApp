@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.core import mail
 from django.contrib import messages
 from django.utils import timezone
-from .forms import CreateUserForm
+from .forms import CreateUserForm, PhotoForm
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from unittest.mock import patch 
 from django.template.loader import render_to_string
@@ -1017,6 +1017,33 @@ class VerifyEmailViewTests(TestCase) :
             self.assertEqual(message.message, 'a verification email request was emailed to you, check your email to confirm your email')
             self.assertContains(response, 'a valid Verification Token has been sent to')
             self.assertContains(response, 'a verification email request was emailed to you, check your email to confirm your email')
+
+# class to test the operation of addNew view 
+class AddNewPhotoViewTests(TestCase) :
+    # test with unauthenticated user 
+    def test_add_new_photo_with_unauthenticated_user(self) :
+        target_url = reverse('new')
+        # target by using both get and post requests
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+        # the sent data dictionnary does't matter since the user is authenticated
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
