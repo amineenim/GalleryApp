@@ -1,7 +1,7 @@
 from datetime import timedelta
 from django.test import TestCase, override_settings
 from django.contrib.auth.models import User
-from .models import PasswordResetToken, EmailVerificationToken
+from .models import PasswordResetToken, EmailVerificationToken, Photo, Category
 from django.urls import reverse
 from django.core import mail
 from django.contrib import messages
@@ -10,6 +10,7 @@ from .forms import CreateUserForm, PhotoForm
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from unittest.mock import patch 
 from django.template.loader import render_to_string
+from django.core.files.uploadedfile import SimpleUploadedFile
 # Create your tests here.
 # class to test the operation of reset_password view
 class PasswordResetViewTests(TestCase) :
@@ -1048,6 +1049,39 @@ class AddNewPhotoViewTests(TestCase) :
         self.assertEqual(response.context['form'].initial, form.initial)
         self.assertContains(response, 'Add new Photo')
         self.assertContains(response, 'Save')
+    
+    # test with authenticated user and post request with invalid data 
+    def test_add_new_photo_with_authenticated_user_using_post_request_and_invalid_data(self) :
+        self.create_and_authenticate_a_user()
+        # create a Category object
+        my_category = Category.objects.create(name='sunset')
+        # create a test file as an image 
+        image_file = SimpleUploadedFile('test.jpg', b"content_file", 'image/jpeg')
+        form_data = {
+            'category' : my_category.id,
+            'image' : image_file,
+            'description' : ''
+        }
+        target_url = reverse('new')
+        response = self.client.post(path=target_url, data=form_data)
+        self.assertEqual(response.status_code, 200)
+        form = PhotoForm(form_data)
+        self.assertEqual(response.context['form'].initial, form.initial)
+        # check that the form is invalid
+        self.assertFalse(response.context['form'].is_valid())
+        form_errors = []
+        # typically, the image and description fields arent valid
+        for field in response.context['form'].fields :
+            # check if the field exists in the errors dictionnary
+            if field in response.context['form'].errors :
+                # get errors for each field , which is a list of all errors for the field
+                form_errors.append(response.context['form'].errors[field])
+        # check that all errors are printed 
+        for error_list_for_field in form_errors :
+            for error in error_list_for_field :
+                self.assertContains(response, error)
+
+
         
 
 
