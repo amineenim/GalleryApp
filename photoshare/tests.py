@@ -949,6 +949,80 @@ class VerifyEmailViewTests(TestCase) :
         self.assertEqual(message.tags, 'warning')
         self.assertEqual(message.message, "can't get a new Token, check your email")
         self.assertContains(response, "check your email")
+    
+
+    # test with post request for user who already has an EmailVerificationToken but it's expired
+    @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+    def test_verify_email_with_post_request_for_user_with_email_verification_token_expired(self) :
+        # register a user 
+        user_data = {
+            'username' : 'amine',
+            'email' : 'test@gmail.com',
+            'password1' : 'af507890',
+            'password2' : 'af507890'
+        }
+        registration_url = reverse('register')
+        self.client.post(registration_url, user_data)
+        # check that the user has been created 
+        self.assertTrue(User.objects.exists())
+        # check that an EmailVerificationToken is associated to this user
+        self.assertTrue(EmailVerificationToken.objects.filter(user=User.objects.get(username='amine')).exists())
+        # check that a mail has been sent to the user 
+        self.assertEqual(len(mail.outbox), 1)
+        sent_mail = mail.outbox[0]
+        self.assertEqual(sent_mail.to, ['test@gmail.com'])
+        self.assertEqual(sent_mail.subject, 'Email Verification')
+        # get the associated token
+        associated_token = EmailVerificationToken.objects.get(user=User.objects.get(username='amine'))
+        token = associated_token.token
+        # patch the current moment to the token expiration date
+        # get request for verify_email view 
+        with patch('django.utils.timezone.now') as mock :
+            mock.return_value = associated_token.expires_at
+            target_url = reverse('verify_email')
+            # send a get request 
+            response = self.client.get(target_url)
+            self.assertEqual(response.status_code, 200)
+            self.assertFalse(response.context['is_verified'])
+            self.assertTrue(response.context['can_get_new_token'])
+            self.assertEqual(response.context['email_address'], 'test@gmail.com')
+            self.assertContains(response, 'Your previous token has expired, get new One')
+            # check that the Token has been deleted 
+            self.assertFalse(EmailVerificationToken.objects.exists())
+        # post request for verify_email view
+        with patch('django.utils.timezone.now') as mock :
+            mock.return_value = associated_token.expires_at 
+            target_url = reverse('verify_email')
+            # send a post request to get a new token 
+            response = self.client.post(target_url, {})
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.context['email_address'], 'test@gmail.com')
+            self.assertEqual(response.context['can_get_new_token'], False)
+            # check that the old token has been deleted 
+            self.assertFalse(EmailVerificationToken.objects.filter(token=token).exists())
+            self.assertEqual(EmailVerificationToken.objects.filter(user=User.objects.get(username='amine')).count(), 1)
+            # check that an email has been sent to user 
+            self.assertEqual(len(mail.outbox), 2)
+            second_mail = mail.outbox[1]
+            self.assertEqual(second_mail.subject, 'Email Verification')
+            self.assertEqual(second_mail.to, ['test@gmail.com'])
+            self.assertEqual(second_mail.body, '')
+            self.assertEqual(second_mail.alternatives[0][0], render_to_string('photoshare/verify_mail.html', {'token' : EmailVerificationToken.objects.get(user=User.objects.get(username='amine')).token}))
+            # check that a new Token has been created and mailed to the user 
+            self.assertTrue(EmailVerificationToken.objects.filter(user=User.objects.get(username='amine')).exists())
+            my_messages = list(messages.get_messages(response.wsgi_request))
+            self.assertEqual(len(my_messages), 1)
+            message = my_messages[0]
+            self.assertEqual(message.tags, 'success')
+            self.assertEqual(message.message, 'a verification email request was emailed to you, check your email to confirm your email')
+            self.assertContains(response, 'a valid Verification Token has been sent to')
+            self.assertContains(response, 'a verification email request was emailed to you, check your email to confirm your email')
+
+
+
+
+
+
 
 
 
