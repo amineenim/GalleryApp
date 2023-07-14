@@ -11,6 +11,7 @@ from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from unittest.mock import patch 
 from django.template.loader import render_to_string
 from django.core.files.uploadedfile import SimpleUploadedFile
+import os 
 # Create your tests here.
 # class to test the operation of reset_password view
 class PasswordResetViewTests(TestCase) :
@@ -1088,10 +1089,35 @@ class AddNewPhotoViewTests(TestCase) :
         for error in response.context['form'].errors['image'] :
             self.assertContains(response, error)
 
-
-
+    # test with authenticated user using post request and valid data for the form
+    def test_add_new_photo_with_authenticated_user_using_post_request_and_valid_data(self) :
+        self.create_and_authenticate_a_user()
+        # create a category Object
+        mycategory = Category.objects.create(name='test')
+        # create an image file 
+        # get path to the test image file
+        image_path = os.path.join(os.path.dirname(__file__), '../static/test/sunset.jpeg')
+        # read the image_file and get it's binary data
+        with open(image_path, 'rb') as f :
+            image_data = f.read()
+        image_file = SimpleUploadedFile('sunset.jpeg', image_data, 'image/jpeg')
+        description = 'nice image for test'
+        target_url = reverse('new')
+        response = self.client.post(target_url, {
+            'category' : mycategory.id,
+            'image' : image_file,
+            'description' : description})
         
-
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        message = my_messages[0]
+        self.assertEqual(message.tags, 'success')
+        self.assertEqual(message.message, "Photo added with success ")
+        # check that a Photo object has been created
+        self.assertTrue(Photo.objects.exists())
+        self.assertTrue(Photo.objects.filter(category=mycategory).exists())
 
 
 
