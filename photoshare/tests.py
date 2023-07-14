@@ -1020,6 +1020,11 @@ class VerifyEmailViewTests(TestCase) :
 
 # class to test the operation of addNew view 
 class AddNewPhotoViewTests(TestCase) :
+    # function that creates and authenticates a user
+    def create_and_authenticate_a_user(self) :
+        User.objects.create_user(username='amine', password='1234')
+        self.client.login(username='amine', password='1234')
+
     # test with unauthenticated user 
     def test_add_new_photo_with_unauthenticated_user(self) :
         target_url = reverse('new')
@@ -1031,8 +1036,19 @@ class AddNewPhotoViewTests(TestCase) :
         response = self.client.post(target_url, {})
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
-
-
+    
+    # test with authenticated user and get request
+    def test_add_new_photo_with_authenticated_user_using_get_request(self) :
+        self.create_and_authenticate_a_user()
+        target_url = reverse('new')
+        form = PhotoForm()
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        # check the form passed in context is empty 
+        self.assertEqual(response.context['form'].initial, form.initial)
+        self.assertContains(response, 'Add new Photo')
+        self.assertContains(response, 'Save')
+        
 
 
 
