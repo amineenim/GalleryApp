@@ -211,7 +211,6 @@ def editPhoto(request, pk) :
 
 # view that handles deleting a given photo resource
 @login_required
-
 def deletePhoto(request, pk) :
     photo_to_delete = get_object_or_404(Photo, pk=pk)
     # check if the user owns the photo 

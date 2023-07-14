@@ -1119,9 +1119,20 @@ class AddNewPhotoViewTests(TestCase) :
         self.assertTrue(Photo.objects.exists())
         self.assertTrue(Photo.objects.filter(category=mycategory).exists())
 
-
-
-
+# class to test the operation of delete photo view 
+class DeletePhotoViewTests(TestCase) :
+    # test with unauthenticated user 
+    def test_dalete_photo_with_unauthenticated_user(self) :
+        # build the target url and pass 1 as pk for photo to delete 
+        target_url = reverse('delete', args=(1,))
+        # test using get request
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+        # using POST request
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
 
 
 
