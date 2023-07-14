@@ -1080,6 +1080,14 @@ class AddNewPhotoViewTests(TestCase) :
         for error_list_for_field in form_errors :
             for error in error_list_for_field :
                 self.assertContains(response, error)
+        # i on purpose submitted the 'description' field empty while he's required
+        # same thing the 'image' field doesn't contain a valid image 
+        # i know that those fields will have errors, check the errors are printed
+        for error in response.context['form'].errors['description'] :
+            self.assertContains(response, error)
+        for error in response.context['form'].errors['image'] :
+            self.assertContains(response, error)
+
 
 
         
