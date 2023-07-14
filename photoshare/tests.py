@@ -12,6 +12,7 @@ from unittest.mock import patch
 from django.template.loader import render_to_string
 from django.core.files.uploadedfile import SimpleUploadedFile
 import os 
+from django.http import Http404
 # Create your tests here.
 # class to test the operation of reset_password view
 class PasswordResetViewTests(TestCase) :
@@ -1121,6 +1122,14 @@ class AddNewPhotoViewTests(TestCase) :
 
 # class to test the operation of delete photo view 
 class DeletePhotoViewTests(TestCase) :
+    def create_and_authenticate_a_user(self, is_superuser) :
+        if is_superuser :
+            User.objects.create_superuser(username='amine_super', password='12345')
+            self.client.login(username='amine_super', password='12345')
+        else :
+            User.objects.create_user(username='amine', password='1234')
+            self.client.login(username='amine', password='1234')
+
     # test with unauthenticated user 
     def test_dalete_photo_with_unauthenticated_user(self) :
         # build the target url and pass 1 as pk for photo to delete 
@@ -1133,6 +1142,20 @@ class DeletePhotoViewTests(TestCase) :
         response = self.client.post(target_url, {})
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+    
+    # test with authenticated user and unexisting Photo 
+    def test_delete_photo_with_authenticated_user_for_unexisting_photo(self) :
+        # create a user and authenticate him 
+        self.create_and_authenticate_a_user(is_superuser=False)
+        # there's no Photo object, pass 1 as pk for the photo to delete
+        target_url = reverse('delete', args=(1,))
+        # check that a 404 is raised when requesting the url with get method
+       
+        self.assertRaises(Http404) 
+        response = self.client.get(target_url)
+        # assert the response's status and template
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, 'photoshare/404.html')
 
 
 

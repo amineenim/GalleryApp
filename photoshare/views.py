@@ -479,6 +479,6 @@ def verify_email(request) :
             })
 
 
-
-
-       
+# view that handles rendering 404 page
+def custom_404_view(request, exception) :
+    return render(request, 'photoshare/404.html', status=404)
