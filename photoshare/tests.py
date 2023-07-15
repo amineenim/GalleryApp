@@ -1196,6 +1196,59 @@ class DeletePhotoViewTests(TestCase) :
         message = my_messages[0]
         self.assertEqual(message.tags, 'warning')
         self.assertEqual(message.message, 'Unauthorized action')
+        # check that the Photo object still exists
+        self.assertTrue(Photo.objects.filter(created_by=user).exists())
+    
+    # test with superuser authenticated trying to delete a photo that belongs to an other user
+    def test_delete_photo_with_authenticated_user_deleting_a_photo_not_his(self) :
+        # create a regular user and authenticate him
+        user = self.create_and_authenticate_a_user(is_superuser=False, username='anas')
+        # create a Photo object asssociated to the user 
+        image_path = os.path.join(os.path.dirname(__file__), '../static/test/sunset.jpeg')
+        with open(image_path, 'rb') as f :
+            image_data = f.read()
+        description = 'this photo belongs to anas'
+        Photo.objects.create(
+            category = Category.objects.create(name='sunset'),
+            image = SimpleUploadedFile('sunset.jpeg', image_data, 'image/jpeg'),
+            description = description,
+            created_by = user
+        )
+        # check that a Photo object has been created and it's associated to anas
+        self.assertTrue(Photo.objects.filter(created_by=user).exists())
+        # logout the user 'anas'
+        self.client.logout()
+        # create and authenticate a superuser
+        superuser = self.create_and_authenticate_a_user(is_superuser=True, username='amine')
+        # the url to delete the Photo 
+        target_url = reverse('delete', args=(Photo.objects.get(created_by=user).id,))
+        # send a post request to delete 
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
+        my_messages = list(messages.get_messages(request=response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        message = my_messages[0]
+        self.assertEqual(message.tags, 'success')
+        self.assertEqual(message.message, "Photo deleted with success !")
+        # check that the Photo object has been deleted
+        self.assertFalse(Photo.objects.exists())
+        self.assertFalse(Photo.objects.filter(created_by=user).exists())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 
 
 
