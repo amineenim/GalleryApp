@@ -221,6 +221,7 @@ def deletePhoto(request, pk) :
             return redirect('gallery')
         return render(request, 'photoshare/delete.html', {"photo" : photo_to_delete})
     else :
+        messages.warning(request, 'Unauthorized action')
         return redirect(reverse('detail_photo', args=(photo_to_delete.id,)))
 
 

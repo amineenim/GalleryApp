@@ -1122,14 +1122,16 @@ class AddNewPhotoViewTests(TestCase) :
 
 # class to test the operation of delete photo view 
 class DeletePhotoViewTests(TestCase) :
-    def create_and_authenticate_a_user(self, is_superuser) :
+    def create_and_authenticate_a_user(self, is_superuser, username) :
         if is_superuser :
-            User.objects.create_superuser(username='amine_super', password='12345')
+            user = User.objects.create_superuser(username='amine_super', password='12345')
             self.client.login(username='amine_super', password='12345')
-        else :
-            User.objects.create_user(username='amine', password='1234')
-            self.client.login(username='amine', password='1234')
-
+            return user 
+        
+        user = User.objects.create_user(username=username, password='1234')
+        self.client.login(username=username, password='1234')
+        return user 
+    
     # test with unauthenticated user 
     def test_dalete_photo_with_unauthenticated_user(self) :
         # build the target url and pass 1 as pk for photo to delete 
@@ -1146,7 +1148,7 @@ class DeletePhotoViewTests(TestCase) :
     # test with authenticated user and unexisting Photo 
     def test_delete_photo_with_authenticated_user_for_unexisting_photo(self) :
         # create a user and authenticate him 
-        self.create_and_authenticate_a_user(is_superuser=False)
+        self.create_and_authenticate_a_user(is_superuser=False, username='amine')
         # there's no Photo object, pass 1 as pk for the photo to delete
         target_url = reverse('delete', args=(1,))
         self.assertFalse(Photo.objects.exists())
@@ -1158,6 +1160,43 @@ class DeletePhotoViewTests(TestCase) :
         response = self.client.post(target_url, {})
         self.assertEqual(response.status_code, 404)
         self.assertTemplateUsed(response, 'photoshare/404.html')
+    
+    # test with authenticated user trying to delete a Photo not his
+    def test_delete_photo_with_authenticated_user_trying_to_delete_a_photo_not_his(self) :
+        # create a regular user and authenticate him
+        user = self.create_and_authenticate_a_user(is_superuser=False, username='amine')
+        # create a category object to which the photo belongs
+        my_category = Category.objects.create(name='sunset')
+        # create a Photo object associated to the user 
+        image_path = os.path.join(os.path.dirname(__file__),'../static/test/sunset.jpeg')    
+        # read the image file and get binary data
+        with open(image_path, 'rb') as f :
+            image_data = f.read()
+        image_file = SimpleUploadedFile('sunset.jpeg', image_data, 'image/jpeg')
+        description = 'test image'
+        Photo.objects.create(category=my_category, 
+                            description=description, 
+                            image=image_file,
+                            created_by = user)
+        self.client.logout()
+        # check that a Photo object has been created 
+        self.assertTrue(Photo.objects.exists())
+        self.assertTrue(Photo.objects.filter(created_by=user).exists())
+        self.assertEqual(Photo.objects.get(created_by=user).description, description)
+        #  create an other regular user
+        user2 = self.create_and_authenticate_a_user(is_superuser=False, username='anas')
+        # build the url to delete the Photo created 
+        target_url = reverse('delete', args=(Photo.objects.get(created_by=user).id,))
+        # send a post request
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('detail_photo', args=(Photo.objects.get(created_by=user).id,)))
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        message = my_messages[0]
+        self.assertEqual(message.tags, 'warning')
+        self.assertEqual(message.message, 'Unauthorized action')
+
 
 
 
