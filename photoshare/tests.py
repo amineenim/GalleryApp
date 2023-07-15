@@ -1445,13 +1445,29 @@ class EditPhotoViewTests(TestCase) :
 
 # class to test operation of viewPhoto View 
 class ViewPhotoViewTests(TestCase) :
+    # function that creates and renders a user 
+    def create_user(self) :
+        user = User.objects.create_user(username='amine', password='1234')
+        self.client.login(username='amine', password='1234')
+        return user 
+    
     # test with unauthenticated user 
-    def test_view_photo_with_unauthenticated_user(self) :
+    def test_viewPhoto_view_with_unauthenticated_user(self) :
         target_url = reverse('detail_photo', args=(1,))
         response = self.client.get(target_url)
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
         
+    # test with authenticated user requesting view_photo for unexisting photo Object
+    def test_viewphoto_view_with_authenticated_user_for_unexisting_photo(self) :
+        # create and authenticate a user
+        self.create_user()
+        # build the url to view a Photo Object that doesn't exist
+        target_url = reverse('detail_photo', args=(1,))
+        response = self.client.get(target_url)
+        # check for response status , and the template user to render response
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, 'photoshare/404.html')
 
 
 
