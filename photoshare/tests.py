@@ -1234,8 +1234,33 @@ class DeletePhotoViewTests(TestCase) :
         # check that the Photo object has been deleted
         self.assertFalse(Photo.objects.exists())
         self.assertFalse(Photo.objects.filter(created_by=user).exists())
+    
 
-
+    # test with authenticated user deleting a photo that belongs to him
+    def test_delete_photo_with_authenticated_user_deleting_his_photo(self) :
+        # create a regular user and authenticate him
+        user = self.create_and_authenticate_a_user(is_superuser=False, username='anas')
+        # create a Photo object associated to the user 
+        image_path = os.path.join(os.path.dirname(__file__), '../static/test/sunset.jpeg')
+        with open(image_path, 'rb') as f :
+            image_data = f.read()
+        category = Category.objects.create(name='test_category')
+        description = 'this is a test'
+        Photo.objects.create(category = category,
+                             image = SimpleUploadedFile('sunset.jpeg', image_data, 'image/jpeg'),
+                             description = description,
+                             created_by = user)
+        # check that an object Photo is created for the user 
+        self.assertTrue(user.photos.exists())
+        self.assertEqual(user.photos.all().count(), 1)
+        # build the url to target for delete
+        target_url = reverse('delete', args=(Photo.objects.get(created_by=user).id,))
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('gallery'))
+        # check that photo has been deleted
+        self.assertFalse(Photo.objects.exists())
+        self.assertFalse(user.photos.exists())
 
 
 
