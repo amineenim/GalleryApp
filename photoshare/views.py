@@ -206,6 +206,7 @@ def editPhoto(request, pk) :
             
         return render(request, 'photoshare/edit.html', {'photo' : photo_to_edit, 'form' : form})
     else : 
+        messages.warning(request, 'Unauthorized action')
         return redirect(reverse('detail_photo',args=(photo_to_edit.id,)))
     
 

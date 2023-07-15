@@ -1317,8 +1317,33 @@ class EditPhotoViewTests(TestCase) :
         response = self.client.post(target_url, {})
         self.assertEqual(response.status_code, 404)
         self.assertTemplateUsed(response, 'photoshare/404.html')
-
-
+    
+    # test with authenticated user not owner of the photo he tries to edit
+    def test_edit_photo_view_with_authenticated_user_attempting_to_edit_a_photo_not_his(self) :
+        # create a test photo Object, a user and authenticate him
+        test_photo = self.create_test_photo(is_superuser= False, username='amine')
+        # logout the currently authenticated user 
+        self.client.logout()
+        # create a new user and authenticate him
+        self.create_and_authenticate_user(is_superuser=False, username='anas')
+        # build the url to target 
+        target_url = reverse('edit', args=(test_photo.id,))
+        # target the url to edit the created image by user 'amine'
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('detail_photo', args=(test_photo.id,)))
+        my_messages = list(messages.get_messages(request=response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        self.assertEqual(my_messages[0].tags, 'warning')
+        self.assertEqual(my_messages[0].message, 'Unauthorized action')
+        # same thing using post request
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('detail_photo', args=(test_photo.id,)))
+        my_messages = list(messages.get_messages(request=response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        self.assertEqual(my_messages[0].tags, 'warning')
+        self.assertEqual(my_messages[0].message, 'Unauthorized action')
 
 
 
