@@ -7,6 +7,7 @@ from django.core import mail
 from django.contrib import messages
 from django.utils import timezone
 from .forms import CreateUserForm, PhotoForm, EditPhotoForm
+from likes.forms import CommentCreateForm
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from unittest.mock import patch 
 from django.template.loader import render_to_string
@@ -1468,6 +1469,32 @@ class ViewPhotoViewTests(TestCase) :
         # check for response status , and the template user to render response
         self.assertEqual(response.status_code, 404)
         self.assertTemplateUsed(response, 'photoshare/404.html')
+    
+    # test with authenticated user requesting the view_photo view with pk corresponding to existing Photo object
+    def test_viewPhoto_view_with_authenticated_user_for_existing_photo(self) :
+        # create a user and authenticate him
+        user_owner_of_photo = self.create_user()
+        # get the path for the test image
+        image_path = os.path.join(os.path.dirname(__file__), '../static/test/sunset.jpeg')
+        # read the image file and get binary data
+        with open(image_path, 'rb') as f :
+            image_bytes = f.read()
+        # create a Category object to which the Photo will be associated
+        category = Category.objects.create(name='test')
+        photo = Photo.objects.create(
+            category = category,
+            image = SimpleUploadedFile('sunset.jpeg', image_bytes, 'image/jpeg'),
+            description = 'this photo belongs to amine',
+            created_by = user_owner_of_photo
+        )
+        # url to view the photo just created detail
+        target_url = reverse('detail_photo', args=(photo.id,))
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['is_user_likes'])
+        self.assertEqual(response.context['photo'], photo)
+        form = CommentCreateForm()
+        self.assertEqual(response.context['form'].initial, form.initial)
 
 
 
