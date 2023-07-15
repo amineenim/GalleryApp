@@ -1262,6 +1262,31 @@ class DeletePhotoViewTests(TestCase) :
         self.assertFalse(Photo.objects.exists())
         self.assertFalse(user.photos.exists())
 
+# class to test the operation of editPhoto View 
+class EditPhotoViewTests(TestCase) :
+    # function that creates a user or a superuser, authenticate and renders him
+    def create_and_authenticate_user(self, is_superuser, username) :
+        if is_superuser :
+            user = User.objects.create_superuser(username=username, password='1234')
+            self.client.login(username=username, password='1234')
+            return user 
+        user = User.objects.create_user(username=username, password='enseirb')
+        self.client.login(username=username, password='enseirb')
+        return user 
+    
+    # test editPhoto with unauthenticated user
+    def test_edit_photo_with_unauthenticated_user(self) :
+        # build the target url 
+        target_url = reverse('edit', args=(1,))
+        # get request
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+        # post request
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+        
 
 
 
