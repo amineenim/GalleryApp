@@ -1274,6 +1274,21 @@ class EditPhotoViewTests(TestCase) :
         self.client.login(username=username, password='enseirb')
         return user 
     
+    def create_test_photo(self, is_superuser, username) :
+        category = Category.objects.create(name='test')
+        image_path = os.path.join(os.path.dirname(__file__), '../static/test/sunset.jpeg')
+        with open(image_path, 'rb') as f :
+            image_data = f.read()
+        description = 'test photo'
+        user = self.create_and_authenticate_user(is_superuser= is_superuser, username= username)
+        photo = Photo.objects.create(
+            category = category,
+            image = SimpleUploadedFile('sunset.jpeg', image_data, 'image/jpeg'),
+            description = description,
+            created_by = user
+        )
+        return photo
+    
     # test editPhoto with unauthenticated user
     def test_edit_photo_with_unauthenticated_user(self) :
         # build the target url 
@@ -1287,6 +1302,22 @@ class EditPhotoViewTests(TestCase) :
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
         
+    # test editPhoto with authenticated user and unexisting photo
+    def test_edit_photo_with_authenticated_user_and_unexisting_photo(self) :
+        # create a user and authenticate him
+        self.create_and_authenticate_user(is_superuser=False, username='amine')
+        # build the url to edit a photo
+        target_url = reverse('edit', args=(1,))
+        # get request
+        response = self.client.get(target_url)
+        # check for response status and used template
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, 'photoshare/404.html')
+        # post request
+        response = self.client.post(target_url, {})
+        self.assertEqual(response.status_code, 404)
+        self.assertTemplateUsed(response, 'photoshare/404.html')
+
 
 
 
