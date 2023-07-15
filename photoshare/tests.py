@@ -1360,6 +1360,32 @@ class EditPhotoViewTests(TestCase) :
         self.assertEqual(response.context['form'].initial, form.initial)
         self.assertIsInstance(response.context['form'], EditPhotoForm)
         self.assertContains(response, 'Edit Photo')
+        self.assertContains(response, 'test photo')
+    
+    # test with authenticated user targeting the view using post request with a photo that belongs to him 
+    def test_edit_photo_view_with_authenticated_user_using_post_request_and_invalid_data_for_the_form(self) :
+        # create a test_photo , user and authenticate him
+        test_photo = self.create_test_photo(is_superuser= False, username='amine')
+        target_url = reverse('edit', args=(test_photo.id,))
+        # get the page displating the form to edit the photo
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['photo'], test_photo)
+        form = EditPhotoForm(instance=test_photo)
+        # check the initial data for the form when it was instantiated
+        self.assertEqual(response.context['form'].initial, form.initial)
+        # simulate updating the photo instance with an empty description field
+        response = self.client.post(target_url, {'description' : ''})
+        self.assertEqual(response.status_code, 200)
+        # check that the form is invalid 
+        self.assertFalse(response.context['form'].is_valid())
+        # check that there's an error list for 'description' field of the form context variable
+        self.assertIn('description', response.context['form'].errors)
+        # check that the corresponding error is displayed
+        for error in response.context['form'].errors['description'] :
+            self.assertContains(response, error)
+        self.assertContains(response, 'Edit Photo')
+
 
 
 
