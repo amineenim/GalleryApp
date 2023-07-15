@@ -1385,6 +1385,28 @@ class EditPhotoViewTests(TestCase) :
         for error in response.context['form'].errors['description'] :
             self.assertContains(response, error)
         self.assertContains(response, 'Edit Photo')
+    
+    # test with authenticated user targeting the view using post request to edit a photo he owns with valid data
+    def test_edit_photo_view_with_authenticated_user_using_post_request_and_valid_data_for_the_form(self) :
+        # create a test_photo, user and authenticate him
+        test_photo = self.create_test_photo(is_superuser= False, username= 'amine')
+        target_url = reverse('edit', args=(test_photo.id,))
+        response = self.client.post(target_url, {'description' : 'this is modified description'})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('detail_photo', args=(test_photo.id,)))
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        message = my_messages[0]
+        self.assertEqual(message.tags, 'success')
+        self.assertEqual(message.message,"Photo Modified with success !")
+        # check that the Photo object has been updated 
+        self.assertEqual(Photo.objects.get(created_by=User.objects.get(username='amine')).description, 'this is modified description')
+
+
+
+
+
+
 
 
 
