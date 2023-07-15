@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.utils import timezone
 from .forms import CreateUserForm, PhotoForm, EditPhotoForm
 from likes.forms import CommentCreateForm
+from likes.models import Like
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from unittest.mock import patch 
 from django.template.loader import render_to_string
@@ -1495,6 +1496,50 @@ class ViewPhotoViewTests(TestCase) :
         self.assertEqual(response.context['photo'], photo)
         form = CommentCreateForm()
         self.assertEqual(response.context['form'].initial, form.initial)
+
+    # test with authenticated user viewing a photo not his, but that he already likes
+    def test_viewPhoto_view_with_authenticated_user_and_a_photo_not_his_that_he_liked(self) :
+        # create a user and authenticate him , and a test_photo that belongs to him
+        user_owner_of_photo = self.create_user()
+        image_path = os.path.join(os.path.dirname(__file__), '../static/test/sunset.jpeg')
+        with open(image_path, 'rb') as f :
+            image_bytes = f.read()
+        category = Category.objects.create(name='test')
+        description = 'this photo belongs to amine'
+        photo = Photo.objects.create(
+            category = category,
+            image = SimpleUploadedFile('sunset.jpeg', image_bytes, 'image/jpeg'),
+            description = description,
+            created_by = user_owner_of_photo
+        )
+        # create a new user that likes this photo
+        user_who_liked_photo = User.objects.create_user(username='anas', password='7895')
+        # create the like object
+        Like.objects.create(photo=photo, created_by=user_who_liked_photo)
+        # build the url to view photo detail
+        target_url = reverse('detail_photo', args=(photo.id,))
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['photo'], photo)
+        self.assertFalse(response.context['is_user_likes'])
+        form = CommentCreateForm()
+        self.assertEqual(response.context['form'].initial, form.initial)
+        # assert the number of likes
+        self.assertContains(response, '1')
+        self.assertContains(response, 'No comments for the moment')
+        # logout the user owner of photo
+        self.client.logout()
+        # login the user who liked the photo 
+        self.client.login(username='anas', password='7895')
+        self.assertTrue(user_who_liked_photo.is_authenticated)
+        # target the url to view the photo
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['form'].initial, form.initial)
+        self.assertEqual(response.context['photo'], photo)
+        self.assertTrue(response.context['is_user_likes'])
+        
+
 
 
 
