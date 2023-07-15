@@ -1443,8 +1443,15 @@ class EditPhotoViewTests(TestCase) :
         # check that the Photo object has been updated
         self.assertEqual(Photo.objects.get(created_by=User.objects.get(username='amine')).description, 'modified by superuser')
 
-
-
+# class to test operation of viewPhoto View 
+class ViewPhotoViewTests(TestCase) :
+    # test with unauthenticated user 
+    def test_view_photo_with_unauthenticated_user(self) :
+        target_url = reverse('detail_photo', args=(1,))
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+        
 
 
 
