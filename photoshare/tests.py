@@ -1422,8 +1422,26 @@ class EditPhotoViewTests(TestCase) :
         self.assertContains(response, 'Edit Photo')
         self.assertContains(response, 'test photo')
         self.assertContains(response, 'Save changes')
-
-
+    
+    # test with superuser editing another user's photo using post request
+    def test_edit_photo_view_with_superuser_trying_to_edit_another_user_photo_using_post_request(self) :
+        # create a test_photo, a user and authenticate him
+        test_photo = self.create_test_photo(is_superuser= False, username='amine')
+        # logout the user
+        self.client.logout()
+        # create a superuser and authenticate him
+        self.create_and_authenticate_user(is_superuser=True, username='anas')
+        target_url = reverse('edit', args=(test_photo.id,))
+        response = self.client.post(target_url, {'description' : 'modified by superuser'})
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('detail_photo', args=(test_photo.id,)))
+        my_messages = list(messages.get_messages(response.wsgi_request))
+        self.assertEqual(len(my_messages), 1)
+        message = my_messages[0]
+        self.assertEqual(message.tags, 'success')
+        self.assertEqual(message.message, "Photo Modified with success !")
+        # check that the Photo object has been updated
+        self.assertEqual(Photo.objects.get(created_by=User.objects.get(username='amine')).description, 'modified by superuser')
 
 
 
