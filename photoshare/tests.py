@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.core import mail
 from django.contrib import messages
 from django.utils import timezone
-from .forms import CreateUserForm, PhotoForm
+from .forms import CreateUserForm, PhotoForm, EditPhotoForm
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from unittest.mock import patch 
 from django.template.loader import render_to_string
@@ -1344,6 +1344,29 @@ class EditPhotoViewTests(TestCase) :
         self.assertEqual(len(my_messages), 1)
         self.assertEqual(my_messages[0].tags, 'warning')
         self.assertEqual(my_messages[0].message, 'Unauthorized action')
+    
+    # test with authenticated user requesting editPhoto view with a photo that bwlongs to him using get request
+    def test_edit_photo_view_with_authenticated_user_using_get_request_for_a_picture_that_belongs_to_him(self) :
+        # create a test_photo , a user and authenticate him
+        test_photo = self.create_test_photo(is_superuser= False, username='amine')
+        # build the url to edit the test_photo
+        target_url = reverse('edit', args=(test_photo.id,))
+        # get request
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['photo'], test_photo)
+        form = EditPhotoForm(instance=test_photo)
+        # check the dict of initial data for the form context variable 
+        self.assertEqual(response.context['form'].initial, form.initial)
+        self.assertIsInstance(response.context['form'], EditPhotoForm)
+        self.assertContains(response, 'Edit Photo')
+
+
+
+
+
+
+
 
 
 
