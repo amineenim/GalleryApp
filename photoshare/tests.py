@@ -1541,12 +1541,84 @@ class ViewPhotoViewTests(TestCase) :
         
 # class to test operation of gallery view 
 class GalleryViewTests(TestCase) :
+    # function that creates a user 
+    def create_user(self, username, password) :
+        return User.objects.create_user(username=username, password=password)
+    
+    # function that creates a photo Object for a user 
+    def create_photo_for_user(self, description, category, username, password) :
+        # create the caregory to which the photo belongs if it already doesn't exist
+        if Category.objects.filter(name=category).exists() :
+            category = Category.objects.get(name=category)
+        else :
+            category = Category.objects.create(name=category)
+        image_path = os.path.join(os.path.dirname(__file__), '../static/test/sunset.jpeg')
+        with open(image_path, 'rb') as f :
+            image_bytes = f.read()
+        image = SimpleUploadedFile('sunset.jpeg', image_bytes, 'image/jpeg')
+        # check if the user doesn't exist already
+        if User.objects.filter(username=username).exists() :
+            created_by = User.objects.get(username=username)
+        else :
+            created_by = self.create_user(username=username, password=password)
+        Photo.objects.create(
+            category = category,
+            image = image,
+            description = description,
+            created_by = created_by
+        )
+
+    # start of tests
     # test with unauthenticated user 
     def test_gallery_view_with_unauthenticated_user(self) :
         target_url = reverse('gallery')
         response = self.client.get(target_url)
         self.assertEqual(response.status_code ,302)
         self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
+    
+    # test with authenticated user having no notifications related to his photos, or friendship
+    def test_gallery_view_with_authenticated_user_with_no_notifications(self) :
+        # since this view corresponds to home page it displays all photos
+        # inclunding those belonging to other users , it has pagination with 6 elements per page
+        
+        # create 4 photos for user1 called 'amine' belonging to two different categories
+        self.create_photo_for_user('test photo one', 'sunset', 'amine', '1234')
+        self.create_photo_for_user('test photo two', 'sunset', 'amine', '1234')
+        self.create_photo_for_user('test photo three', 'sunrise', 'amine', '1234')
+        self.create_photo_for_user('test photo four', 'sunrise', 'amine', '1234')
+        # create 2 photos for user2 called 'anas' with 2 photos in sunset category and 1 in food category
+        self.create_photo_for_user('test photo five', 'sunset', 'anas', 'enseirb')
+        self.create_photo_for_user('test photo six', 'food', 'anas', 'enseirb')
+        # url to target
+        target_url = reverse('gallery')
+        # authenticate user1 'amine'
+        self.client.login(username='amine', password='1234')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        # check for response context variables, first the categories
+        self.assertQuerysetEqual(response.context['categories'], Category.objects.all())
+        self.assertCountEqual([cat.name for cat in response.context['categories']], ['sunset', 'sunrise', 'food'])
+        # check for photos
+        self.assertQuerysetEqual(response.context['photos'], Photo.objects.all())
+        self.assertEqual(len(response.context['photos']), 6)
+        # check for notifications related to photos
+        self.assertEqual(response.context['notifications'], [])
+        # check for notifications for friendship
+        self.assertQuerysetEqual(response.context['friendship_notifications'], [])
+        # check for number of unread messages
+        self.assertEqual(response.context['unread_messages'], 0)
+        # check for conversations having unread messages
+        self.assertQuerysetEqual(response.context['conversations_with_number_of_unread_messages'], [])
+        # check that the three existing categories are displayed
+        self.assertContains(response, 'sunset')
+        self.assertContains(response, 'sunrise')
+        self.assertContains(response, 'food')
+        # check for photos description
+        for elt in {'one', 'two', 'three', 'four', 'five', 'six'} :
+            self.assertContains(response, f"test photo {elt}")
+
+
+
 
 
 
