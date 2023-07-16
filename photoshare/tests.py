@@ -1539,9 +1539,14 @@ class ViewPhotoViewTests(TestCase) :
         self.assertEqual(response.context['photo'], photo)
         self.assertTrue(response.context['is_user_likes'])
         
-
-
-
+# class to test operation of gallery view 
+class GalleryViewTests(TestCase) :
+    # test with unauthenticated user 
+    def test_gallery_view_with_unauthenticated_user(self) :
+        target_url = reverse('gallery')
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code ,302)
+        self.assertRedirects(response, f"{reverse('login')}?next={target_url}")
 
 
 
