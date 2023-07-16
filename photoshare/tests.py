@@ -1616,6 +1616,17 @@ class GalleryViewTests(TestCase) :
         # check for photos description
         for elt in {'one', 'two', 'three', 'four', 'five', 'six'} :
             self.assertContains(response, f"test photo {elt}")
+        
+        # test when the user selects a given category for example 'sunset'
+        target_url = f"{reverse('gallery')}?category=sunset"
+        response = self.client.get(target_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context['photos']), 3)
+        for elt in response.context['photos'] :
+            self.assertEqual(elt.category.name, 'sunset')
+        self.assertEqual(response.context['category'], Category.objects.get(name='sunset'))
+        self.assertQuerysetEqual(response.context['categories'], Category.objects.all())
+        self.assertEqual(len(response.context['categories']), 3)
 
 
 
